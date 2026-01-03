@@ -23,7 +23,6 @@ app.use(cors({
    allowedHeaders: ["Content-Type","Authorization"],
 }))
 
-app.options("*", cors());
 app.use('/', employeeRouter)
 app.use('/', recuterRoute)
 app.use('/', jobRouter)
