@@ -18,9 +18,12 @@ app.use(cookieParser())
 
 app.use(cors({
    origin: frontendURL,
-   credentials: true
+   credentials: true,
+   methods: ["GET","POST","PUT","PATCH","DELETE","OPTIONS"],
+   allowedHeaders: ["Content-Type","Authorization"],
 }))
 
+app.options("*", cors());
 app.use('/', employeeRouter)
 app.use('/', recuterRoute)
 app.use('/', jobRouter)
