@@ -4,7 +4,7 @@ const cors = require('cors')
 const cookieParser = require('cookie-parser')
 const connectToDB = require('./database/config.database')
 require('dotenv').config()
-const Port = process.env.PORT
+const PORT = process.env.PORT || 3000
 const employeeRouter = require("./routers/employee.router")
 const recuterRoute = require('./routers/recurter.router')
 const jobRouter = require("./routers/job.router")
@@ -46,8 +46,8 @@ app.use((err, req, res, next) => {
 
 connectToDB().then(() => {
   console.log("Database connection established...")
-  app.listen(process.env.PORT, () => {
-    console.log(`Server is Sucessfully connected on http://localhost:${Port}`)
+  app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server is Sucessfully connected on http://localhost:${PORT}`)
   })
 }).catch((err) => {
   console.error(`Database cannot be connected!! : ${err}`)
