@@ -9,6 +9,7 @@ const employeeRouter = require("./routers/employee.router")
 const recuterRoute = require('./routers/recurter.router')
 const jobRouter = require("./routers/job.router")
 const applicationRouter = require("./routers/application.router")
+const frontendURL = process.env.FRONTEND_URL
 
 
 app.use(express.json())
@@ -16,7 +17,7 @@ app.use(express.urlencoded({extended: true}))
 app.use(cookieParser())
 
 app.use(cors({
-   origin:'http://localhost:3001',
+   origin: frontendURL,
    credentials: true
 }))
 
