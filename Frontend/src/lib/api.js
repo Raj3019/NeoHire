@@ -3,7 +3,7 @@ import { cookieStorage, scrubStorage } from './utils';
 
 // Create axios instance with base configuration
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, ""),
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
 
   withCredentials: true,
   headers: {
