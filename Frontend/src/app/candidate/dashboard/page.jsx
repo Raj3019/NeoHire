@@ -1,0 +1,140 @@
+"use client";
+import React, { useEffect } from 'react';
+import Link from 'next/link';
+import AuthGuard from '@/components/auth/AuthGuard';
+import { useAuthStore, useDataStore } from '@/lib/store';
+import { NeoCard, NeoButton } from '@/components/ui/neo';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import ProfileCompletionBanner from '@/components/shared/ProfileCompletionBanner';
+
+export default function CandidateDashboard() {
+  const { user, fetchProfile } = useAuthStore();
+  const [mounted, setMounted] = React.useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+    if (user?.role) {
+      fetchProfile(user.role);
+    }
+  }, []);
+
+  const applications = user?.recentApplicationJob || [];
+  
+  // Calculate real stats
+  const stats = applications.reduce((acc, app) => {
+    const s = (app.status || '').toLowerCase();
+    if (s.includes('offer') || s.includes('accept') || s.includes('hired') || s.includes('selected')) {
+      acc.offers++;
+    } else if (s.includes('interview')) {
+      acc.interview++;
+    } else if (s.includes('shortlist') || s.includes('review')) {
+      acc.reviewed++;
+    }
+    acc.applied++;
+    return acc;
+  }, { applied: 0, reviewed: 0, interview: 0, offers: 0 });
+
+  // Calculate real average score
+  const scores = applications && applications.length > 0 
+    ? applications.map(app => {
+        if (app.aiMatchScore?.overallScore !== undefined) return app.aiMatchScore.overallScore;
+        if (app.aiMatchScore?.score !== undefined) return app.aiMatchScore.score;
+        const totalSkills = (app.aiMatchScore?.matchedSkills?.length || 0) + (app.aiMatchScore?.missingSkills?.length || 0);
+        return totalSkills > 0 ? Math.round(((app.aiMatchScore?.matchedSkills?.length || 0) / totalSkills) * 100) : 0;
+      })
+    : [];
+  
+  const hasLoadedData = user?.recentApplicationJob !== undefined;
+  const avgScore = scores.length > 0 
+    ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) 
+    : (hasLoadedData ? 0 : 0); 
+
+  // Revert chart to real data
+  const data = [
+    { name: 'Applied', value: stats.applied },
+    { name: 'Reviewed', value: stats.reviewed },
+    { name: 'Interview', value: stats.interview },
+    { name: 'Offers', value: stats.offers },
+  ];
+
+  const colors = ['#FF6B6B', '#54A0FF', '#FFD026', '#2ECC71'];
+
+  return (
+    <AuthGuard allowedRoles={['candidate']}>
+      <ProfileCompletionBanner />
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <h1 className="text-4xl font-black uppercase mb-8 dark:text-white">Candidate <span className="text-neo-blue">Dashboard</span></h1>
+        
+        {/* Stats Row */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <NeoCard className="bg-neo-blue text-white dark:border-white">
+              <h3 className="font-mono text-sm opacity-80">Total Applications</h3>
+              <p className="text-5xl font-black mt-2">{applications.length}</p>
+          </NeoCard>
+          <NeoCard className="bg-neo-yellow text-black dark:border-white">
+              <h3 className="font-mono text-sm opacity-80">Avg Resume Score</h3>
+              <p className="text-5xl font-black mt-2">{avgScore}%</p>
+          </NeoCard>
+          <NeoCard className="bg-white dark:bg-zinc-800 dark:border-white">
+              <h3 className="font-mono text-sm opacity-80 dark:text-gray-300">Interviews Pending (beta)</h3>
+              <p className="text-5xl font-black mt-2 dark:text-white">{stats.interview}</p>
+          </NeoCard>
+          <NeoCard className="bg-neo-pink text-white dark:border-white">
+              <h3 className="font-mono text-sm opacity-80">Profile Views (beta)</h3>
+              <p className="text-5xl font-black mt-2">{user?.profileViews || 0}</p>
+          </NeoCard>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main Chart */}
+          <div className="lg:col-span-2">
+              <NeoCard className="h-96 flex flex-col">
+                  <h2 className="text-xl font-bold mb-4 border-b-2 border-gray-200 dark:border-zinc-700 pb-2 dark:text-white shrink-0">Application Status</h2>
+                  <div className="flex-1 w-full min-h-0">
+                    {mounted && (
+                      <ResponsiveContainer width="100%" height={300} minWidth={0} minHeight={0}>
+                          <BarChart data={data}>
+                              <XAxis dataKey="name" tick={{fontFamily: 'Space Mono', fill: '#888', fontSize: 12}} axisLine={false} tickLine={false} />
+                              <YAxis tick={{fontFamily: 'Space Mono', fill: '#888', fontSize: 12}} axisLine={false} tickLine={false} allowDecimals={false} />
+                              <Tooltip 
+                                  contentStyle={{border: '3px solid black', boxShadow: '4px 4px 0px 0px black', borderRadius: '0px', background: '#fff', color: '#000'}}
+                                  cursor={{fill: '#f3f4f6', opacity: 0.2}}
+                              />
+                              <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                                  {data.map((entry, index) => (
+                                      <Cell key={`cell-${index}`} fill={colors[index % colors.length]} stroke="#000" strokeWidth={2} />
+                                  ))}
+                              </Bar>
+                          </BarChart>
+                      </ResponsiveContainer>
+                    )}
+                  </div>
+              </NeoCard>
+          </div>
+
+          {/* Recommended Jobs */}
+          <div className="lg:col-span-1">
+              <NeoCard className="h-96 flex flex-col">
+                  <h2 className="text-xl font-bold mb-4 border-b-2 border-gray-200 dark:border-zinc-700 pb-2 dark:text-white">Recommended For You (beta)</h2>
+                  <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+                    {[1, 2, 3].map((i) => (
+                        <div key={i} className="p-3 border-2 border-gray-200 dark:border-zinc-700 hover:border-neo-black dark:hover:border-white hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors cursor-pointer">
+                            <h4 className="font-bold dark:text-white truncate">Frontend Engineer</h4>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 font-mono truncate">TechCorp Inc.</p>
+                            <div className="flex justify-between items-center mt-2">
+                                <span className="text-xs bg-neo-green text-white px-1 font-bold">92% Match</span>
+                                <span className="text-xs font-bold dark:text-white">&rarr;</span>
+                            </div>
+                        </div>
+                    ))}
+                  </div>
+                  <Link href="/candidate/jobs">
+                    <NeoButton variant="secondary" className="w-full mt-4 text-sm">View All Jobs</NeoButton>
+                  </Link>
+              </NeoCard>
+          </div>
+        </div>
+      </div>
+    </AuthGuard>
+  );
+}
