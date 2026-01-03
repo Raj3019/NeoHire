@@ -9,19 +9,33 @@ const employeeRouter = require("./routers/employee.router")
 const recuterRoute = require('./routers/recurter.router')
 const jobRouter = require("./routers/job.router")
 const applicationRouter = require("./routers/application.router")
-const frontendURL = process.env.FRONTEND_URL
+const allowedOrigins = [
+  process.env.FRONTEND_URL?.replace(/\/$/, ""),
+  "http://localhost:3000",
+  "http://localhost:3001",
+  "http://localhost:5173"
+].filter(Boolean);
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
+}))
 
 
 app.use(express.json())
-app.use(express.urlencoded({extended: true}))
+app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser())
 
-app.use(cors({
-   origin: frontendURL,
-   credentials: true,
-   methods: ["GET","POST","PUT","PATCH","DELETE","OPTIONS"],
-   allowedHeaders: ["Content-Type","Authorization"],
-}))
 
 app.use('/', employeeRouter)
 app.use('/', recuterRoute)
