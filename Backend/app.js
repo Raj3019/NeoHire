@@ -11,9 +11,25 @@ const jobRouter = require("./routers/job.router")
 const applicationRouter = require("./routers/application.router")
 const frontendURL = process.env.FRONTEND_URL
 
+// Allow both public frontend URL and localhost for development
+const allowedOrigins = [
+  frontendURL,
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://localhost:8080'
+].filter(Boolean);
 
 app.use(cors({
-  origin: frontendURL,
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, Postman, server-to-server)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],

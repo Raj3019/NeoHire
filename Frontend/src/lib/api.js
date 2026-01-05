@@ -2,8 +2,9 @@ import axios from 'axios';
 import { cookieStorage, scrubStorage } from './utils';
 
 // Create axios instance with base configuration
+// Use relative path /api to proxy through Next.js rewrites (avoids cross-origin cookie issues)
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  baseURL: '/api',
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
