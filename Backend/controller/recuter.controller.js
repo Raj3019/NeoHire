@@ -43,11 +43,11 @@ const registerRecuter = async (req, res) => {
     res.cookie('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 25 * 60 * 1000 // 7 days
+      sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     })
 
-    return res.stauts(200).json({
+    return res.status(200).json({
       user:{
         id: recruiter._id,
         email: recruiter.email,
@@ -91,8 +91,8 @@ const loginRecuter = async (req, res) => {
     res.cookie('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 25 * 60 * 1000 // 7 days
+      sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     })
 
     return res.status(200).json({
@@ -540,7 +540,7 @@ const logoutRecruter = async (req, res) => {
   res.clearCookie('token', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict'
+    sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax'
   })
   return res.status(201).json({message: "logout sucessfully"})
     

@@ -35,12 +35,12 @@ const registerEmployee = async (req, res) => {
     await employee.save()
     const token = jwt.sign({id: employee._id, role: employee.role}, jwtToken, {expiresIn: "1hr"})
 
-    // Set HTTP-only cookie
+    // Set HTTP-only cookie with secure SameSite settings for cross-site contexts
     res.cookie('token', token, {
-      // httpOnly: true,
-      // secure: process.env.NODE_ENV === 'production',
-      // sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
-      maxAge: 7 * 24 * 60 * 1000 // 7 days
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     })
 
     res.status(200).json({ "message": "Employee sucessfully created" , 
@@ -89,7 +89,11 @@ const loginEmployee = async (req, res) => {
     const token = jwt.sign({id: employee._id, role: employee.role}, jwtToken, {expiresIn: "1hr"})
     // return res.status(200).json({ message: "Login Successful" , token});
 
+    // Set cookie with secure and SameSite=None in production so cross-site frontends receive it
     res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
       maxAge: 7 * 24 * 60 * 60 * 1000
     })
 
@@ -377,8 +381,12 @@ const logoutEmployee = async (req, res) => {
       return res.status(401).json({message: "Employee not found"})
     }
     
-  //  res.clear
-  res.clearCookie('token')
+  // Clear cookie using same attributes to ensure browser removes it
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax'
+  })
   return res.status(201).json({message: "logout sucessfully"})
     
   }catch(err){

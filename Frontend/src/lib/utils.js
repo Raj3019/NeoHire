@@ -22,7 +22,16 @@ export const cookieStorage = {
   },
   setItem: (name, value) => {
     if (typeof document === 'undefined') return;
-    document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=31536000; SameSite=Lax`;
+    // Use SameSite=None and Secure when served over HTTPS so cross-site cookies can be set
+    try {
+      const isSecure = typeof window !== 'undefined' && window.location && window.location.protocol === 'https:';
+      const sameSite = isSecure ? 'None' : 'Lax';
+      const secureFlag = isSecure ? '; Secure' : '';
+      document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=31536000; SameSite=${sameSite}${secureFlag}`;
+    } catch (e) {
+      // Fallback
+      document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=31536000; SameSite=Lax`;
+    }
   },
   removeItem: (name) => {
     if (typeof document === 'undefined') return;
