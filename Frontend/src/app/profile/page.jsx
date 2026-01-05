@@ -52,6 +52,7 @@ export default function ProfilePage() {
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [successMessage, setSuccessMessage] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   
   const [formData, setFormData] = useState({
      fullName: '',
@@ -300,10 +301,10 @@ export default function ProfilePage() {
   const prevStep = () => setActiveStep(prev => Math.max(prev - 1, 1));
   
   const saveProfile = async () => {
-    setIsUploading(true);
+    setIsSaving(true);
     if (!user || !user._id) {
         setSuccessMessage("Error: User ID missing. Please refresh.");
-        setIsUploading(false);
+        setIsSaving(false);
         return;
     }
 
@@ -389,7 +390,7 @@ export default function ProfilePage() {
     } catch (error) {
         setSuccessMessage(error.response?.data?.message || error.message || 'Failed to save profile.'); 
     } finally {
-        setIsUploading(false);
+      setIsSaving(false);
         setTimeout(() => setSuccessMessage(''), 3000);
     }
   };
@@ -605,7 +606,7 @@ export default function ProfilePage() {
             ) : (
               <>
                 <NeoButton onClick={() => { setIsEditing(false); syncFormData(user); }} variant="secondary"><X className="w-4 h-4 mr-2" /> Cancel</NeoButton>
-                <NeoButton onClick={saveProfile} className="bg-neo-green text-white" disabled={isUploading}><Save className="w-4 h-4 mr-2" /> Save</NeoButton>
+                <NeoButton onClick={saveProfile} className="bg-neo-green text-white" disabled={isSaving}><Save className="w-4 h-4 mr-2" /> Save</NeoButton>
               </>
             )}
           </div>
