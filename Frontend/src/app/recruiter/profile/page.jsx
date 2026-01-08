@@ -5,7 +5,7 @@ import { useAuthStore } from '@/lib/store';
 import { recruiterAPI } from '@/lib/api';
 import { getMissingProfileFields, formatDate } from '@/lib/utils';
 import { NeoCard, NeoButton, NeoInput, NeoBadge, NeoDatePicker, NeoCheckbox, NeoRadio } from '@/components/ui/neo';
-import { User, Briefcase, MapPin, GraduationCap, Globe, Edit2, Save, X, Trophy, Plus, Trash2 } from 'lucide-react';
+import { User, Briefcase, MapPin, GraduationCap, Globe, Edit2, Save, X, Trophy, Plus, Trash2, Camera } from 'lucide-react';
 
 import ProfileCompletionBanner from '@/components/shared/ProfileCompletionBanner';
 
@@ -244,11 +244,21 @@ export default function RecruiterProfilePage() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    
+    // Phone Validation: 10 digits max
     if (name === 'phone') {
         const numericValue = value.replace(/\D/g, '').slice(0, 10);
         setFormData(prev => ({ ...prev, [name]: numericValue }));
         return;
     }
+
+    // Zip Code Validation: 6 digits max
+    if (name === 'zipCode') {
+        const numericValue = value.replace(/\D/g, '').slice(0, 6);
+        setFormData(prev => ({ ...prev, [name]: numericValue }));
+        return;
+    }
+
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
@@ -273,6 +283,14 @@ export default function RecruiterProfilePage() {
   };
 
   const handleEducationChange = (level, field, value) => {
+    // Prevent negative values
+    // Validation Logic
+    if (value < 0) return;
+
+    if (field === 'percentage' && value > 100) return;
+    if (field === 'cgpa' && value > 10) return;
+    if ((field === 'year' || field === 'passingYear') && value.length > 4) return;
+
     setFormData(prev => ({
       ...prev,
       education: {
@@ -428,20 +446,26 @@ export default function RecruiterProfilePage() {
         
         <div className="md:w-1/3">
           <NeoCard className="sticky top-24 text-center border-4">
-            <div className="w-32 h-32 mx-auto bg-gray-200 dark:bg-zinc-800 rounded-full mb-4 border-4 border-neo-black dark:border-white overflow-hidden relative group">
-               <img 
-                 src={user?.profilePicture || user?.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=Recruiter"} 
-                 alt="Profile" 
-                 className="w-full h-full object-cover"
-                 onError={(e) => {
-                   e.target.onerror = null;
-                   e.target.src = "https://api.dicebear.com/7.x/avataaars/svg?seed=Recruiter";
-                 }}
-               />
+            <div className="relative w-32 h-32 mx-auto mb-4">
+              <div className="w-full h-full rounded-full border-4 border-neo-black dark:border-white overflow-hidden bg-gray-200 dark:bg-zinc-800 relative flex items-center justify-center">
+                 <img 
+                   src={user?.profilePicture || user?.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=Recruiter"} 
+                   alt="Profile" 
+                   className="w-full h-full object-cover"
+                   onError={(e) => {
+                     e.target.onerror = null;
+                     e.target.src = "https://api.dicebear.com/7.x/avataaars/svg?seed=Recruiter";
+                   }}
+                 />
+              </div>
                {isEditing && (
-                   <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer" onClick={() => handleFileSelection('profile-pic-input')}>
-                       <span className="text-white text-xs font-bold uppercase">Change</span>
-                   </div>
+                   <button 
+                       onClick={() => handleFileSelection('profile-pic-input')}
+                       className="absolute bottom-0 right-0 bg-white dark:bg-zinc-800 border-2 border-neo-black dark:border-white p-2 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors shadow-neo-sm z-10" 
+                       title="Change Profile Picture"
+                   >
+                       <Camera className="w-4 h-4 text-neo-black dark:text-white" />
+                   </button>
                )}
                <input type="file" id="profile-pic-input" className="hidden" accept="image/*" onChange={handleProfilePicUpload} />
             </div>
@@ -536,7 +560,7 @@ export default function RecruiterProfilePage() {
                           <DisplayField isEditing={isEditing} label="About You" value={formData.about} name="about" onChange={handleInputChange} isTextarea={true} placeholder="Recruiter bio..." />
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <DisplayField isEditing={isEditing} label="Phone Number" value={formData.phone} name="phone" onChange={handleInputChange} placeholder="10 Digit Number" />
-                              <DisplayField isEditing={isEditing} label="Date of Birth" value={formData.dateOfBirth} name="dateOfBirth" type="date" onChange={handleInputChange} max={new Date().toISOString().split('T')[0]} />
+                              <DisplayField isEditing={isEditing} label="Date of Birth" value={formData.dateOfBirth} name="dateOfBirth" type="date" onChange={handleInputChange} maxDate={new Date().toISOString().split('T')[0]} />
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                <div>
@@ -687,11 +711,17 @@ export default function RecruiterProfilePage() {
                                           </div>
                                           <div>
                                               <label className="block font-bold text-xs mb-1 dark:text-white">Grade</label>
-                                              <NeoInput 
+                                              <select 
                                                 value={formData.education[level]?.grade || ''} 
                                                 onChange={(e) => handleEducationChange(level, 'grade', e.target.value)}
-                                                disabled={!isEditing} 
-                                              />
+                                                disabled={!isEditing}
+                                                className="w-full bg-white dark:bg-zinc-900 border-2 border-black p-2 font-mono text-sm dark:text-white focus:outline-none focus:ring-2 focus:ring-neo-yellow"
+                                              >
+                                                  <option value="">Select Grade</option>
+                                                  {['A+', 'A', 'B+', 'B', 'C', 'D', 'E', 'F'].map(g => (
+                                                      <option key={g} value={g}>{g}</option>
+                                                  ))}
+                                              </select>
                                           </div>
                                           <div>
                                               <label className="block font-bold text-xs mb-1 dark:text-white">Year</label>

@@ -13,8 +13,15 @@ const registerEmployee = async (req, res) => {
     
     const validateBody = EmployeeRegisterValidation.safeParse(req.body)
     
-    if(!validateBody.success){
-      return res.status(400).json({error: validateBody.error})
+    // if(!validateBody.success){
+    //   return res.status(400).json({error: validateBody.error})
+    // }
+
+    if (!validateBody.success) {
+      const errors = validateBody.error.issues[0].message
+      return res.status(400).json({
+        message: errors
+      })
     }
     
     const {
@@ -24,7 +31,7 @@ const registerEmployee = async (req, res) => {
     
     const checkEmail = await Employee.findOne({ email })
     if (checkEmail) {
-      return res.status(409).json({ error: "Employee with this email already exists" });
+      return res.status(409).json({ message: "Employee with this email already exists" });
     }
     const passwordHash = await bcrypt.hash(password, 10)
     const employee = new Employee({
@@ -54,7 +61,7 @@ const registerEmployee = async (req, res) => {
     // res.status(200).json({ "message": "Employee sucessfully created" , token})
   } catch (error) {
     // console.log(error)
-    res.status(400).send(`Error: ${error}`)
+    res.status(400).send({ message: error.message })
   }
 }
 
@@ -65,25 +72,26 @@ const loginEmployee = async (req, res) => {
     const validateBody = EmployeeLoginValidation.safeParse(req.body)
     
     if(!validateBody.success){
-      return res.status(400).json({error: validateBody.error})
+      const errors = validateBody.error.issues[0].message
+      return res.status(400).json({message: errors})
     }
     
     const { email, password } = validateBody.data;
 
     if (!email || !password) {
-      return res.status(400).json({ error: "Email and password are required" });
+      return res.status(400).json({ message: "Email and password are required" });
     }
 
     const employee = await Employee.findOne({ email });
 
     if (!employee) {
-      return res.status(401).json({ error: "Invalid Credentials" });
+      return res.status(401).json({ message: "Invalid Credentials" });
     }
 
     const isPasswordValid = await bcrypt.compare(password, employee.password);
 
     if (!isPasswordValid) {
-      return res.status(401).json({ error: "Invalid Credentials" });
+      return res.status(401).json({ message: "Invalid Credentials" });
     }
 
     const token = jwt.sign({id: employee._id, role: employee.role}, jwtToken, {expiresIn: "1hr"})

@@ -84,6 +84,11 @@ export const NeoInput = React.forwardRef(({ className, type, label, error, icon:
               className
             )}
             ref={ref}
+            onKeyDown={(e) => {
+              if (type === 'number' && (e.key === '-' || e.key === 'e')) {
+                e.preventDefault();
+              }
+            }}
             {...props}
           />
       </div>
@@ -314,15 +319,24 @@ export const NeoDatePicker = ({ value, onChange, label, placeholder = "Select da
                  const isSelected = value && isSameDay(new Date(value), day);
                  const isCurrentMonth = isSameMonth(day, viewDate);
                  
+                 // Check if date is disabled
+                 const isDisabled = (minDate && day < new Date(minDate)) || (maxDate && day > new Date(maxDate));
+                 
                  return (
                    <button
                      key={idx}
-                     onClick={(e) => { e.stopPropagation(); handleDateClick(day); }}
+                     onClick={(e) => { 
+                       e.stopPropagation(); 
+                       if (!isDisabled) handleDateClick(day); 
+                     }}
+                     disabled={isDisabled}
                      className={cn(
-                       "h-8 w-8 flex items-center justify-center text-sm font-bold border-2 border-transparent relative hover:border-neo-black dark:hover:border-white dark:text-white transition-all rounded-sm",
-                       !isCurrentMonth && "text-gray-300 dark:text-zinc-700",
-                       isSelected && "bg-neo-yellow text-neo-black border-neo-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] z-10",
-                       isSameDay(day, new Date()) && !isSelected && "border-neo-black border-dashed"
+                       "h-8 w-8 flex items-center justify-center text-sm font-bold border-2 border-transparent relative transition-all rounded-sm",
+                       !isCurrentMonth && !isDisabled && "text-gray-300 dark:text-zinc-700",
+                       isSelected && !isDisabled && "bg-neo-yellow text-neo-black border-neo-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] z-10",
+                       isSameDay(day, new Date()) && !isSelected && !isDisabled && "border-neo-black border-dashed",
+                       !isDisabled && "hover:border-neo-black dark:hover:border-white dark:text-white",
+                       isDisabled && "opacity-20 cursor-not-allowed text-gray-400 dark:text-gray-600"
                      )}
                    >
                      {format(day, 'd')}

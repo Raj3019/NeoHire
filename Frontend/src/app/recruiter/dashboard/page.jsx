@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import AuthGuard from '@/components/auth/AuthGuard';
 import { NeoCard, NeoButton } from '@/components/ui/neo';
-import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, LabelList } from 'recharts';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/store';
@@ -152,13 +152,21 @@ const RecruiterDashboard = () => {
                 <div style={{ minWidth: Math.max(100, jobStats.length * 20) + '%' }}>
                     {mounted && (
                         <ResponsiveContainer width="100%" height={300} minWidth={0} minHeight={0}>
-                            <BarChart data={jobStats} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                            <BarChart data={jobStats} margin={{ top: 20, right: 30, left: 0, bottom: 25 }}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
                                 <XAxis 
                                     dataKey="name" 
-                                    tick={{fontFamily: 'Space Grotesk', fontWeight: 'bold', fontSize: 12, fill: '#888'}} 
-                                    axisLine={false} 
+                                    tick={{fontFamily: 'Space Grotesk', fontWeight: 'bold', fontSize: 10, fill: '#666'}} 
+                                    axisLine={{ stroke: '#000', strokeWidth: 2 }}
                                     tickLine={false} 
                                     dy={10}
+                                    interval={0}
+                                />
+                                <YAxis 
+                                    allowDecimals={false}
+                                    axisLine={false}
+                                    tickLine={false}
+                                    tick={{fontFamily: 'Space Mono', fontSize: 12, fill: '#888'}}
                                 />
                                 <Tooltip 
                                     cursor={{fill: '#000', opacity: 0.05}} 
@@ -170,7 +178,9 @@ const RecruiterDashboard = () => {
                                         borderRadius: '0px'
                                     }}
                                 />
-                                <Bar dataKey="applicants" fill="#FF6B6B" stroke="black" strokeWidth={3} radius={[4, 4, 0, 0]} />
+                                <Bar dataKey="applicants" fill="#FF6B6B" stroke="black" strokeWidth={2} radius={[4, 4, 0, 0]} barSize={50}>
+                                    <LabelList dataKey="applicants" position="top" style={{ fill: '#000', fontSize: 14, fontWeight: 'bold', fontFamily: 'Space Mono' }} />
+                                </Bar>
                             </BarChart>
                         </ResponsiveContainer>
                     )}

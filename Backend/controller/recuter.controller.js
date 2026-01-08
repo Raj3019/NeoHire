@@ -16,8 +16,11 @@ const registerRecuter = async (req, res) => {
     
     const validateBody = RecurterRegisterValidation.safeParse(req.body)
     
-    if(!validateBody.success){
-      return res.status(400).json({error: validateBody.error})
+    if (!validateBody.success) {
+      const errors = validateBody.error.issues[0].message
+      return res.status(400).json({
+        message: errors
+      })
     }
     
     const { email, password } = validateBody.data;
@@ -66,8 +69,11 @@ const loginRecuter = async (req, res) => {
     
     const validateBody = RecurterLoginValidation.safeParse(req.body)
     
-    if(!validateBody.success){
-      return res.status(400).json({error: validateBody.error})
+    if (!validateBody.success) {
+      const errors = validateBody.error.issues[0].message
+      return res.status(400).json({
+        message: errors
+      })
     }
     
     const { email, password } = validateBody.data;
@@ -154,7 +160,7 @@ const profileRecuter = async(req, res) => {
     
     const recuter = await Recuter.findById(recuterId.id).select('-password').populate({
         path: 'jobs',
-        select: '_id title companyName location jobType salary status createdAt skillsRequired applicationDeadline',
+        select: '_id title companyName location jobType salary status createdAt skillsRequired openings applicationDeadline',
         populate: {
           path: 'appliedBy.applicant',
           select: '_id fullName email phone skills experienceYears currentJobTitle profilePicture'

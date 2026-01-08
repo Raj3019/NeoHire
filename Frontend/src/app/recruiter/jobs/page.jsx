@@ -58,6 +58,9 @@ export default function RecruiterJobs() {
   const pageSize = 5;
   const [currentAppPage, setCurrentAppPage] = useState(1);
   const appPageSize = 5;
+  const [activeTab, setActiveTab] = useState('All');
+
+  const TABS = ['All', 'Applied', 'Pending', 'Shortlist', 'Accept', 'Reject'];
   
   // Fetch profile on mount to ensure we have the latest jobs
   useEffect(() => {
@@ -118,6 +121,7 @@ export default function RecruiterJobs() {
   const handleViewCandidates = (jobId) => {
       setSelectedJobId(jobId);
       setCurrentAppPage(1); // Reset modal pagination
+      setActiveTab('All'); // Reset tab
       setCandidateModalOpen(true);
   };
 
@@ -252,7 +256,7 @@ export default function RecruiterJobs() {
     <ProfileCompletionBanner />
     <div className="max-w-6xl mx-auto px-4 py-8">
       {successMessage && (
-        <div className="fixed top-24 right-4 z-50 animate-in slide-in-from-right-5">
+        <div className="fixed top-24 right-4 z-[9999] animate-in slide-in-from-right-5">
           <div className="bg-neo-green border-2 border-neo-black dark:border-white px-6 py-3 shadow-neo dark:shadow-[4px_4px_0px_0px_#ffffff]">
             <p className="text-white font-bold">{successMessage}</p>
           </div>
@@ -302,6 +306,9 @@ export default function RecruiterJobs() {
                             </span>
                             <span className="text-xs font-mono font-bold bg-neo-black text-white px-2 py-1 border-2 border-black dark:border-white">
                                 {job.applicantsCount} Candidates
+                            </span>
+                            <span className="text-xs font-mono font-bold bg-white text-black px-2 py-1 border-2 border-black dark:border-white">
+                                Openings: {job.openings}
                             </span>
                         </div>
                     </div>
@@ -546,16 +553,27 @@ export default function RecruiterJobs() {
              <div className="space-y-6">
                 {selectedJob?.applications && selectedJob.applications.length > 0 ? (
                   <>
-                    {(() => {
-                      const allApps = selectedJob.applications;
-                      const paginatedApps = allApps.slice((currentAppPage - 1) * appPageSize, currentAppPage * appPageSize);
+                    <div className="flex gap-2 mb-6 overflow-x-auto pb-2 custom-scrollbar">
+                        {TABS.map(tab => (
+                            <button
+                                key={tab}
+                                onClick={() => { setActiveTab(tab); setCurrentAppPage(1); }}
+                                className={`px-4 py-2 text-xs font-black uppercase tracking-wider border-2 transition-all whitespace-nowrap ${
+                                    activeTab === tab 
+                                    ? 'bg-neo-black text-white border-neo-black dark:border-white' 
+                                    : 'bg-white dark:bg-zinc-900 text-neo-black dark:text-gray-300 border-neo-black dark:border-zinc-700 hover:bg-gray-100 dark:hover:bg-zinc-800'
+                                }`}
+                            >
+                                {tab}
+                            </button>
+                        ))}
+                    </div>
 
-                      return (
-                        <>
-                          {paginatedApps.map((app, index) => {
-                            // Helper to safely extract data regardless of slight structure variations
-                            const getSafeData = (source) => {
-                              const findApplicationId = (src) => {
+                    {(() => {
+                      // 1. Get safe data first
+                       const allSafeApps = selectedJob.applications.map((app, index) => {
+                           // Helper to safely extract data regardless of slight structure variations
+                           const findApplicationId = (src) => {
                                 if (src._id) return src._id;
                                 if (src.id) return src.id;
                                 if (src.application?._id) return src.application._id;
@@ -563,38 +581,57 @@ export default function RecruiterJobs() {
                                 if (src.applicant?._id) return src.applicant._id;
                                 if (src.applicant?.id) return src.applicant.id;
                                 return null;
-                              };
-                              
-                              const applicationId = findApplicationId(source);
-                              
-                              if (source.applicant && typeof source.applicant === 'object') {
-                                return {
-                                  id: source.applicant._id || `app-${index}`,
-                                  applicationId: applicationId,
-                                  name: source.applicant.fullName || "Candidate",
-                                  title: source.applicant.currentJobTitle || "Applicant",
-                                  image: source.applicant.profilePicture,
-                                  score: source.aiMatchScore?.overallScore || 0,
-                                  insights: source.aiMatchScore?.insights || "No AI insights available.",
-                                  status: source.status || "Applied",
-                                  resume: source.applicant.resume || source.resume
-                                };
-                              }
-                              return {
-                                id: source._id || `app-${index}`,
-                                applicationId: applicationId,
-                                name: source.fullName || source.name || "Candidate",
-                                title: source.currentJobTitle || source.title || "Applicant",
-                                image: source.profilePicture,
-                                score: source.score || 0,
-                                insights: source.summary || source.insights || "No AI insights available.",
-                                status: source.status || "Applied",
-                                resume: source.resume || source.applicant?.resume
-                              };
                             };
+                            
+                            const applicationId = findApplicationId(app);
+                            
+                            if (app.applicant && typeof app.applicant === 'object') {
+                                return {
+                                    id: app.applicant._id || `app-${index}`,
+                                    applicationId: applicationId,
+                                    name: app.applicant.fullName || "Candidate",
+                                    title: app.applicant.currentJobTitle || "Applicant",
+                                    image: app.applicant.profilePicture,
+                                    score: app.aiMatchScore?.overallScore || 0,
+                                    insights: app.aiMatchScore?.insights || "No AI insights available.",
+                                    status: app.status || "Applied",
+                                    resume: app.applicant.resume || app.resume
+                                };
+                            }
+                            return {
+                                id: app._id || `app-${index}`,
+                                applicationId: applicationId,
+                                name: app.fullName || app.name || "Candidate",
+                                title: app.currentJobTitle || app.title || "Applicant",
+                                image: app.profilePicture,
+                                score: app.score || 0,
+                                insights: app.summary || app.insights || "No AI insights available.",
+                                status: app.status || "Applied",
+                                resume: app.resume || app.applicant?.resume
+                            };
+                       });
 
-                            const data = getSafeData(app);
+                      // 2. Filter based on activeTab
+                      const filteredApps = activeTab === 'All' 
+                        ? allSafeApps 
+                        : allSafeApps.filter(app => app.status === activeTab);
 
+                      // 3. Paginate
+                      const paginatedApps = filteredApps.slice((currentAppPage - 1) * appPageSize, currentAppPage * appPageSize);
+
+                      if (filteredApps.length === 0) {
+                          return (
+                              <div className="text-center py-12 border-4 border-dashed border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900/50">
+                                  <p className="font-mono text-gray-500 font-bold mb-2">NO CANDIDATES FOUND</p>
+                                  <p className="text-xs text-gray-400">There are no candidates with status "{activeTab}".</p>
+                              </div>
+                          );
+                      }
+
+                      return (
+                        <>
+                          {paginatedApps.map((data) => {
+                            // Already processed data in allSafeApps step
                             return (
                               <div key={data.id} className="bg-white dark:bg-zinc-900 border-4 border-neo-black dark:border-white p-6 shadow-sm hover:shadow-neo transition-all relative group grid grid-cols-1 md:grid-cols-12 gap-6">
                                 {/* Left Column: Avatar & Info */}
@@ -673,7 +710,7 @@ export default function RecruiterJobs() {
                                   <button onClick={() => handleUpdateStatus(selectedJobId, data.applicationId, 'Accept')} className={`w-full py-2.5 text-xs font-black uppercase tracking-wider border-2 transition-all active:translate-y-0.5 flex items-center justify-center gap-2 ${data.status === 'Accept' ? 'bg-neo-green text-white border-neo-black cursor-default shadow-neo-sm' : 'bg-neo-green text-white border-neo-black hover:bg-green-600 shadow-sm'} ${data.status === 'Reject' ? 'opacity-50 cursor-not-allowed' : ''}`} disabled={data.status === 'Accept' || data.status === 'Reject'}>
                                     ✅ Accept
                                   </button>
-                                  <button onClick={() => handleUpdateStatus(selectedJobId, data.applicationId, 'Reject')} className={`w-full py-2 text-xs font-black uppercase tracking-wider border-2 transition-all active:translate-y-0.5 flex items-center justify-center gap-2 ${data.status === 'Reject' ? 'bg-red-500 text-white border-red-500 cursor-default' : 'border-red-500 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20'}`} disabled={data.status === 'Reject' || data.status === 'Accept'}>
+                                  <button onClick={() => handleUpdateStatus(selectedJobId, data.applicationId, 'Reject')} className={`w-full py-2 text-xs font-black uppercase tracking-wider border-2 transition-all active:translate-y-0.5 flex items-center justify-center gap-2 ${data.status === 'Reject' ? 'bg-red-500 text-white border-red-500 cursor-default' : 'border-red-500 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20'} ${data.status === 'Accept' ? 'opacity-50 cursor-not-allowed' : ''}`} disabled={data.status === 'Reject' || data.status === 'Accept'}>
                                     ❌ Reject
                                   </button>
                                 </div>
@@ -681,19 +718,19 @@ export default function RecruiterJobs() {
                             );
                           })}
 
-                          {Math.ceil(allApps.length / appPageSize) > 1 && (
+                          {Math.ceil(filteredApps.length / appPageSize) > 1 && (
                             <div className="flex flex-wrap justify-center items-center gap-2 mt-8 py-4 border-t-2 border-gray-100 dark:border-zinc-800">
                               <button onClick={() => setCurrentAppPage(prev => Math.max(1, prev - 1))} disabled={currentAppPage === 1} className="p-1.5 border-2 border-neo-black dark:border-white bg-white dark:bg-zinc-800 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_#fff] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neo-yellow dark:hover:bg-neo-yellow dark:hover:text-black transition-colors">
                                 <ChevronLeft className="w-4 h-4" />
                               </button>
                               <div className="flex gap-1.5">
-                                {Array.from({ length: Math.ceil(allApps.length / appPageSize) }, (_, i) => i + 1).map(page => (
+                                {Array.from({ length: Math.ceil(filteredApps.length / appPageSize) }, (_, i) => i + 1).map(page => (
                                   <button key={page} onClick={() => setCurrentAppPage(page)} className={`w-8 h-8 flex items-center justify-center border-2 font-black text-xs transition-all ${currentAppPage === page ? "bg-neo-blue text-white border-neo-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] translate-x-[-1px] translate-y-[-1px]" : "bg-white dark:bg-zinc-800 text-neo-black dark:text-white border-neo-black dark:border-white hover:bg-gray-100 dark:hover:bg-zinc-700 shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] dark:shadow-[1px_1px_0px_0px_#fff]"}`}>
                                     {page}
                                   </button>
                                 ))}
                               </div>
-                              <button onClick={() => setCurrentAppPage(prev => Math.min(Math.ceil(allApps.length / appPageSize), prev + 1))} disabled={currentAppPage === Math.ceil(allApps.length / appPageSize)} className="p-1.5 border-2 border-neo-black dark:border-white bg-white dark:bg-zinc-800 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_#fff] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neo-yellow dark:hover:bg-neo-yellow dark:hover:text-black transition-colors">
+                              <button onClick={() => setCurrentAppPage(prev => Math.min(Math.ceil(filteredApps.length / appPageSize), prev + 1))} disabled={currentAppPage === Math.ceil(filteredApps.length / appPageSize)} className="p-1.5 border-2 border-neo-black dark:border-white bg-white dark:bg-zinc-800 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_#fff] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neo-yellow dark:hover:bg-neo-yellow dark:hover:text-black transition-colors">
                                 <ChevronRight className="w-4 h-4" />
                               </button>
                             </div>
