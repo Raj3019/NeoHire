@@ -101,6 +101,11 @@ export const employeeAPI = {
     const response = await api.put(`/api/employee/profile/${id}`, data);
     return response.data;
   },
+
+  getRecommendations: async () => {
+    const response = await api.get('/api/employee/recommendations');
+    return response.data;
+  },
 };
 
 // Recruiter API endpoints (note: using /recuter/ as per backend)

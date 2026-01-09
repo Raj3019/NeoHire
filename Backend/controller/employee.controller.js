@@ -1,5 +1,6 @@
 const Employee = require("../model/employee.model.js");
 const Application = require("../model/application.model.js");
+const Job = require("../model/job.model.js")
 const {EmployeeRegisterValidation, EmployeeLoginValidation} = require("../utils/validation.utlis.js")
 const fs = require("fs");
 const bcrypt = require("bcryptjs");
@@ -380,6 +381,57 @@ const getApplicationById = async (req, res) => {
   }
 }
 
+
+//Recommendation
+
+const recommendJobToEmployee = async (req, res) =>{
+  try {
+    const employee = await Employee.findById(req.user.id)
+    const employeeSkills = employee.skills
+
+    const appliedJobs = await Application.find({JobSeeker:employee}).select('job')
+    const appliedJobIds = appliedJobs.map(app => app.job)
+
+    const jobs = await Job.find({
+      _id: {$nin: appliedJobIds},
+      status: "Active"
+    }).select('_id skillsRequired').sort({createdAt: -1})
+    
+    // const allSkills = jobSkills.map((skill) => ({
+    //   id: skill._id,
+    //   skillRequired: skill.skillsRequired
+    // }))
+
+    // const matchSkills = employeeSkills.filter(skill => {
+    //   return allSkills.some(job => job.jobSkill.includes(skill))
+    // })
+
+    const recommendedJobs = jobs.filter(job => {
+      return job.skillsRequired.some(skill => employeeSkills.includes(skill))
+    })
+
+    const jobId = recommendedJobs.map(job => job._id)
+
+    return res.status(200).json({
+      success: true,
+      count: recommendedJobs.length,
+      recommendedJobs: jobId
+    })
+
+    // return res.status(200).json({
+    //   sucess: true,
+    //   // matchSkills: matchSkills,
+    //   recommendedJobs: allSkills.filter(job => 
+    //     job.skillRequired.some(skill => employeeSkills.includes(skill))
+    //   )
+    // })
+    
+  } catch (err) {
+    return res.status(401).json({message: "Recommendation Failed", error: err.message})
+  }
+}
+
+
   
 const logoutEmployee = async (req, res) => {
   try{
@@ -414,5 +466,6 @@ module.exports = {
   getMyApplications,
   getApplicationById,
   logoutEmployee,
+  recommendJobToEmployee
   // setupEmployee
 }

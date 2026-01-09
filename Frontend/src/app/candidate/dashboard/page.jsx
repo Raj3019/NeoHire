@@ -6,10 +6,13 @@ import { useAuthStore, useDataStore } from '@/lib/store';
 import { NeoCard, NeoButton } from '@/components/ui/neo';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import ProfileCompletionBanner from '@/components/shared/ProfileCompletionBanner';
+import { employeeAPI, jobsAPI } from '@/lib/api';
 
 export default function CandidateDashboard() {
   const { user, fetchProfile } = useAuthStore();
   const [mounted, setMounted] = React.useState(false);
+  const [recommendedJobs, setRecommendedJobs] = React.useState([]);
+  const [isLoadingRecs, setIsLoadingRecs] = React.useState(false);
   
   useEffect(() => {
     setMounted(true);
@@ -17,6 +20,33 @@ export default function CandidateDashboard() {
       fetchProfile(user.role);
     }
   }, []);
+
+  useEffect(() => {
+    const fetchRecommendations = async () => {
+      if (!mounted) return;
+      setIsLoadingRecs(true);
+      try {
+        const res = await employeeAPI.getRecommendations();
+        if (res.success && res.recommendedJobs?.length > 0) {
+          const jobIds = res.recommendedJobs.slice(0, 5);
+          const jobPromises = jobIds.map(id => jobsAPI.getById(id).catch(() => null));
+          const jobsResults = await Promise.all(jobPromises);
+          
+          const validJobs = jobsResults
+            .filter(r => r && (r.success !== false))
+            .map(r => r.data || r.job || r);
+          
+          setRecommendedJobs(validJobs);
+        }
+      } catch (err) {
+        console.error("Failed to fetch recommendations:", err);
+      } finally {
+        setIsLoadingRecs(false);
+      }
+    };
+
+    fetchRecommendations();
+  }, [mounted]);
 
   const applications = user?.recentApplicationJob || [];
   
@@ -115,18 +145,32 @@ export default function CandidateDashboard() {
           {/* Recommended Jobs */}
           <div className="lg:col-span-1">
               <NeoCard className="h-96 flex flex-col">
-                  <h2 className="text-xl font-bold mb-4 border-b-2 border-gray-200 dark:border-zinc-700 pb-2 dark:text-white">Recommended For You (beta)</h2>
+                  <h2 className="text-xl font-bold mb-4 border-b-2 border-gray-200 dark:border-zinc-700 pb-2 dark:text-white">Recommended For You</h2>
                   <div className="flex-1 overflow-y-auto space-y-4 pr-2">
-                    {[1, 2, 3].map((i) => (
-                        <div key={i} className="p-3 border-2 border-gray-200 dark:border-zinc-700 hover:border-neo-black dark:hover:border-white hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors cursor-pointer">
-                            <h4 className="font-bold dark:text-white truncate">Frontend Engineer</h4>
-                            <p className="text-sm text-gray-500 dark:text-gray-400 font-mono truncate">TechCorp Inc.</p>
-                            <div className="flex justify-between items-center mt-2">
-                                <span className="text-xs bg-neo-green text-white px-1 font-bold">92% Match</span>
-                                <span className="text-xs font-bold dark:text-white">&rarr;</span>
-                            </div>
-                        </div>
-                    ))}
+                    {isLoadingRecs ? (
+                      <div className="flex flex-col gap-4">
+                        {[1, 2, 3].map(i => (
+                          <div key={i} className="h-20 bg-gray-100 dark:bg-zinc-800 animate-pulse border-2 border-gray-200 dark:border-zinc-700" />
+                        ))}
+                      </div>
+                    ) : recommendedJobs.length > 0 ? (
+                      recommendedJobs.map((job) => (
+                        <Link key={job?._id || job?.id || Math.random()} href={`/candidate/jobs/${job?._id || job?.id}`}>
+                          <div className="p-3 border-2 border-gray-200 dark:border-zinc-700 hover:border-neo-black dark:hover:border-white hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors cursor-pointer mb-2">
+                              <h4 className="font-bold dark:text-white truncate">{job?.title || "Unknown Position"}</h4>
+                              <p className="text-sm text-gray-500 dark:text-gray-400 font-mono truncate">{job?.companyName || job?.company || "Unknown Company"}</p>
+                              <div className="flex justify-between items-center mt-2">
+                                  <span className="text-xs bg-neo-green text-white px-1 font-bold">Match</span>
+                                  <span className="text-xs font-bold dark:text-white">&rarr;</span>
+                              </div>
+                          </div>
+                        </Link>
+                      ))
+                    ) : (
+                      <div className="text-center py-8 text-gray-400 font-mono text-sm border-2 border-dashed border-gray-200 dark:border-zinc-700">
+                        {mounted ? "No recommendations found" : "Loading..."}
+                      </div>
+                    )}
                   </div>
                   <Link href="/candidate/jobs">
                     <NeoButton variant="secondary" className="w-full mt-4 text-sm">View All Jobs</NeoButton>

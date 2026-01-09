@@ -1,5 +1,5 @@
 const express = require("express");
-const {registerEmployee, loginEmployee, logoutEmployee, profileEmployee, editEmployee, getMyApplications, employeeDashboard, uploadProfilePicture, uploadResume, getApplicationById} = require("../controller/employee.controller")
+const {registerEmployee, loginEmployee, logoutEmployee, profileEmployee, editEmployee, getMyApplications, employeeDashboard, uploadProfilePicture, uploadResume,recommendJobToEmployee, getApplicationById} = require("../controller/employee.controller")
 const {authenticateJWT} = require("../middleware/auth.middleware")
 const employeeRouter = express.Router();
 require("dotenv").config();
@@ -35,6 +35,9 @@ employeeRouter.get("/api/employee/applications", authenticateJWT, getMyApplicati
 
 // GET - APPLICATION BY ID
 employeeRouter.get("api/employee/application/:jobId", authenticateJWT, getApplicationById)
+
+//GET - RECOMMENDED JOBS
+employeeRouter.get("/api/employee/recommendations", authenticateJWT, recommendJobToEmployee)
 
 
 module.exports = employeeRouter
