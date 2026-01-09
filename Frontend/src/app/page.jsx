@@ -92,6 +92,19 @@ const Content = () => {
     return (
         <div className="bg-neo-bg overflow-x-hidden transition-colors duration-200">
           
+          {/* Beta Warning Banner */}
+          <div className="bg-neo-yellow border-b-4 border-neo-black dark:border-white py-2 px-4 flex justify-center items-center gap-2 overflow-hidden">
+            <span className="font-black uppercase text-xs md:text-sm tracking-tighter whitespace-nowrap animate-pulse">
+              ⚠ BETA WARNING:
+            </span>
+            <span className="font-bold text-[10px] md:text-xs uppercase font-mono leading-none">
+              Features marked with "(beta)" are experimental and may behave unpredictably. Use with caution.
+            </span>
+            <span className="font-black uppercase text-xs md:text-sm tracking-tighter whitespace-nowrap animate-pulse">
+              ⚠
+            </span>
+          </div>
+          
           {/* Hero Section */}
           <section id="home" className={`relative py-24 px-4 border-b-4 border-neo-black dark:border-white overflow-hidden ${isRecruiterMode ? 'bg-neo-orange/10 dark:bg-neo-orange/20' : 'bg-neo-blue/10 dark:bg-neo-blue/20'}`}>
             <div className="absolute inset-0 bg-grid-pattern opacity-10 pointer-events-none"></div>
@@ -115,9 +128,9 @@ const Content = () => {
                     </>
                 ) : (
                     <>
-                        <span className="text-neo-blue block transform -rotate-2">GET</span>
-                        <span className="block transform rotate-1">THE JOB.</span>
-                        <span className="text-neo-yellow block transform -rotate-1">GET RICH.</span>
+                        <span className="text-neo-blue block transform -rotate-2">STOP</span>
+                        <span className="block transform rotate-1">BEING</span>
+                        <span className="text-neo-yellow block transform -rotate-1">GHOSTED.</span>
                     </>
                 )}
               </h1>
