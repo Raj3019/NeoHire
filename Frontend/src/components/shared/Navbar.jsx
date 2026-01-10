@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { NeoButton } from '@/components/ui/neo';
 import { useAuthStore } from '@/lib/store';
 import { cookieStorage } from '@/lib/utils';
+import NotificationBell from './NotificationBell';
 
 const NavbarContent = () => {
   const pathname = usePathname();
@@ -155,48 +156,46 @@ const NavbarContent = () => {
 
             {mounted && user ? (
               <>
-              <div className="ml-6 relative">
-                <button 
-                  onClick={() => setShowProfileMenu(!showProfileMenu)}
-                  className="flex items-center gap-2 border-2 border-neo-black dark:border-white p-1 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors shadow-neo-sm dark:shadow-[2px_2px_0px_0px_#ffffff] active:translate-y-[2px] active:shadow-none bg-white dark:bg-zinc-900"
-                >
-                  <img 
-                    src={user.profilePicture || user.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=Recruiter"} 
-                    alt="User" 
-                    className="w-8 h-8 border border-neo-black dark:border-white object-cover"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = "https://api.dicebear.com/7.x/avataaars/svg?seed=Recruiter";
-                    }}
-                  />
-                  <span className="font-bold text-sm hidden lg:block mr-1 uppercase text-neo-black dark:text-white">{user.fullName || user.name || 'USER'}</span>
-                  <svg className="w-4 h-4 text-neo-black dark:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
-                </button>
+              <div className="ml-6 flex items-center gap-4">
+                <NotificationBell />
+                
+                <div className="relative">
+                  <button 
+                    onClick={() => setShowProfileMenu(!showProfileMenu)}
+                    className="flex items-center gap-2 border-2 border-neo-black dark:border-white p-1 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors shadow-neo-sm dark:shadow-[2px_2px_0px_0px_#ffffff] active:translate-y-[2px] active:shadow-none bg-white dark:bg-zinc-900"
+                  >
+                    <img 
+                      src={user.profilePicture || user.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=Recruiter"} 
+                      alt="User" 
+                      className="w-8 h-8 border border-neo-black dark:border-white object-cover"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = "https://api.dicebear.com/7.x/avataaars/svg?seed=Recruiter";
+                      }}
+                    />
+                    <span className="font-bold text-sm hidden lg:block mr-1 uppercase text-neo-black dark:text-white">{user.fullName || user.name || 'USER'}</span>
+                    <svg className="w-4 h-4 text-neo-black dark:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                  </button>
 
-                {showProfileMenu && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-zinc-900 border-2 border-neo-black dark:border-white shadow-neo dark:shadow-[4px_4px_0px_0px_#ffffff] z-50 animate-in fade-in slide-in-from-top-2">
-                    <Link href={(user?.role === 'recruiter' || user?.role === 'Recruiter') ? '/recruiter/profile' : '/profile'}>
-                        <button 
-                        onClick={() => setShowProfileMenu(false)}
-                        className="block w-full text-left px-4 py-3 text-sm font-bold text-neo-black dark:text-white hover:bg-neo-yellow dark:hover:text-black border-b-2 border-neo-black dark:border-white"
-                        >
-                        MY PROFILE
-                        </button>
-                    </Link>
-                    {/* <button 
-                      onClick={() => setShowProfileMenu(false)}
-                      className="block w-full text-left px-4 py-3 text-sm font-bold text-neo-black dark:text-white hover:bg-neo-blue hover:text-white border-b-2 border-neo-black dark:border-white"
+                  {showProfileMenu && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-zinc-900 border-2 border-neo-black dark:border-white shadow-neo dark:shadow-[4px_4px_0px_0px_#ffffff] z-50 animate-in fade-in slide-in-from-top-2">
+                      <Link href={(user?.role === 'recruiter' || user?.role === 'Recruiter') ? '/recruiter/profile' : '/profile'}>
+                          <button 
+                          onClick={() => setShowProfileMenu(false)}
+                          className="block w-full text-left px-4 py-3 text-sm font-bold text-neo-black dark:text-white hover:bg-neo-yellow dark:hover:text-black border-b-2 border-neo-black dark:border-white"
+                          >
+                          MY PROFILE
+                          </button>
+                      </Link>
+                      <button 
+                        onClick={() => { logout(); setShowProfileMenu(false); router.push('/'); }}
+                        className="block w-full text-left px-4 py-3 text-sm font-bold hover:bg-neo-orange hover:text-white text-red-600"
                       >
-                      SETTINGS
-                    </button> */}
-                    <button 
-                      onClick={() => { logout(); setShowProfileMenu(false); router.push('/'); }}
-                      className="block w-full text-left px-4 py-3 text-sm font-bold hover:bg-neo-orange hover:text-white text-red-600"
-                    >
-                      LOGOUT
-                    </button>
-                  </div>
-                )}
+                        LOGOUT
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <button onClick={toggleDarkMode} className="ml-4 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-xl">

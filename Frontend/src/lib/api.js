@@ -216,4 +216,29 @@ export const jobsAPI = {
   },
 };
 
+// Notification API endpoints
+export const notificationAPI = {
+  getAll: async (limit = 50, skip = 0) => {
+    const response = await api.get('/api/notifications', {
+      params: { limit, skip }
+    });
+    return response.data;
+  },
+
+  markAsRead: async (id) => {
+    const response = await api.patch(`/api/notifications/${id}/read`);
+    return response.data;
+  },
+
+  markAllAsRead: async () => {
+    const response = await api.patch('/api/notifications/read-all');
+    return response.data;
+  },
+
+  delete: async (id) => {
+    const response = await api.delete(`/api/notifications/${id}`);
+    return response.data;
+  }
+};
+
 export default api;

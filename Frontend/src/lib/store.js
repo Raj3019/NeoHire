@@ -154,9 +154,113 @@ export const useAuthStore = create(
         }
       },
 
+      notifications: [],
+      unreadCount: 0,
+      socket: null,
+
+      // Fetch notifications
+      fetchNotifications: async () => {
+        try {
+          const { notificationAPI } = await import('./api');
+          const response = await notificationAPI.getAll();
+          if (response.success) {
+            set({
+              notifications: response.notifications,
+              unreadCount: response.unreadCount
+            });
+          }
+        } catch (error) {
+          // console.error('Failed to fetch notifications:', error);
+        }
+      },
+
+      // Mark single notification as read
+      markNotificationAsRead: async (id) => {
+        try {
+          const { notificationAPI } = await import('./api');
+          const response = await notificationAPI.markAsRead(id);
+          if (response.success) {
+            set((state) => ({
+              notifications: state.notifications.map(n =>
+                n._id === id ? { ...n, isRead: true } : n
+              ),
+              unreadCount: Math.max(0, state.unreadCount - 1)
+            }));
+          }
+        } catch (error) {
+          // console.error('Failed to mark notification as read:', error);
+        }
+      },
+
+      // Mark all as read
+      markAllNotificationsAsRead: async () => {
+        try {
+          const { notificationAPI } = await import('./api');
+          const response = await notificationAPI.markAllAsRead();
+          if (response.success) {
+            set((state) => ({
+              notifications: state.notifications.map(n => ({ ...n, isRead: true })),
+              unreadCount: 0
+            }));
+          }
+        } catch (error) {
+          // console.error('Failed to mark all notifications as read:', error);
+        }
+      },
+
+      // Initialize Socket
+      initSocket: (userId) => {
+        if (!userId) return;
+
+        const { socket } = get();
+        if (socket) return;
+
+        const { io } = require('socket.io-client');
+        // Backend runs on PORT 8080 (as per next.config.mjs), Frontend on 3001
+        // We need to connect to the backend URL
+        const backendURL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
+
+        const newSocket = io(backendURL, {
+          withCredentials: true,
+          transports: ['websocket', 'polling']
+        });
+
+        newSocket.on('connect', () => {
+          // console.log('Connected to socket server');
+          newSocket.emit('register', userId);
+        });
+
+        newSocket.on('notification', (notification) => {
+          // console.log('New notification received:', notification);
+          set((state) => ({
+            notifications: [notification, ...state.notifications],
+            unreadCount: state.unreadCount + 1
+          }));
+
+          // Optional: Show browser notification or toast
+          if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+            new Notification(notification.title, { body: notification.message });
+          }
+        });
+
+        set({ socket: newSocket });
+      },
+
+      // Disconnect Socket
+      disconnectSocket: () => {
+        const { socket } = get();
+        if (socket) {
+          socket.disconnect();
+          set({ socket: null });
+        }
+      },
+
       // Logout function - calls backend API and clears token and user data
       logout: async () => {
         try {
+          // Disconnect socket on logout
+          get().disconnectSocket();
+
           // Get current user role to call the correct logout endpoint
           const state = get();
           const role = state.user?.role?.toLowerCase();
@@ -168,7 +272,7 @@ export const useAuthStore = create(
           // Ignore errors since we're logging out anyway
         } finally {
           // Reset auth state
-          set({ user: null, isAuthenticated: false, error: null });
+          set({ user: null, isAuthenticated: false, error: null, notifications: [], unreadCount: 0 });
 
           scrubStorage();
         }
@@ -185,6 +289,11 @@ export const useAuthStore = create(
     {
       name: 'auth-storage',
       storage: createJSONStorage(() => cookieStorage),
+      // Exclude socket from persistence as it contains circular structures
+      partialize: (state) => {
+        const { socket, ...rest } = state;
+        return rest;
+      },
     }
   )
 );
