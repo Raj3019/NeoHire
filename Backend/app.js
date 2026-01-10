@@ -1,5 +1,7 @@
 const express = require('express')
 const app = express()
+const http = require('http')
+const socketIO = require('socket.io')
 const cors = require('cors')
 const cookieParser = require('cookie-parser')
 const connectToDB = require('./database/config.database')
@@ -9,7 +11,10 @@ const employeeRouter = require("./routers/employee.router")
 const recuterRoute = require('./routers/recurter.router')
 const jobRouter = require("./routers/job.router")
 const applicationRouter = require("./routers/application.router")
+const notificationRouter = require('./routers/notification.router')
 const frontendURL = process.env.FRONTEND_URL
+
+const server = http.createServer(app)
 
 // Allow both public frontend URL and localhost for development
 const allowedOrigins = [
@@ -18,6 +23,46 @@ const allowedOrigins = [
   'http://localhost:3001',
   'http://localhost:8080'
 ].filter(Boolean);
+
+
+const io = socketIO(server, {
+  cros: {
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    method: ['Get', 'POST'],
+    credentials: true
+  }
+})
+
+const userSockets = new Map();
+
+io.on('connection', (socket) => {
+  console.log('User Connected: ', socket.id)
+
+  socket.on('register', (userId) => {
+    userSockets.set(userId.toString(), socket.id)
+    console.log(`User ${userId} registered with socket ${socket.id}`);
+    console.log(`Total online users: ${userSockets.size}`)
+  })
+
+  //Listen to disconnection
+
+  socket.on('disconnect', () => {
+    //Find which userID has this socket.id
+    for(let [userId, socketId] of userSockets.entries()){
+      if(socketId === socket.id){
+        userSockets.delete(userId)
+        console.log(`User ${userId} disconnected`)
+        console.log(`Total online users: ${userSockets.size}`)
+        break;
+      }
+    }
+  })
+})
+
+// make io and userSocket avalible to all controllers
+
+app.set('io', io)
+app.set('userSockets', userSockets)
 
 app.use(cors({
   origin: (origin, callback) => {
@@ -44,7 +89,7 @@ app.use('/', employeeRouter)
 app.use('/', recuterRoute)
 app.use('/', jobRouter)
 app.use('/', applicationRouter)
-
+app.use('/api/notifications', notificationRouter)
 
 app.get('/', (req, res) => {
   res.send("Hello World")
@@ -65,7 +110,7 @@ app.use((err, req, res, next) => {
 
 connectToDB().then(() => {
   console.log("Database connection established...")
-  app.listen(PORT, "0.0.0.0", () => {
+  server.listen(PORT, "0.0.0.0", () => {
     console.log(`Server is Sucessfully connected on http://localhost:${PORT}`)
   })
 }).catch((err) => {

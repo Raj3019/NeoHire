@@ -7,6 +7,7 @@ const fs = require('fs')
 const Job = require('../model/job.model')
 const {RecurterRegisterValidation, RecurterLoginValidation} = require('../utils/validation.utlis');
 const { default: mongoose } = require("mongoose");
+const { createNotification, sendRealTimeNotification } = require('../utils/notification.utlis')
 const { deleteFromCloudinary, uploadResumeToCloudnary, uploadToCloudinary, deleteResumeFromCloudinary } = require("../utils/cloudnary.utlis");
 // const salt = process.env.SALT
 
@@ -416,41 +417,64 @@ const getApplicationsByJob = async (req, res) => {
 // update application status
 const updateApplicationStatus = async (req, res) => {
   try {
-  const {applicationId} = req.params;
-  const {status} = req.body;
-  const recruiterId = req.user.id 
+    const {applicationId} = req.params;
+    const {status} = req.body;
+    const recruiterId = req.user.id 
 
-  //validate status input
-  const validateStatuses = ["Applied", "Pending", "Shortlist","Accept", "Reject"];
-  if(!validateStatuses.includes(status)){
-    return res.status(400).json({message: "Invalid Status"})
-  }
+    //validate status input
+    const validateStatuses = ["Applied", "Pending", "Shortlist","Accept", "Reject"];
+    if(!validateStatuses.includes(status)){
+      return res.status(400).json({message: "Invalid Status"})
+    }
 
-  //Find the application
-  const application = await Application.findById(applicationId)
-  if(!application){
-    return res.status(404).json({message: "Application not found"})
-  }
+    //Find the application
+    const application = await Application.findById(applicationId)
+    if(!application){
+      return res.status(404).json({message: "Application not found"})
+    }
 
-  if(application.postedBy.toString() !== recruiterId){
-    return res.status(403).json({message: "Unauthorized access"})
-  }
+    // FIX 1: Fetch the related job to get job details
+    const job = await Job.findById(application.job);
+    if(!job){
+      return res.status(404).json({message: "Job not found"})
+    }
 
-  application.status = status
-  await application.save()
+    // Security check: Verify this job belongs to the recruiter
+    if(job.postedBy.toString() !== recruiterId){
+      return res.status(403).json({message: "Unauthorized access"})
+    }
 
-  await Job.updateOne(
-    {_id: application.job, "appliedBy.applicant": application.JobSeeker},
-    {$set: {"appliedBy.$.status": status}}
-  );
+    application.status = status
+    await application.save()
 
-  return res.status(200).json({
-    success: true,
-    message: "Application Status Updated",
-    data: application
-  })
+    await Job.updateOne(
+      {_id: application.job, "appliedBy.applicant": application.JobSeeker},
+      {$set: {"appliedBy.$.status": status}}
+    );
+
+    // FIX 2: Create notification with correct field names
+    const notification = await createNotification({
+      recipient: application.JobSeeker,  // ✅ Use JobSeeker (not candidateId)
+      recipientModel: 'Employee',
+      type: 'STATUS_CHANGED',
+      title: 'Application Status Updated',
+      message: `Your application for ${job.title} has been ${status}`, // ✅ job is now defined
+      relatedJob: job._id,  // ✅ job is now defined
+      relatedApplication: application._id
+    });
+
+    // Send real-time notification if candidate is online
+    const io = req.app.get('io');
+    const userSockets = req.app.get('userSockets');
+    sendRealTimeNotification(io, userSockets, application.JobSeeker, notification); // ✅ Use JobSeeker
+
+    return res.status(200).json({
+      success: true,
+      message: "Application Status Updated",
+      data: application
+    })
   } catch (err) {
-    // console.log(err)
+    console.error("Error in updateApplicationStatus:", err); // ✅ Better error logging
     return res.status(500).json({
       message: "Failed to update Status",
       error: err.message

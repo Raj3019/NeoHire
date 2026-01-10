@@ -8,6 +8,7 @@ const GroqApiKey = process.env.GROQAPIKEY
 const {uploadResumeToCloudnary } = require("../utils/cloudnary.utlis.js");
 const Employee = require("../model/employee.model.js");
 const axios = require('axios')
+const { createNotification, sendRealTimeNotification } = require('../utils/notification.utlis.js');
 
 
 async function extractTextFromPDF(source, isURL = false){
@@ -369,6 +370,22 @@ const applyJob = async (req, res) => {
         console.error('Failed to delete temp file:', err)
       );
     }
+    
+    // Notify recruiter about the new application
+    const notification = await createNotification({
+      recipient: recuterId,
+      recipientModel: 'Recruiter',
+      type: 'APPLICATION_RECEIVED',
+      title: 'New Job Application',
+      message: `${employeeId} has applied for the job: ${jobById.title}`,
+      relatedJob: jobId,
+      relatedApplication: applyForJob._id
+    });
+
+    // Send real-time notification
+    const io = req.app.get('io');
+    const userSockets = req.app.get('userSockets');
+    sendRealTimeNotification(io, userSockets, recuterId, notification);
     
     return res.status(200).json({
       data: applyForJob, 
