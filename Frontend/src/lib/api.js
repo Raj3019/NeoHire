@@ -108,7 +108,7 @@ export const employeeAPI = {
   },
 };
 
-// Recruiter API endpoints (note: using /recuter/ as per backend)
+// Recruiter API endpoints (note: using /recuter/ to match backend routes)
 export const recruiterAPI = {
   login: async (email, password) => {
     const response = await api.post('/api/recuter/login', { email, password });

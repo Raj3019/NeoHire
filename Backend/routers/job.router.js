@@ -6,11 +6,11 @@ const jobRouter = express.Router()
 
 //create Job
 
-jobRouter.post('/api/job/create', authenticateJWT, authenticateRole("Recuter"), createJob)
+jobRouter.post('/api/job/create', authenticateJWT, authenticateRole("Recruiter"), createJob)
 
 //edit job
 
-jobRouter.put('/api/job/:id', authenticateJWT, authenticateRole("Recuter"), editJob)
+jobRouter.put('/api/job/:id', authenticateJWT, authenticateRole("Recruiter"), editJob)
 
 
 //Get Jobs

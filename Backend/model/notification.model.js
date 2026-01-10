@@ -12,7 +12,7 @@ const notificationSchema = new mongoose.Schema({
   recipientModel: {
     type: String,
     required: true,
-    enum: ['Employee', 'Recuter']
+    enum: ['Employee', 'Recruiter']
   },
 
   // What Type of notification

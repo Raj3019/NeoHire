@@ -156,7 +156,7 @@ export const getMissingProfileFields = (user) => {
     if (!user.education?.graduation?.degree) missing.push('education.graduation');
     if (!user.jobPreferences?.jobType || user.jobPreferences.jobType.length === 0) missing.push('jobPreferences.jobType');
     if (!user.jobPreferences?.workMode || user.jobPreferences.workMode.length === 0) missing.push('jobPreferences.workMode');
-  } else if (user.role === 'recruiter' || user.role === 'Recuter') {
+  } else if (user.role === 'recruiter' || user.role === 'Recruiter') {
     // Recruiter required
     // if (!user.currentRole) missing.push('currentRole');
     // if (!user.currentEmployer) missing.push('currentEmployer');

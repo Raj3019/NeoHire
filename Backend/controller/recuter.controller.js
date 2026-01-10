@@ -1,4 +1,4 @@
-const Recuter = require("../model/recurter.model")
+const Recruiter = require("../model/recurter.model")
 const Application = require("../model/application.model");
 const jwt = require("jsonwebtoken")
 const jwtToken = process.env.JWT_TOKEN_Secret
@@ -26,15 +26,15 @@ const registerRecuter = async (req, res) => {
     
     const { email, password } = validateBody.data;
     
-    const existingEmail = await Recuter.findOne({email})
+    const existingEmail = await Recruiter.findOne({email})
     
     if(existingEmail){
-      return res.status(401).json({message: "Recuter with this email already exists"})
+      return res.status(401).json({message: "Recruiter with this email already exists"})
     }
     
     const passwordHash = await bcrypt.hash(password, 10);
     
-    const recruiter = new Recuter({
+    const recruiter = new Recruiter({
       email, 
       password: passwordHash,
       
@@ -79,19 +79,19 @@ const loginRecuter = async (req, res) => {
     
     const { email, password } = validateBody.data;
     
-    const recuter = await Recuter.findOne({email})
+    const recruiter = await Recruiter.findOne({email})
     
-    if(!recuter){
+    if(!recruiter){
       return res.status(401).json({message: "Invalid creds"})
     }
     
-    const isPasswordValid = await bcrypt.compare(password, recuter.password)
+    const isPasswordValid = await bcrypt.compare(password, recruiter.password)
     
     if(!isPasswordValid){
       return res.status(401).json({message: "Invalid creds"})
     }
     
-    const token = jwt.sign({id: recuter._id, role: recuter.role}, jwtToken, {expiresIn: "1hr"})
+    const token = jwt.sign({id: recruiter._id, role: recruiter.role}, jwtToken, {expiresIn: "1hr"})
     
     // return res.status(200).json({ message: "Login Successful" , data: token});
 
@@ -104,9 +104,9 @@ const loginRecuter = async (req, res) => {
 
     return res.status(200).json({
       user:{
-        id: recuter._id,
-        email: recuter.email,
-        role: recuter.role
+        id: recruiter._id,
+        email: recruiter.email,
+        role: recruiter.role
       }
     })
     
@@ -124,7 +124,7 @@ const uploadProfilePicture = async (req, res) => {
     }
     
     const recruiterId = req.user.id
-    const recruiter = await Recuter.findById(recruiterId)
+    const recruiter = await Recruiter.findById(recruiterId)
     if (!recruiter) {
       return res.status(404).json({ message: "Recruiter not found" });
     }
@@ -159,7 +159,7 @@ const profileRecuter = async(req, res) => {
   try{
     const recuterId = req.user
     
-    const recuter = await Recuter.findById(recuterId.id).select('-password').populate({
+    const recruiter = await Recruiter.findById(recuterId.id).select('-password').populate({
         path: 'jobs',
         select: '_id title companyName location jobType salary status createdAt skillsRequired openings applicationDeadline',
         populate: {
@@ -168,12 +168,12 @@ const profileRecuter = async(req, res) => {
         }
       })
     
-    if(!recuter){
+    if(!recruiter){
       return res.status(401).json({message: "Invalid profile"})
     }
     
     const jobsWithDetails = await Promise.all(
-      recuter.jobs.map(async (job) => {
+      recruiter.jobs.map(async (job) => {
         const applications = await Application.find({ job: job._id })
           .populate('JobSeeker', '_id fullName email phone skills experienceYears currentJobTitle profilePicture')
           .select('_id status aiMatchScore resume appliedAt');
@@ -194,7 +194,7 @@ const profileRecuter = async(req, res) => {
     );
 
     return res.status(200).json({data: {
-        ...recuter.toObject(),
+        ...recruiter.toObject(),
         jobs: jobsWithDetails
       } ,message: "Profile sucessfully fetched"})
     
@@ -207,17 +207,17 @@ const profileRecuter = async(req, res) => {
 const uploadResume = async(req, res) => {
   try {
     const recruiterId = req.user.id
-    const recuter = await Recuter.findById(recruiterId)
+    const recruiter = await Recruiter.findById(recruiterId)
 
-    if(recuter.resumePublicLinkId){
-      await deleteResumeFromCloudinary(recuter.resumePublicLinkId)
+    if(recruiter.resumePublicLinkId){
+      await deleteResumeFromCloudinary(recruiter.resumePublicLinkId)
     }
 
     const result = await uploadResumeToCloudnary(req.file.path)
 
-    recuter.resumeFileURL = result.url
-    recuter.resumePublicLinkId = result.public_id
-    await recuter.save()
+    recruiter.resumeFileURL = result.url
+    recruiter.resumePublicLinkId = result.public_id
+    await recruiter.save()
 
     fs.unlinkSync(req.file.path)
 
@@ -244,13 +244,13 @@ const editRecuter = async (req, res) => {
       req.body.password = await bcrypt.hash(req.body.password, 10)
     }
   
-    const recuter = await Recuter.findByIdAndUpdate(recuterId, req.body, {new: true}).select('-password')
+    const recruiter = await Recruiter.findByIdAndUpdate(recuterId, req.body, {new: true}).select('-password')
     
-    if(!recuter){
+    if(!recruiter){
       return res.status(401).json({message: "Invalid profile"})
     }
     
-    return res.status(200).json({data:recuter ,message: "Profile edited sucessfully"})
+    return res.status(200).json({data:recruiter ,message: "Profile edited sucessfully"})
   }catch(err){
     // console.log(err)
     return res.status(401).json({message: "Unable unable to Edit Profile", error: err.message})
@@ -528,7 +528,7 @@ const getAllCandidates = async(req, res) => {
   try {
     const recruiterId = req.user.id
 
-    const recruiter = await Recuter.findById(recruiterId).populate({
+    const recruiter = await Recruiter.findById(recruiterId).populate({
       path: 'jobs',
       populate:{
         path: 'appliedBy.applicant'
@@ -536,7 +536,7 @@ const getAllCandidates = async(req, res) => {
     });
 
     if(!recruiter){
-      return res.status(404).json({message: "Recuter not found"})
+      return res.status(404).json({message: "Recruiter not found"})
     }
 
     const getCandidates = recruiter.jobs.map(job => ({

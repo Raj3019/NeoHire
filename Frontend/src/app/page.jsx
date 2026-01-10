@@ -28,7 +28,7 @@ const Content = () => {
 
     useEffect(() => {
         if (mounted && isAuthenticated && user) {
-            if (user.role?.toLowerCase() === 'recuter' || user.role?.toLowerCase() === 'recruiter') {
+            if (user.role?.toLowerCase() === 'recruiter') {
                 router.push('/recruiter/dashboard');
             } else {
                 router.push('/candidate/dashboard');

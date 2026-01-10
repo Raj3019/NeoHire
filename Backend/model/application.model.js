@@ -15,7 +15,7 @@ const applicationSchema = new mongoose.Schema({
   },
   postedBy:{
     type:mongoose.Schema.Types.ObjectId,
-    ref: "Recuter",
+    ref: "Recruiter",
     required: true
   },
   resume:{

@@ -7,7 +7,7 @@ const normalizeRole = (role) => {
   if (!role) return null;
   const lower = String(role).toLowerCase();
   if (lower === 'employee' || lower === 'candidate') return 'candidate';
-  if (lower === 'recruiter' || lower === 'recuter') return 'recruiter';
+  if (lower === 'recruiter') return 'recruiter';
   return null;
 };
 

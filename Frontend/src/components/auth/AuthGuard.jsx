@@ -22,9 +22,8 @@ const hasAllowedRole = (userRole, allowedRoles) => {
       return true;
     }
     
-    // Handle Recruiter/Recuter equivalence
-    if ((lowerUserRole === 'recruiter' || lowerUserRole === 'recuter') && 
-        (lowerAllowedRole === 'recruiter' || lowerAllowedRole === 'recuter')) {
+    // Handle Recruiter equivalence
+    if (lowerUserRole === 'recruiter' && lowerAllowedRole === 'recruiter') {
       return true;
     }
     
@@ -37,7 +36,7 @@ const normalizeRole = (role) => {
   if (!role) return null;
   const lowerRole = role.toLowerCase();
   if (lowerRole === 'employee' || lowerRole === 'candidate') return 'candidate';
-  if (lowerRole === 'recruiter' || lowerRole === 'recuter') return 'recruiter';
+  if (lowerRole === 'recruiter') return 'recruiter';
   return role;
 };
 

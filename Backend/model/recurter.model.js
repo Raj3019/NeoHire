@@ -55,7 +55,7 @@ const recurterSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      default: "Recuter",
+      default: "Recruiter",
     },
     gender: {
       type: String,
@@ -214,6 +214,6 @@ const recurterSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const RecurterModel = mongoose.model("Recuter", recurterSchema);
+const RecruiterModel = mongoose.model("Recruiter", recurterSchema);
 
-module.exports = RecurterModel;
+module.exports = RecruiterModel;

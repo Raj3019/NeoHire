@@ -42,7 +42,7 @@ function RegisterForm() {
           const storedUser = stored?.user || stored;
           const storedRole = storedUser?.role?.toLowerCase();
           if (storedRole) {
-            const isRec = storedRole === 'recruiter' || storedRole === 'recuter';
+            const isRec = storedRole === 'recruiter';
             const redirectTo = isRec ? '/recruiter/dashboard' : '/candidate/dashboard';
             //console.log('Register page: redirecting from cookie:', { storedRole, redirectTo });
             router.replace(redirectTo);
@@ -65,7 +65,7 @@ function RegisterForm() {
     const hasAuth = (isAuthenticated && user && user.email);
     if (hasAuth) {
       const userRole = user?.role?.toLowerCase();
-      const isRecruiterRole = userRole === 'recruiter' || userRole === 'recuter';
+      const isRecruiterRole = userRole === 'recruiter';
       const redirectTo = isRecruiterRole ? '/recruiter/dashboard' : '/candidate/dashboard';
       router.replace(redirectTo);
     }
