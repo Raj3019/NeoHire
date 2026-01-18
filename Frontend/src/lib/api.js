@@ -52,23 +52,23 @@ api.interceptors.response.use(
 // Employee API endpoints
 export const employeeAPI = {
   login: async (email, password) => {
-    const response = await api.post('/api/employee/login', { email, password });
+    const response = await api.post('/employee/login', { email, password });
     return response.data;
   },
 
-  signup: async (email, password, confirmPassword) => {
-    const response = await api.post('/api/employee/signup', { email, password, confirmPassword });
+  signup: async (email, password, confirmPassword, fullName) => {
+    const response = await api.post('/employee/signup', { email, password, confirmPassword, fullName });
     return response.data;
   },
 
   getProfile: async () => {
     try {
-      const response = await api.get('/api/employee/profile');
+      const response = await api.get('/employee/profile');
       return response.data;
     } catch (error) {
       if (error.response?.status === 404 || error.response?.status === 403) {
         // Fallback for potential route variations
-        const response = await api.get('/api/candidate/profile');
+        const response = await api.get('/candidate/profile');
         return response.data;
       }
       throw error;
@@ -76,11 +76,11 @@ export const employeeAPI = {
   },
 
   logout: async () => {
-    const response = await api.post('/api/employee/logout');
+    const response = await api.post('/employee/logout');
     return response.data;
   },
   updateProfilePicture: async (formData) => {
-    const response = await api.post('/api/employee/profile/picture', formData, {
+    const response = await api.post('/employee/profile/picture', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -89,7 +89,7 @@ export const employeeAPI = {
   },
 
   updateResume: async (formData) => {
-    const response = await api.post('/api/employee/profile/resume', formData, {
+    const response = await api.post('/employee/profile/resume', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -98,37 +98,46 @@ export const employeeAPI = {
   },
 
   updateProfile: async (id, data) => {
-    const response = await api.put(`/api/employee/profile/${id}`, data);
+    const response = await api.put(`/employee/profile/${id}`, data);
     return response.data;
   },
 
   getRecommendations: async () => {
-    const response = await api.get('/api/employee/recommendations');
+    const response = await api.get('/employee/recommendations');
+    return response.data;
+  },
+
+  verifyEmail: async (token) => {
+    const response = await api.get(`/employee/verify-email/${token}`);
+    return response.data;
+  },
+
+  resendVerification: async (email) => {
+    const response = await api.post('/employee/resend-verification', { email });
     return response.data;
   },
 };
 
-// Recruiter API endpoints (note: using /recuter/ as per backend)
+// Recruiter API endpoints
 export const recruiterAPI = {
   login: async (email, password) => {
-    const response = await api.post('/api/recuter/login', { email, password });
+    const response = await api.post('/recruiter/login', { email, password });
     return response.data;
   },
 
-  signup: async (email, password, confirmPassword) => {
-    const response = await api.post('/api/recuter/signup', { email, password, confirmPassword });
+  signup: async (email, password, confirmPassword, fullName) => {
+    const response = await api.post('/recruiter/signup', { email, password, confirmPassword, fullName });
     return response.data;
   },
 
   getProfile: async () => {
     try {
-      // Try the documented endpoint with typo
-      const response = await api.get('/api/recuter/profile');
+      const response = await api.get('/recruiter/profile');
       return response.data;
     } catch (error) {
       if (error.response?.status === 404 || error.response?.status === 403) {
         // Fallback to correct spelling just in case
-        const response = await api.get('/api/recruiter/profile');
+        const response = await api.get('/recruiter/profile');
         return response.data;
       }
       throw error;
@@ -136,16 +145,16 @@ export const recruiterAPI = {
   },
 
   logout: async () => {
-    const response = await api.post('/api/recuter/logout');
+    const response = await api.post('/recruiter/logout');
     return response.data;
   },
   updateProfile: async (id, data) => {
-    const response = await api.put(`/api/recuter/profile/${id}`, data);
+    const response = await api.put(`/recruiter/profile/${id}`, data);
     return response.data;
   },
 
   updateProfilePicture: async (formData) => {
-    const response = await api.post('/api/recuter/profile/picture', formData, {
+    const response = await api.post('/recruiter/profile/picture', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -154,7 +163,7 @@ export const recruiterAPI = {
   },
 
   updateResume: async (formData) => {
-    const response = await api.post('/api/recuter/profile/resume', formData, {
+    const response = await api.post('/recruiter/profile/resume', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -163,14 +172,22 @@ export const recruiterAPI = {
   },
 
   getTalents: async () => {
-    const response = await api.get('/api/recuter/talents');
+    const response = await api.get('/recruiter/talents');
     return response.data;
   },
 
   updateApplicationStatus: async (jobId, applicationId, status) => {
-    const response = await api.put(`/api/recuter/update/${applicationId}/status`, {
+    const response = await api.put(`/recruiter/update/${applicationId}/status`, {
       status
     });
+    return response.data;
+  },
+  verifyEmail: async (token) => {
+    const response = await api.get(`/recruiter/verify-email/${token}`);
+    return response.data;
+  },
+  resendVerification: async (email) => {
+    const response = await api.post('/recruiter/resend-verification', { email });
     return response.data;
   },
 };
@@ -178,17 +195,17 @@ export const recruiterAPI = {
 // Jobs API endpoints
 export const jobsAPI = {
   getAll: async () => {
-    const response = await api.get('/api/jobs');
+    const response = await api.get('/jobs');
     return response.data;
   },
 
   getById: async (id) => {
-    const response = await api.get(`/api/job/${id}`);
+    const response = await api.get(`/job/${id}`);
     return response.data;
   },
 
   scoreResume: async (id, formData) => {
-    const response = await api.post(`/api/job/score/${id}`, formData, {
+    const response = await api.post(`/job/score/${id}`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -197,7 +214,7 @@ export const jobsAPI = {
   },
 
   apply: async (id, formData) => {
-    const response = await api.post(`/api/job/${id}`, formData, {
+    const response = await api.post(`/job/${id}`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -206,12 +223,35 @@ export const jobsAPI = {
   },
 
   update: async (id, data) => {
-    const response = await api.put(`/api/job/${id}`, data);
+    const response = await api.put(`/job/${id}`, data);
     return response.data;
   },
 
   create: async (data) => {
-    const response = await api.post('/api/job/create', data);
+    const response = await api.post('/job/create', data);
+    return response.data;
+  },
+};
+
+// Notification API endpoints
+export const notificationAPI = {
+  getNotifications: async (params = {}) => {
+    const response = await api.get('/notifications', { params });
+    return response.data;
+  },
+
+  markAsRead: async (id) => {
+    const response = await api.patch(`/notifications/${id}/read`);
+    return response.data;
+  },
+
+  markAllAsRead: async () => {
+    const response = await api.patch('/notifications/read-all');
+    return response.data;
+  },
+
+  deleteNotification: async (id) => {
+    const response = await api.delete(`/notifications/${id}`);
     return response.data;
   },
 };

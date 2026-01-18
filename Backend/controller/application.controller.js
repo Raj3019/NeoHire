@@ -372,12 +372,13 @@ const applyJob = async (req, res) => {
     }
     
     // Notify recruiter about the new application
+    const employee = await Employee.findById(employeeId)
     const notification = await createNotification({
       recipient: recuterId,
       recipientModel: 'Recruiter',
       type: 'APPLICATION_RECEIVED',
       title: 'New Job Application',
-      message: `${employeeId} has applied for the job: ${jobById.title}`,
+      message: `${employee.fullName} has applied for the job: ${jobById.title}`,
       relatedJob: jobId,
       relatedApplication: applyForJob._id
     });

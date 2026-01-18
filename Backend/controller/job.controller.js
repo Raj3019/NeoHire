@@ -1,10 +1,10 @@
 const Job = require("../model/job.model")
-const Recuter = require("../model/recurter.model");
+const Recruiter = require("../model/recruiter.model");
 const Application = require("../model/application.model");
 
 const createJob = async (req, res) => {
   try{
-    const recuter = req.user;
+    const recruiter = req.user;
     // console.log(recuter)
     
     const {title, description, jobRequirements,location,companyName, jobType, department,applicationDeadline, openings, status, industry, benefits , educationRequired,workType, skillsRequired, experienceLevel, salary, postedBy} = req.body
@@ -28,7 +28,7 @@ const createJob = async (req, res) => {
         skillsRequired,
         experienceLevel,
         salary,
-        postedBy: recuter.id
+        postedBy: recruiter.id
       }
     )
     
@@ -36,7 +36,7 @@ const createJob = async (req, res) => {
     
     // to save jobs in recuter model first it finds the recuter id from user 
     // then use $push to push in jobs table the newly created job id
-    await Recuter.findByIdAndUpdate(recuter.id, {$push: {jobs: createdJob._id}})
+    await Recruiter.findByIdAndUpdate(recruiter.id, {$push: {jobs: createdJob._id}})
     return res.status(200).json({data: createdJob, message: "Job Created sucessfully"})
     
   }catch(err){

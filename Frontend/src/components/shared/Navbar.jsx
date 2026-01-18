@@ -5,20 +5,23 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { NeoButton } from '@/components/ui/neo';
 import { useAuthStore } from '@/lib/store';
 import { cookieStorage } from '@/lib/utils';
+import NotificationBell from './NotificationBell';
+import { useNotificationSocket } from '@/lib/notificationStore';
 
 const NavbarContent = () => {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, logout, isAuthenticated } = useAuthStore();
+  useNotificationSocket();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const mode = searchParams.get('mode');
+  const mode = searchParams.get('mode')?.toLowerCase();
   const isGuestRecruiter = mode === 'recruiter';
   
-  const isRecruiterMode = user?.role === 'recruiter' || user?.role === 'Recuter' || (!user && isGuestRecruiter);
+  const isRecruiterMode = (user?.role === 'Recruiter' || user?.role?.toLowerCase() === 'recruiter') || (!user && isGuestRecruiter);
 
   // Wait for hydration to complete before rendering dynamic content
   useEffect(() => {
@@ -28,7 +31,7 @@ const NavbarContent = () => {
   const toggleRecruiterMode = () => {
       if (!user) {
           const newMode = isGuestRecruiter ? '' : 'recruiter';
-          router.push(`/?mode=${newMode}`);
+          router.push(`/${newMode ? `?mode=${newMode}` : ''}`);
       }
   };
 
@@ -108,14 +111,14 @@ const NavbarContent = () => {
           
           <div className={mobile ? "mt-2" : "inline-block ml-2"}>
              <Link href={`/login${isRecruiterMode ? '?mode=recruiter' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
-                <NeoButton className={`${mobile ? 'w-full' : ''} ${isRecruiterMode ? 'bg-neo-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black' : ''}`}>LOGIN</NeoButton>
+                <NeoButton className={`${mobile ? 'w-full' : ''} ${isRecruiterMode ? 'bg-neo-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black shadow-neo-sm' : ''}`}>LOGIN</NeoButton>
              </Link>
           </div>
         </>
       );
     }
 
-    if (user.role === 'candidate' || user.role === 'Employee') {
+    if (user.role === 'Employee' || user.role?.toLowerCase() === 'employee' || user.role?.toLowerCase() === 'candidate') {
       return (
         <>
           <Link href="/candidate/dashboard" className={`${baseClass} ${activeStyle('/candidate/dashboard')}`}>DASHBOARD</Link>
@@ -125,7 +128,7 @@ const NavbarContent = () => {
       );
     }
 
-    if (user.role === 'recruiter' || user.role === 'Recruiter' || user.role === 'Recuter') {
+    if (user.role === 'Recruiter' || user.role?.toLowerCase() === 'recruiter') {
       return (
         <>
           <Link href="/recruiter/dashboard" className={`${baseClass} ${activeStyle('/recruiter/dashboard')}`}>HUB</Link>
@@ -142,7 +145,7 @@ const NavbarContent = () => {
     <nav className="border-b-4 border-neo-black dark:border-white bg-white dark:bg-[#1E1E1E] sticky top-0 z-40 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-20 items-center">
-          <Link href={user ? (user.role === 'recruiter' ? '/recruiter/dashboard' : '/candidate/dashboard') : (isRecruiterMode ? '/?mode=recruiter' : '/')} className="flex items-center cursor-pointer">
+          <Link href={user ? ((user.role === 'Recruiter' || user.role?.toLowerCase() === 'recruiter') ? '/recruiter/dashboard' : '/candidate/dashboard') : (isRecruiterMode ? '/?mode=recruiter' : '/')} className="flex items-center cursor-pointer">
             <div className={`w-8 h-8 ${isRecruiterMode ? 'bg-neo-orange' : 'bg-neo-yellow'} border-2 border-neo-black dark:border-white mr-2 shadow-neo-sm dark:shadow-[2px_2px_0px_0px_#ffffff]`}></div>
             <span className="font-black text-2xl tracking-tighter uppercase text-neo-black dark:text-white">
               Neo<span className={isRecruiterMode ? 'text-neo-orange' : 'text-neo-blue'}>Hire</span>
@@ -155,7 +158,10 @@ const NavbarContent = () => {
 
             {mounted && user ? (
               <>
-              <div className="ml-6 relative">
+              <div className="mr-2">
+                <NotificationBell />
+              </div>
+              <div className="ml-4 relative">
                 <button 
                   onClick={() => setShowProfileMenu(!showProfileMenu)}
                   className="flex items-center gap-2 border-2 border-neo-black dark:border-white p-1 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors shadow-neo-sm dark:shadow-[2px_2px_0px_0px_#ffffff] active:translate-y-[2px] active:shadow-none bg-white dark:bg-zinc-900"
@@ -175,7 +181,7 @@ const NavbarContent = () => {
 
                 {showProfileMenu && (
                   <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-zinc-900 border-2 border-neo-black dark:border-white shadow-neo dark:shadow-[4px_4px_0px_0px_#ffffff] z-50 animate-in fade-in slide-in-from-top-2">
-                    <Link href={(user?.role === 'recruiter' || user?.role === 'Recuter') ? '/recruiter/profile' : '/profile'}>
+                    <Link href={(user?.role === 'Recruiter' || user?.role?.toLowerCase() === 'recruiter') ? '/recruiter/profile' : '/profile'}>
                         <button 
                         onClick={() => setShowProfileMenu(false)}
                         className="block w-full text-left px-4 py-3 text-sm font-bold text-neo-black dark:text-white hover:bg-neo-yellow dark:hover:text-black border-b-2 border-neo-black dark:border-white"
@@ -212,6 +218,11 @@ const NavbarContent = () => {
 
           {/* Mobile Menu Button */}
           <div className="flex md:hidden items-center gap-4">
+              {user && (
+                <div className="scale-90">
+                  <NotificationBell />
+                </div>
+              )}
               <button onClick={toggleDarkMode} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-xl">
                 {darkMode ? '☀️' : '🌙'}
               </button>
@@ -235,7 +246,7 @@ const NavbarContent = () => {
                   {renderLinks(true)}
                   {user && (
                       <div className="border-t-2 border-gray-200 dark:border-zinc-700 mt-4 pt-4">
-                          <Link href={(user?.role === 'recruiter' || user?.role === 'Recuter') ? '/recruiter/profile' : '/profile'} onClick={() => setIsMobileMenuOpen(false)} className="block w-full text-left py-2 font-bold hover:bg-gray-100 dark:hover:bg-zinc-800 px-2">MY PROFILE</Link>
+                          <Link href={(user?.role === 'Recruiter' || user?.role?.toLowerCase() === 'recruiter') ? '/recruiter/profile' : '/profile'} onClick={() => setIsMobileMenuOpen(false)} className="block w-full text-left py-2 font-bold hover:bg-gray-100 dark:hover:bg-zinc-800 px-2">MY PROFILE</Link>
                           <button onClick={() => { logout(); setIsMobileMenuOpen(false); router.push('/'); }} className="block w-full text-left py-2 font-bold text-red-600 hover:bg-red-50 px-2">LOGOUT</button>
                       </div>
                   )}

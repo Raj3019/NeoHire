@@ -51,7 +51,7 @@ export default function JobsPage() {
               </div>
             </div>
             <div>
-              <Link href={isAuthenticated ? (user?.role === 'candidate' ? `/candidate/jobs/${job._id}` : '#') : '/login?redirect=/jobs'}>
+              <Link href={isAuthenticated ? (user?.role === 'Employee' ? `/candidate/jobs/${job._id}` : '#') : '/login?redirect=/jobs'}>
                 <NeoButton size="lg" variant={isAuthenticated ? 'default' : 'outline'}>
                   {isAuthenticated ? 'View & Apply' : 'Login to Apply'}
                 </NeoButton>

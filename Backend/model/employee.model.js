@@ -19,6 +19,7 @@ const employeeSchema = new mongoose.Schema({
 		unique: true
 	},
 	password: {
+		minlength: 6,
 		type: String,
 	},
 	phone: {
@@ -212,6 +213,18 @@ const employeeSchema = new mongoose.Schema({
 			ref: "Application",
 		},
 	],
+	isVerified:{
+		type: Boolean,
+		default: false
+	},
+	verificationToken:{
+		type: String,
+		default: null
+	},
+	verificationTokenExpiry:{
+		type: Date,
+		default: null
+	}
 }, { timestamps: true })
 
 const Employee = mongoose.model("Employee", employeeSchema)

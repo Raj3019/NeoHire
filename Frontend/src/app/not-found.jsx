@@ -6,8 +6,8 @@ import { NeoButton, NeoCard } from '@/components/ui/neo';
 const normalizeRole = (role) => {
   if (!role) return null;
   const lower = String(role).toLowerCase();
-  if (lower === 'employee' || lower === 'candidate') return 'candidate';
-  if (lower === 'recruiter' || lower === 'recuter') return 'recruiter';
+  if (lower === 'employee' || lower === 'candidate') return 'Employee';
+  if (lower === 'recruiter' ) return 'Recruiter';
   return null;
 };
 
@@ -40,7 +40,7 @@ export default async function NotFound() {
     // Optionally attempt to parse token if it's a plain object. Skip for safety.
   }
 
-  const isRecruiter = role === 'recruiter';
+  const isRecruiter = role === 'Recruiter';
   const jobsHref = isRecruiter ? '/recruiter/jobs' : '/candidate/jobs';
   const title = isRecruiter ? 'Recruiter — Page Not Found' : "WHOOPS! YOU'RE OFF THE GRID.";
 

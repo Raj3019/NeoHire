@@ -9,17 +9,61 @@ import { User, Briefcase, MapPin, GraduationCap, Globe, Edit2, Save, X, Trophy, 
 
 import ProfileCompletionBanner from '@/components/shared/ProfileCompletionBanner';
 
+const FIELD_LIMITS = {
+  fullName: 50,
+  headline: 120,
+  about: 1000,
+  phone: 10,
+  area: 100,
+  currentCity: 50,
+  state: 50,
+  country: 50,
+  zipCode: 6,
+  schoolName: 150,
+  collegeName: 150,
+  university: 150,
+  degree: 100,
+  specialization: 100,
+  thesisTitle: 200,
+  fieldOfStudy: 100,
+  company: 100,
+  jobTitle: 100,
+  location: 100,
+  description: 1000,
+  language: 50,
+  issuingOrganization: 150,
+  certificationName: 150,
+  portfolioUrl: 200,
+  linkedinUrl: 200,
+  twitter: 100,
+  githubUrl: 200,
+  skills: 500,
+  industries: 300,
+  jobTypes: 300,
+  currentRole: 100,
+  currentEmployer: 100,
+  companyURL: 200
+};
+
 // Helper component for displaying field in view mode vs edit mode
-const DisplayField = ({ label, value, name, type = "text", onChange, isTextarea = false, placeholder = "", isEditing, ...props }) => {
+const DisplayField = ({ label, value, name, type = "text", onChange, isTextarea = false, placeholder = "", isEditing, maxLength, ...props }) => {
   if (isEditing) {
     if (isTextarea) {
       return (
         <div>
-          <label className="block font-bold text-sm mb-1 dark:text-white">{label}</label>
+          <div className="flex justify-between items-end mb-1">
+            <label className="block font-bold text-sm dark:text-white">{label}</label>
+            {maxLength && (
+              <span className="text-[10px] font-mono text-gray-400 dark:text-gray-500">
+                {(value || '').length}/{maxLength}
+              </span>
+            )}
+          </div>
           <textarea 
             name={name} 
             value={value || ''} 
-            onChange={onChange} 
+            onChange={onChange}
+            maxLength={maxLength}
             className="w-full bg-white dark:bg-zinc-900 border-2 border-neo-black dark:border-white p-3 focus:outline-none focus:ring-2 focus:ring-neo-yellow font-mono text-sm h-24 resize-none dark:text-white"
             placeholder={placeholder} 
           />
@@ -32,7 +76,16 @@ const DisplayField = ({ label, value, name, type = "text", onChange, isTextarea 
       );
     }
     return (
-      <NeoInput label={label} type={type} name={name} value={value || ''} onChange={onChange} placeholder={placeholder} {...props} />
+      <NeoInput 
+        label={label} 
+        type={type} 
+        name={name} 
+        value={value || ''} 
+        onChange={onChange} 
+        placeholder={placeholder} 
+        maxLength={maxLength}
+        {...props} 
+      />
     );
   }
   return (
@@ -52,6 +105,7 @@ export default function RecruiterProfilePage() {
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [successMessage, setSuccessMessage] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploadingProfilePic, setIsUploadingProfilePic] = useState(false);
   const [isUploadingResume, setIsUploadingResume] = useState(false);
   
   const [formData, setFormData] = useState({
@@ -355,7 +409,7 @@ export default function RecruiterProfilePage() {
       const file = e.target.files[0];
       const formData = new FormData();
       formData.append('profilePicture', file);
-      setIsSaving(true);
+      setIsUploadingProfilePic(true);
       try {
         const res = await recruiterAPI.updateProfilePicture(formData);
         const picUrl = res.profilePicture || res.data?.profilePicture;
@@ -367,7 +421,7 @@ export default function RecruiterProfilePage() {
       } catch (error) {
         setSuccessMessage('Failed to upload image.');
       } finally {
-        setIsSaving(false);
+        setIsUploadingProfilePic(false);
         setTimeout(() => setSuccessMessage(''), 3000);
       }
     }
@@ -423,7 +477,7 @@ export default function RecruiterProfilePage() {
   ];
 
   return (
-    <AuthGuard allowedRoles={['recruiter']}>
+    <AuthGuard allowedRoles={['Recruiter']}>
       {isLoadingProfile ? (
         <div className="min-h-screen flex items-center justify-center bg-neo-bg dark:bg-zinc-950">
           <div className="text-center">
@@ -448,17 +502,24 @@ export default function RecruiterProfilePage() {
           <NeoCard className="sticky top-24 text-center border-4">
             <div className="relative w-32 h-32 mx-auto mb-4">
               <div className="w-full h-full rounded-full border-4 border-neo-black dark:border-white overflow-hidden bg-gray-200 dark:bg-zinc-800 relative flex items-center justify-center">
-                 <img 
-                   src={user?.profilePicture || user?.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=Recruiter"} 
-                   alt="Profile" 
-                   className="w-full h-full object-cover"
-                   onError={(e) => {
-                     e.target.onerror = null;
-                     e.target.src = "https://api.dicebear.com/7.x/avataaars/svg?seed=Recruiter";
-                   }}
-                 />
+                 {isUploadingProfilePic ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-neo-black dark:border-white"></div>
+                    <span className="text-xs font-bold text-gray-600 dark:text-gray-300">Uploading...</span>
+                  </div>
+                ) : (
+                  <img 
+                    src={user?.profilePicture || user?.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=Recruiter"} 
+                    alt="Profile" 
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = "https://api.dicebear.com/7.x/avataaars/svg?seed=Recruiter";
+                    }}
+                  />
+                )}
               </div>
-               {isEditing && (
+               {isEditing && !isUploadingProfilePic && (
                    <button 
                        onClick={() => handleFileSelection('profile-pic-input')}
                        className="absolute bottom-0 right-0 bg-white dark:bg-zinc-800 border-2 border-neo-black dark:border-white p-2 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors shadow-neo-sm z-10" 
@@ -467,7 +528,7 @@ export default function RecruiterProfilePage() {
                        <Camera className="w-4 h-4 text-neo-black dark:text-white" />
                    </button>
                )}
-               <input type="file" id="profile-pic-input" className="hidden" accept="image/*" onChange={handleProfilePicUpload} />
+               <input type="file" id="profile-pic-input" className="hidden" accept="image/*" onChange={handleProfilePicUpload} disabled={!isEditing || isUploadingProfilePic} />
             </div>
             <h2 className="text-2xl font-black uppercase dark:text-white">{formData.fullName}</h2>
             <p className="font-mono text-gray-500 dark:text-gray-400 mb-2">{formData.headline || ''}</p>
@@ -555,11 +616,11 @@ export default function RecruiterProfilePage() {
               <div className="flex-grow space-y-6">
                   {activeStep === 1 && (
                       <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
-                          <DisplayField isEditing={isEditing} label="Full Name" value={formData.fullName} name="fullName" onChange={handleInputChange} />
-                          <DisplayField isEditing={isEditing} label="Headline" value={formData.headline} name="headline" onChange={handleInputChange} />
-                          <DisplayField isEditing={isEditing} label="About You" value={formData.about} name="about" onChange={handleInputChange} isTextarea={true} placeholder="Recruiter bio..." />
+                          <DisplayField isEditing={isEditing} label="Full Name" value={formData.fullName} name="fullName" onChange={handleInputChange} maxLength={FIELD_LIMITS.fullName} />
+                          <DisplayField isEditing={isEditing} label="Headline" value={formData.headline} name="headline" onChange={handleInputChange} maxLength={FIELD_LIMITS.headline} />
+                          <DisplayField isEditing={isEditing} label="About You" value={formData.about} name="about" onChange={handleInputChange} isTextarea={true} placeholder="Recruiter bio..." maxLength={FIELD_LIMITS.about} />
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <DisplayField isEditing={isEditing} label="Phone Number" value={formData.phone} name="phone" onChange={handleInputChange} placeholder="10 Digit Number" />
+                              <DisplayField isEditing={isEditing} label="Phone Number" value={formData.phone} name="phone" onChange={handleInputChange} placeholder="10 Digit Number" maxLength={FIELD_LIMITS.phone} />
                               <DisplayField isEditing={isEditing} label="Date of Birth" value={formData.dateOfBirth} name="dateOfBirth" type="date" onChange={handleInputChange} maxDate={new Date().toISOString().split('T')[0]} />
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -579,14 +640,14 @@ export default function RecruiterProfilePage() {
                           <div className="pt-4 border-t border-gray-100 dark:border-zinc-700">
                                <label className="block font-bold text-sm mb-3 uppercase text-gray-400 dark:text-gray-500 tracking-widest font-mono">Location Details</label>
                                <div className="space-y-4">
-                                  <DisplayField isEditing={isEditing} label="Area / Locality" value={formData.area} name="area" onChange={handleInputChange} />
+                                  <DisplayField isEditing={isEditing} label="Area / Locality" value={formData.area} name="area" onChange={handleInputChange} maxLength={FIELD_LIMITS.area} />
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                      <DisplayField isEditing={isEditing} label="City" value={formData.currentCity} name="currentCity" onChange={handleInputChange} />
-                                      <DisplayField isEditing={isEditing} label="State" value={formData.state} name="state" onChange={handleInputChange} />
+                                      <DisplayField isEditing={isEditing} label="City" value={formData.currentCity} name="currentCity" onChange={handleInputChange} maxLength={FIELD_LIMITS.currentCity} />
+                                      <DisplayField isEditing={isEditing} label="State" value={formData.state} name="state" onChange={handleInputChange} maxLength={FIELD_LIMITS.state} />
                                   </div>
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                      <DisplayField isEditing={isEditing} label="Country" value={formData.country} name="country" onChange={handleInputChange} />
-                                      <DisplayField isEditing={isEditing} label="Zip Code" value={formData.zipCode} name="zipCode" onChange={handleInputChange} />
+                                      <DisplayField isEditing={isEditing} label="Country" value={formData.country} name="country" onChange={handleInputChange} maxLength={FIELD_LIMITS.country} />
+                                      <DisplayField isEditing={isEditing} label="Zip Code" value={formData.zipCode} name="zipCode" onChange={handleInputChange} maxLength={FIELD_LIMITS.zipCode} />
                                   </div>
                                </div>
                           </div>
@@ -609,6 +670,7 @@ export default function RecruiterProfilePage() {
                                                 value={formData.education[level]?.[level.includes('tenth') ? 'schoolName' : 'collegeName'] || ''} 
                                                 onChange={(e) => handleEducationChange(level, level.includes('tenth') ? 'schoolName' : 'collegeName', e.target.value)}
                                                 disabled={!isEditing} 
+                                                maxLength={FIELD_LIMITS.schoolName}
                                               />
                                           </div>
                                           {level.includes('tenth') || level.includes('juniorCollege') ? (
@@ -629,14 +691,15 @@ export default function RecruiterProfilePage() {
                                                ) : <span className="font-bold dark:text-white block">{formData.education[level]?.board || 'Not specified'}</span>}
                                              </div>
                                           ) : (
-                                            <div>
-                                                <label className="block font-bold text-xs mb-1 dark:text-white">University</label>
-                                                <NeoInput 
-                                                  value={formData.education[level]?.university || ''} 
-                                                  onChange={(e) => handleEducationChange(level, 'university', e.target.value)}
-                                                  disabled={!isEditing} 
-                                                />
-                                            </div>
+                                             <div>
+                                                 <label className="block font-bold text-xs mb-1 dark:text-white">University</label>
+                                                 <NeoInput 
+                                                   value={formData.education[level]?.university || ''} 
+                                                   onChange={(e) => handleEducationChange(level, 'university', e.target.value)}
+                                                   disabled={!isEditing} 
+                                                   maxLength={FIELD_LIMITS.university}
+                                                 />
+                                             </div>
                                           )}
                                           
                                           {level === 'juniorCollege' && (
@@ -666,6 +729,7 @@ export default function RecruiterProfilePage() {
                                                       value={formData.education[level]?.degree || ''} 
                                                       onChange={(e) => handleEducationChange(level, 'degree', e.target.value)}
                                                       disabled={!isEditing} 
+                                                      maxLength={FIELD_LIMITS.degree}
                                                     />
                                                 </div>
                                                 <div>
@@ -674,6 +738,7 @@ export default function RecruiterProfilePage() {
                                                       value={formData.education[level]?.specialization || ''} 
                                                       onChange={(e) => handleEducationChange(level, 'specialization', e.target.value)}
                                                       disabled={!isEditing} 
+                                                      maxLength={FIELD_LIMITS.specialization}
                                                     />
                                                 </div>
                                               </>
@@ -687,6 +752,7 @@ export default function RecruiterProfilePage() {
                                                       value={formData.education[level]?.fieldOfStudy || ''} 
                                                       onChange={(e) => handleEducationChange(level, 'fieldOfStudy', e.target.value)}
                                                       disabled={!isEditing} 
+                                                      maxLength={FIELD_LIMITS.fieldOfStudy}
                                                     />
                                                 </div>
                                                 <div className="md:col-span-2">
@@ -695,6 +761,7 @@ export default function RecruiterProfilePage() {
                                                       value={formData.education[level]?.thesisTitle || ''} 
                                                       onChange={(e) => handleEducationChange(level, 'thesisTitle', e.target.value)}
                                                       disabled={!isEditing} 
+                                                      maxLength={FIELD_LIMITS.thesisTitle}
                                                     />
                                                 </div>
                                               </>
@@ -739,6 +806,7 @@ export default function RecruiterProfilePage() {
                                                 value={formData.education[level]?.city || ''} 
                                                 onChange={(e) => handleEducationChange(level, 'city', e.target.value)}
                                                 disabled={!isEditing} 
+                                                maxLength={FIELD_LIMITS.currentCity}
                                               />
                                             </div>
                                             <div>
@@ -747,6 +815,7 @@ export default function RecruiterProfilePage() {
                                                 value={formData.education[level]?.state || ''} 
                                                 onChange={(e) => handleEducationChange(level, 'state', e.target.value)}
                                                 disabled={!isEditing} 
+                                                maxLength={FIELD_LIMITS.state}
                                               />
                                             </div>
                                           </div>
@@ -779,6 +848,7 @@ export default function RecruiterProfilePage() {
                                                 value={l.language} 
                                                 onChange={(e) => handleLanguageChange(i, 'language', e.target.value)} 
                                                 disabled={!isEditing} 
+                                                maxLength={FIELD_LIMITS.language}
                                                 className="flex-grow border-0 focus:ring-0 bg-transparent"
                                              />
                                              <div className="w-px h-6 bg-gray-300 dark:bg-gray-600"></div>
@@ -941,6 +1011,7 @@ export default function RecruiterProfilePage() {
                                                             value={exp.jobTitle || ''} 
                                                             onChange={(e) => handleWorkExperienceChange(idx, 'jobTitle', e.target.value)}
                                                             disabled={!isEditing} 
+                                                            maxLength={FIELD_LIMITS.jobTitle}
                                                         />
                                                     </div>
                                                     <div>
@@ -950,6 +1021,7 @@ export default function RecruiterProfilePage() {
                                                             value={exp.company || ''} 
                                                             onChange={(e) => handleWorkExperienceChange(idx, 'company', e.target.value)}
                                                             disabled={!isEditing} 
+                                                            maxLength={FIELD_LIMITS.company}
                                                         />
                                                     </div>
                                                 </div>
@@ -1015,9 +1087,10 @@ export default function RecruiterProfilePage() {
                                         setFormData(p => ({
                                             ...p, 
                                             skillsString: val,
-                                            skills: val.split(',').map(s=>s.trim())
+                                            skills: val.split(',').map(s=>s.trim()).filter(s => s !== '')
                                         }));
                                     }} 
+                                    maxLength={FIELD_LIMITS.skills}
                                   />
                                 ) : (
                                   <div className="flex flex-wrap gap-2">
@@ -1028,42 +1101,44 @@ export default function RecruiterProfilePage() {
                            </div>
 
                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-100 dark:border-zinc-700">
-                               <div className="space-y-4">
-                                   <label className="block font-bold text-sm uppercase text-gray-400 font-mono">Web Presence</label>
-                                   <DisplayField isEditing={isEditing} label="LinkedIn" value={formData.linkedinUrl || formData.socials.linkedin} name="linkedinUrl" onChange={handleInputChange} />
-                                   <DisplayField isEditing={isEditing} label="Portfolio" value={formData.portfolioUrl} name="portfolioUrl" onChange={handleInputChange} />
-                                   <DisplayField isEditing={isEditing} label="Github" value={formData.githubUrl} name="githubUrl" onChange={handleInputChange} />
-                               </div>
+                                <div className="space-y-4">
+                                    <label className="block font-bold text-sm uppercase text-gray-400 font-mono">Web Presence</label>
+                                    <DisplayField isEditing={isEditing} label="LinkedIn" value={formData.linkedinUrl || formData.socials.linkedin} name="linkedinUrl" onChange={handleInputChange} maxLength={FIELD_LIMITS.linkedinUrl} />
+                                    <DisplayField isEditing={isEditing} label="Portfolio" value={formData.portfolioUrl} name="portfolioUrl" onChange={handleInputChange} maxLength={FIELD_LIMITS.portfolioUrl} />
+                                    <DisplayField isEditing={isEditing} label="Github" value={formData.githubUrl} name="githubUrl" onChange={handleInputChange} maxLength={FIELD_LIMITS.githubUrl} />
+                                </div>
                                <div className="space-y-4">
                                    <label className="block font-bold text-sm uppercase text-gray-400 font-mono">Recruitment Preferences</label>
-                                   <DisplayField 
-                                      isEditing={isEditing} 
-                                      label="Industries" 
-                                      value={formData.industriesString || formData.preferences?.industries?.join(', ')} 
-                                      name="industriesString" 
-                                      onChange={(e) => {
-                                          const val = e.target.value;
-                                          setFormData(p => ({
-                                              ...p,
-                                              industriesString: val,
-                                              preferences: { ...p.preferences, industries: val.split(',').map(s=>s.trim()).filter(s=>s!=='') }
-                                          }));
-                                      }}
-                                   />
-                                   <DisplayField 
-                                      isEditing={isEditing} 
-                                      label="Job Types" 
-                                      value={formData.jobTypesString || formData.preferences?.jobTypes?.join(', ')} 
-                                      name="jobTypesString" 
-                                      onChange={(e) => {
-                                          const val = e.target.value;
-                                          setFormData(p => ({
-                                              ...p,
-                                              jobTypesString: val,
-                                              preferences: { ...p.preferences, jobTypes: val.split(',').map(s=>s.trim()).filter(s=>s!=='') }
-                                          }));
-                                      }}
-                                   />
+                                    <DisplayField 
+                                       isEditing={isEditing} 
+                                       label="Industries" 
+                                       value={formData.industriesString || formData.preferences?.industries?.join(', ')} 
+                                       name="industriesString" 
+                                       onChange={(e) => {
+                                           const val = e.target.value;
+                                           setFormData(p => ({
+                                               ...p,
+                                               industriesString: val,
+                                               preferences: { ...p.preferences, industries: val.split(',').map(s=>s.trim()).filter(s=>s!=='') }
+                                           }));
+                                       }}
+                                       maxLength={FIELD_LIMITS.industries}
+                                    />
+                                    <DisplayField 
+                                       isEditing={isEditing} 
+                                       label="Job Types" 
+                                       value={formData.jobTypesString || formData.preferences?.jobTypes?.join(', ')} 
+                                       name="jobTypesString" 
+                                       onChange={(e) => {
+                                           const val = e.target.value;
+                                           setFormData(p => ({
+                                               ...p,
+                                               jobTypesString: val,
+                                               preferences: { ...p.preferences, jobTypes: val.split(',').map(s=>s.trim()).filter(s=>s!=='') }
+                                           }));
+                                       }}
+                                       maxLength={FIELD_LIMITS.jobTypes}
+                                    />
                                </div>
                            </div>
                            

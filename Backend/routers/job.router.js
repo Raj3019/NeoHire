@@ -1,22 +1,22 @@
 const express = require("express")
 const {authenticateJWT, authenticateRole} = require("../middleware/auth.middleware")
 const {createJob, listJobs, editJob, getJobById} = require("../controller/job.controller")
-
+const checkRercuiterProfileComplete = require("../middleware/recruiter.middleware")
 const jobRouter = express.Router()
 
 //create Job
 
-jobRouter.post('/api/job/create', authenticateJWT, authenticateRole("Recuter"), createJob)
+jobRouter.post('/job/create', authenticateJWT, authenticateRole("Recruiter"), createJob, checkRercuiterProfileComplete)
 
 //edit job
 
-jobRouter.put('/api/job/:id', authenticateJWT, authenticateRole("Recuter"), editJob)
+jobRouter.put('/job/:id', authenticateJWT, authenticateRole("Recruiter"), editJob)
 
 
 //Get Jobs
-jobRouter.get('/api/jobs', authenticateJWT, listJobs)
+jobRouter.get('/jobs', authenticateJWT, listJobs)
 
 //Get Job [id]
-jobRouter.get('/api/job/:id', authenticateJWT, getJobById)
+jobRouter.get('/job/:id', authenticateJWT, getJobById)
 
 module.exports = jobRouter;

@@ -2,9 +2,11 @@ const z = require("zod");
 
 const EmployeeRegisterValidation = z
   .object({
+    fullName: z.string(),
     email: z.string().email(),
-    password: z.string().min(8, "Password must be at least 8 characters long"),
-    confirmPassword: z.string(),
+    password: z.string().min(6, "Password must be at least 6 characters long")
+    .max(15,"Password must be at most 15 characters long"),
+    confirmPassword: z.string("Confirm password is required"),
   })
   .strict()
   .refine((data) => data.password === data.confirmPassword, {
@@ -139,11 +141,13 @@ const EmployeeLoginValidation = z.object({
   password: z.string(),
 });
 
-const RecurterRegisterValidation = z
+const RecruiterRegisterValidation = z
   .object({
+    fullName: z.string(),
     email: z.string().email(),
-    password: z.string().min(8, "Password must be at least 8 characters long"),
-    confirmPassword: z.string(),
+    password: z.string().min(6, "Password must be at least 6 characters long")
+    .max(15,"Password must be at most 15 characters long"),
+    confirmPassword: z.string("Confirm password is required"),
   })
   .strict()
   .refine((data) => data.password === data.confirmPassword, {
@@ -151,7 +155,7 @@ const RecurterRegisterValidation = z
     path: ["confirmPassword"],
   });
 
-const RecurterLoginValidation = z.object({
+const RecruiterLoginValidation = z.object({
   email: z.string().email(),
   password: z.string(),
 });
@@ -171,7 +175,7 @@ module.exports = {
   EmployeeRegisterValidation,
   EmployeeLoginValidation,
   // EmployeeSetupValidation,
-  RecurterRegisterValidation,
-  RecurterLoginValidation,
+  RecruiterRegisterValidation,
+  RecruiterLoginValidation,
   JobValidation,
 };

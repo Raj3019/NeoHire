@@ -15,7 +15,7 @@ export const useAuthStore = create(
       login: async (email, password, role) => {
         set({ isLoading: true, error: null });
         try {
-          const api = (role?.toLowerCase() === 'recruiter' || role?.toLowerCase() === 'recuter') ? recruiterAPI : employeeAPI;
+          const api = (role === 'Recruiter' || role?.toLowerCase() === 'recruiter') ? recruiterAPI : employeeAPI;
           const response = await api.login(email, password);
 
           // console.log('Login response:', response);
@@ -30,8 +30,8 @@ export const useAuthStore = create(
             // Continue with basic user data if profile fetch fails
           }
 
-          // Determine the correct role: Employee for candidates, Recuter for recruiters (matching backend typo)
-          const userRole = (role?.toLowerCase() === 'recruiter' || role?.toLowerCase() === 'recuter') ? 'Recuter' : 'Employee';
+          // Determine the correct role: Employee for candidates, Recruiter for recruiters
+          const userRole = (role === 'Recruiter' || role?.toLowerCase() === 'recruiter') ? 'Recruiter' : 'Employee';
 
           // Build user object carefully - ensure role is not overwritten
           // Normalize profile data: handle cases where it's in response.data or response directly
@@ -58,14 +58,21 @@ export const useAuthStore = create(
       },
 
       // Signup function - calls backend API
-      signup: async (email, password, confirmPassword, role) => {
+      signup: async (email, password, confirmPassword, role, fullName) => {
         set({ isLoading: true, error: null });
         try {
-          const api = (role?.toLowerCase() === 'recruiter' || role?.toLowerCase() === 'recuter') ? recruiterAPI : employeeAPI;
-          const response = await api.signup(email, password, confirmPassword);
+          const api = (role === 'Recruiter' || role?.toLowerCase() === 'recruiter') ? recruiterAPI : employeeAPI;
+          const response = await api.signup(email, password, confirmPassword, fullName);
 
-          // For new accounts, we set basic user info
-          const userRole = role === 'recruiter' ? 'Recuter' : 'Employee';
+          // Both roles now require verification
+          set({ isLoading: false });
+          return {
+            success: true,
+            message: response.message || "Registration successful! Please check your email to verify your account.",
+            requiresVerification: true
+          };
+
+          const userRole = (role === 'Recruiter' || role?.toLowerCase() === 'recruiter') ? 'Recruiter' : 'Employee';
           const user = {
             email,
             role: userRole,
@@ -102,7 +109,7 @@ export const useAuthStore = create(
             return {
               ...cleanData,
               recentApplicationJob: response.recentApplicationJob,
-              role: (finalRole?.toLowerCase() === 'recruiter' || finalRole?.toLowerCase() === 'recuter') ? 'Recuter' : 'Employee',
+              role: (finalRole === 'Recruiter' || finalRole?.toLowerCase() === 'recruiter') ? 'Recruiter' : 'Employee',
               isAuthenticated: true,
             };
           };
@@ -110,7 +117,7 @@ export const useAuthStore = create(
           let response;
 
           if (role) {
-            const targetApi = (role?.toLowerCase() === 'recruiter' || role?.toLowerCase() === 'recuter') ? recruiterAPI : employeeAPI;
+            const targetApi = (role === 'Recruiter' || role?.toLowerCase() === 'recruiter') ? recruiterAPI : employeeAPI;
             response = await tryApi(targetApi);
             const user = buildUser(response, role);
             set({ user, isAuthenticated: true, isLoading: false });
@@ -120,14 +127,14 @@ export const useAuthStore = create(
           // No explicit role: try recruiter first, then employee
           try {
             response = await tryApi(recruiterAPI);
-            const user = buildUser(response, 'recruiter');
+            const user = buildUser(response, 'Recruiter');
             set({ user, isAuthenticated: true, isLoading: false });
             return { success: true, data: user };
           } catch (recErr) {
             // If recruiter returns 401/403, fall back to employee
             try {
               response = await tryApi(employeeAPI);
-              const user = buildUser(response, 'employee');
+              const user = buildUser(response, 'Employee');
               set({ user, isAuthenticated: true, isLoading: false });
               return { success: true, data: user };
             } catch (empErr) {
@@ -159,8 +166,8 @@ export const useAuthStore = create(
         try {
           // Get current user role to call the correct logout endpoint
           const state = get();
-          const role = state.user?.role?.toLowerCase();
-          const api = (role === 'recruiter' || role === 'recuter') ? recruiterAPI : employeeAPI;
+          const role = state.user?.role;
+          const api = (role === 'Recruiter') ? recruiterAPI : employeeAPI;
 
           // Call logout API (don't wait for success, proceed with local logout)
           await api.logout().catch(() => { });

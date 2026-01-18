@@ -45,7 +45,7 @@ export default function CreateJob() {
   };
 
   return (
-    <AuthGuard allowedRoles={['recruiter']}>
+    <AuthGuard allowedRoles={['Recruiter']}>
       <div className="min-h-screen bg-neo-bg dark:bg-zinc-950">
         <ProfileCompletionBanner />
         <div className="container mx-auto px-4 py-8">

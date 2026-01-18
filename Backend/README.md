@@ -28,7 +28,7 @@ controller/
   application.controller.js
   employee.controller.js
   job.controller.js
-  recuter.controller.js
+  recruiter.controller.js
 database/
   config.database.js
 middleware/
@@ -38,12 +38,12 @@ model/
   application.model.js
   employee.model.js
   job.model.js
-  recuter.model.js
+  recruiter.model.js
 routers/
   application.router.js
   employee.router.js
   job.router.js
-  recuter.router.js
+  recruiter.router.js
 uploads/
 profilePicture/
 resume/
@@ -68,7 +68,7 @@ utils/
 
 - job, JobSeeker, postedBy, resume, status, appliedAt
 
-### 4. Recurter
+### 4. Recruiter
 
 - fullName, email, password, phone, age, role, gender, location, currentRole, currentEmployer, companyURL, jobs
 
@@ -86,13 +86,13 @@ utils/
 - `POST   /api/employee/profile/picture` — Upload resume (auth)
 - `GET    /api/employee/dashboard` — Get applied jobs (auth)
 
-### Recurter APIs
+### Recruiter APIs
 
-- `POST   /api/recuter/signup` — Register new recruiter
-- `POST   /api/recuter/login` — Recruiter login
-- `GET    /api/recuter/profile/` — Get recruiter profile (auth)
-- `PUT    /api/recuter/profile/:id` — Edit recruiter profile (auth)
-- `GET    /api/recuter/dashboard` — Get recruiter dashboard (auth)
+- `POST   /api/recruiter/signup` — Register new recruiter
+- `POST   /api/recruiter/login` — Recruiter login
+- `GET    /api/recruiter/profile/` — Get recruiter profile (auth)
+- `PUT    /api/recruiter/profile/:id` — Edit recruiter profile (auth)
+- `GET    /api/recruiter/dashboard` — Get recruiter dashboard (auth)
 
 ### Job APIs
 

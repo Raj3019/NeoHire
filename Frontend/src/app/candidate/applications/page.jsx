@@ -68,7 +68,7 @@ export default function CandidateApplications() {
   };
 
   return (
-    <AuthGuard allowedRoles={['candidate']}>
+    <AuthGuard allowedRoles={['Employee']}>
       <ProfileCompletionBanner />
       <div className="max-w-5xl mx-auto px-4 py-8">
         <h1 className="text-4xl font-black uppercase mb-8 dark:text-white">My <span className="text-neo-pink">Applications</span></h1>

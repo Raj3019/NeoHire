@@ -22,9 +22,9 @@ const hasAllowedRole = (userRole, allowedRoles) => {
       return true;
     }
     
-    // Handle Recruiter/Recuter equivalence
-    if ((lowerUserRole === 'recruiter' || lowerUserRole === 'recuter') && 
-        (lowerAllowedRole === 'recruiter' || lowerAllowedRole === 'recuter')) {
+    // Handle Recruiter equivalence
+    if ((lowerUserRole === 'recruiter') && 
+        (lowerAllowedRole === 'recruiter')) {
       return true;
     }
     
@@ -36,8 +36,8 @@ const hasAllowedRole = (userRole, allowedRoles) => {
 const normalizeRole = (role) => {
   if (!role) return null;
   const lowerRole = role.toLowerCase();
-  if (lowerRole === 'employee' || lowerRole === 'candidate') return 'candidate';
-  if (lowerRole === 'recruiter' || lowerRole === 'recuter') return 'recruiter';
+  if (lowerRole === 'employee' || lowerRole === 'candidate') return 'Employee';
+  if (lowerRole === 'recruiter') return 'Recruiter';
   return role;
 };
 
@@ -117,7 +117,7 @@ export default function AuthGuard({ children, allowedRoles }) {
 
     // If authenticated but wrong role, redirect to appropriate dashboard
     if (!isAllowed) {
-      if (userRole === 'recruiter') {
+      if (userRole === 'Recruiter') {
         router.push('/recruiter/dashboard');
       } else {
         router.push('/candidate/dashboard');

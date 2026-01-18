@@ -18,7 +18,7 @@ function LoginForm() {
   
   const { login, isAuthenticated, user, fetchProfile } = useAuthStore();
   // Role defaults to URL param or candidate, but we won't toggle it here anymore to match reference
-  const role = isRecruiter ? 'recruiter' : 'candidate';
+  const role = isRecruiter ? 'Recruiter' : 'Employee';
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -39,12 +39,11 @@ function LoginForm() {
       if (authCookie) {
         try {
           const parsed = JSON.parse(authCookie);
-          // Zustand persist can store state directly or under a `state` key
           const stored = parsed?.state || parsed;
-          const storedUser = stored?.user || stored;
-          const storedRole = storedUser?.role?.toLowerCase();
+          const storedUser = stored?.user || (stored?.isAuthenticated ? stored : null);
+          const storedRole = storedUser?.role;
           if (storedRole) {
-            const isRec = storedRole === 'recruiter' || storedRole === 'recuter';
+            const isRec = (storedRole === 'Recruiter' || storedRole?.toLowerCase() === 'recruiter');
             const redirectTo = isRec ? '/recruiter/dashboard' : '/candidate/dashboard';
             // console.log('Login page: redirecting from cookie:', { storedRole, redirectTo });
             router.replace(redirectTo);
@@ -68,8 +67,8 @@ function LoginForm() {
     // Fallback: check store state and redirect
     const hasAuth = (isAuthenticated && user && user.email);
     if (hasAuth) {
-      const userRole = user?.role?.toLowerCase();
-      const isRecruiterRole = userRole === 'recruiter' || userRole === 'recuter';
+      const userRole = user?.role;
+      const isRecruiterRole = (userRole === 'Recruiter' || userRole?.toLowerCase() === 'recruiter');
       const redirectTo = isRecruiterRole ? '/recruiter/dashboard' : '/candidate/dashboard';
       // console.log('Login page redirecting:', { userRole, redirectTo });
       router.replace(redirectTo);
@@ -89,7 +88,7 @@ function LoginForm() {
       
       if (result.success) {
         // Redirect based on role
-        router.push(role === 'recruiter' ? '/recruiter/dashboard' : '/candidate/dashboard');
+        router.push(role === 'Recruiter' ? '/recruiter/dashboard' : '/candidate/dashboard');
       } else {
         // Show error message and stop loading
         setError(result.error || 'Login failed. Please check your credentials.');

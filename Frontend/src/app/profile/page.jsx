@@ -9,20 +9,61 @@ import { User, Briefcase, MapPin, GraduationCap, Globe, Edit2, Save, X, Plus, Tr
 
 import ProfileCompletionBanner from '@/components/shared/ProfileCompletionBanner';
 
+const FIELD_LIMITS = {
+  fullName: 50,
+  headline: 120,
+  about: 1000,
+  phone: 10,
+  area: 100,
+  currentCity: 50,
+  state: 50,
+  country: 50,
+  zipCode: 6,
+  schoolName: 150,
+  collegeName: 150,
+  university: 150,
+  degree: 100,
+  specialization: 100,
+  thesisTitle: 200,
+  fieldOfStudy: 100,
+  company: 100,
+  jobTitle: 100,
+  location: 100,
+  description: 1000,
+  language: 50,
+  issuingOrganization: 150,
+  certificationName: 150,
+  portfolioUrl: 200,
+  linkedinUrl: 200,
+  githubUrl: 200,
+  skills: 500,
+  preferredLocations: 200
+};
+
 // Helper component for displaying field in view mode vs edit mode
-const DisplayField = ({ label, value, name, type = "text", onChange, isTextarea = false, placeholder = "", isEditing, ...props }) => {
+const DisplayField = ({ label, value, name, type = "text", onChange, isTextarea = false, placeholder = "", isEditing, maxLength, ...props }) => {
   if (isEditing) {
     if (isTextarea) {
       return (
         <div>
-          <label className="block font-bold text-sm mb-1 dark:text-white">{label}</label>
-          <textarea 
-            name={name} 
-            value={value || ''} 
-            onChange={onChange} 
-            className="w-full bg-white dark:bg-zinc-900 border-2 border-neo-black dark:border-white p-3 focus:outline-none focus:ring-2 focus:ring-neo-yellow font-mono text-sm h-24 resize-none dark:text-white"
-            placeholder={placeholder} 
-          />
+          <div className="flex justify-between items-end mb-1">
+            <label className="block font-bold text-sm dark:text-white">{label}</label>
+            {maxLength && (
+              <span className="text-[10px] font-mono text-gray-400 dark:text-gray-500">
+                {(value || '').length}/{maxLength}
+              </span>
+            )}
+          </div>
+          <div className="relative">
+            <textarea 
+              name={name} 
+              value={value || ''} 
+              onChange={onChange}
+              maxLength={maxLength}
+              className="w-full bg-white dark:bg-zinc-900 border-2 border-neo-black dark:border-white p-3 focus:outline-none focus:ring-2 focus:ring-neo-yellow font-mono text-sm h-24 resize-none dark:text-white"
+              placeholder={placeholder} 
+            />
+          </div>
         </div>
       );
     }
@@ -32,7 +73,16 @@ const DisplayField = ({ label, value, name, type = "text", onChange, isTextarea 
       );
     }
     return (
-      <NeoInput label={label} type={type} name={name} value={value || ''} onChange={onChange} placeholder={placeholder} {...props} />
+      <NeoInput 
+        label={label} 
+        type={type} 
+        name={name} 
+        value={value || ''} 
+        onChange={onChange} 
+        placeholder={placeholder} 
+        maxLength={maxLength}
+        {...props} 
+      />
     );
   }
   return (
@@ -562,7 +612,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <AuthGuard allowedRoles={['candidate']}>
+    <AuthGuard allowedRoles={['Employee']}>
       {isLoadingProfile ? (
         <div className="min-h-screen flex items-center justify-center bg-neo-bg dark:bg-zinc-950">
           <div className="text-center"><div className="w-16 h-16 border-4 border-neo-yellow border-t-transparent rounded-full animate-spin mx-auto mb-4"></div></div>
@@ -660,11 +710,11 @@ export default function ProfilePage() {
               <div className="flex-grow space-y-6">
                   {activeStep === 1 && (
                       <div className="space-y-6">
-                          <DisplayField isEditing={isEditing} label="Full Name" value={formData.fullName} name="fullName" onChange={handleInputChange} />
-                          <DisplayField isEditing={isEditing} label="Headline" value={formData.headline} name="headline" onChange={handleInputChange} />
-                          <DisplayField isEditing={isEditing} label="About" value={formData.about} name="about" onChange={handleInputChange} isTextarea placeholder="Tell us about yourself..." />
+                          <DisplayField isEditing={isEditing} label="Full Name" value={formData.fullName} name="fullName" onChange={handleInputChange} maxLength={FIELD_LIMITS.fullName} />
+                          <DisplayField isEditing={isEditing} label="Headline" value={formData.headline} name="headline" onChange={handleInputChange} maxLength={FIELD_LIMITS.headline} />
+                          <DisplayField isEditing={isEditing} label="About" value={formData.about} name="about" onChange={handleInputChange} isTextarea maxLength={FIELD_LIMITS.about} placeholder="Tell us about yourself..." />
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <DisplayField isEditing={isEditing} label="Phone Number" value={formData.phone} name="phone" onChange={handleInputChange} />
+                              <DisplayField isEditing={isEditing} label="Phone Number" value={formData.phone} name="phone" onChange={handleInputChange} maxLength={FIELD_LIMITS.phone} />
                               <DisplayField isEditing={isEditing} label="Date of Birth" value={formData.dateOfBirth} name="dateOfBirth" type="date" onChange={handleInputChange} maxDate={new Date().toISOString().split('T')[0]} />
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -678,14 +728,14 @@ export default function ProfilePage() {
                           <div className="pt-4 border-t border-gray-100 dark:border-zinc-700">
                                <label className="block font-bold text-sm mb-3 uppercase text-gray-400">Address Details</label>
                                <div className="space-y-4">
-                                  <DisplayField isEditing={isEditing} label="Area / Locality" value={formData.area} name="area" onChange={handleInputChange} />
+                                  <DisplayField isEditing={isEditing} label="Area / Locality" value={formData.area} name="area" onChange={handleInputChange} maxLength={FIELD_LIMITS.area} />
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                      <DisplayField isEditing={isEditing} label="City" value={formData.currentCity} name="currentCity" onChange={handleInputChange} />
-                                      <DisplayField isEditing={isEditing} label="State" value={formData.state} name="state" onChange={handleInputChange} />
+                                      <DisplayField isEditing={isEditing} label="City" value={formData.currentCity} name="currentCity" onChange={handleInputChange} maxLength={FIELD_LIMITS.currentCity} />
+                                      <DisplayField isEditing={isEditing} label="State" value={formData.state} name="state" onChange={handleInputChange} maxLength={FIELD_LIMITS.state} />
                                   </div>
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                      <DisplayField isEditing={isEditing} label="Country" value={formData.country} name="country" onChange={handleInputChange} />
-                                      <DisplayField isEditing={isEditing} label="Zip Code" value={formData.zipCode} name="zipCode" onChange={handleInputChange} />
+                                      <DisplayField isEditing={isEditing} label="Country" value={formData.country} name="country" onChange={handleInputChange} maxLength={FIELD_LIMITS.country} />
+                                      <DisplayField isEditing={isEditing} label="Zip Code" value={formData.zipCode} name="zipCode" onChange={handleInputChange} maxLength={FIELD_LIMITS.zipCode} />
                                   </div>
                                </div>
                           </div>
@@ -697,7 +747,20 @@ export default function ProfilePage() {
                            <div>
                              <label className="block font-bold text-sm mb-1 dark:text-white">Skills</label>
                              {isEditing ? (
-                                <NeoInput name="skills" value={formData.skillsString || formData.skills?.join(', ')} onChange={(e) => setFormData(p => ({...p, skillsString: e.target.value, skills: e.target.value.split(',').map(s=>s.trim())}))} placeholder="React, Node.js..." />
+                                 <NeoInput 
+                                    name="skills" 
+                                    value={formData.skillsString || formData.skills?.join(', ')} 
+                                    onChange={(e) => {
+                                        const val = e.target.value;
+                                        setFormData(p => ({
+                                            ...p, 
+                                            skillsString: val, 
+                                            skills: val.split(',').map(s=>s.trim()).filter(s => s !== '')
+                                        }));
+                                    }} 
+                                    maxLength={FIELD_LIMITS.skills} 
+                                    placeholder="React, Node.js..." 
+                                 />
                              ) : (
                                <div className="flex flex-wrap gap-2 mt-2">{formData.skills?.map((s,i) => <NeoBadge key={i} variant="blue">{s}</NeoBadge>) || <span className="text-gray-400">No skills</span>}</div>
                              )}
@@ -705,9 +768,9 @@ export default function ProfilePage() {
 
                            {/* Education Accordions with Extra Fields */}
                            <details className="group border-2 border-black bg-white dark:bg-zinc-900 open:bg-gray-50 dark:open:bg-zinc-800 transition-colors">
-                                <summary className="flex cursor-pointer items-center justify-between p-4 font-bold select-none dark:text-white">10th Standard<span className="text-xl group-open:rotate-180 transition-transform">▼</span></summary>
+                                 <summary className="flex cursor-pointer items-center justify-between p-4 font-bold select-none dark:text-white">10th Standard<span className="text-xl group-open:rotate-180 transition-transform">▼</span></summary>
                                 <div className="p-4 border-t-2 border-black grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="md:col-span-2"><label className="block font-bold text-xs mb-1">School Name</label><NeoInput value={formData.education.tenth?.schoolName} onChange={(e) => handleEducationChange('tenth', 'schoolName', e.target.value)} disabled={!isEditing} /></div>
+                                    <div className="md:col-span-2"><label className="block font-bold text-xs mb-1">School Name</label><NeoInput value={formData.education.tenth?.schoolName} onChange={(e) => handleEducationChange('tenth', 'schoolName', e.target.value)} disabled={!isEditing} maxLength={FIELD_LIMITS.schoolName} /></div>
                                     <div>
                                         <label className="block font-bold text-xs mb-1">Board</label>
                                         <select 
@@ -739,15 +802,15 @@ export default function ProfilePage() {
                                         </select>
                                     </div>
                                     <div><label className="block font-bold text-xs mb-1">Year</label><NeoInput type="number" value={formData.education.tenth?.year} onChange={(e) => handleEducationChange('tenth', 'year', e.target.value)} disabled={!isEditing} /></div>
-                                    <div><label className="block font-bold text-xs mb-1">City</label><NeoInput value={formData.education.tenth?.city} onChange={(e) => handleEducationChange('tenth', 'city', e.target.value)} disabled={!isEditing} /></div>
-                                    <div><label className="block font-bold text-xs mb-1">State</label><NeoInput value={formData.education.tenth?.state} onChange={(e) => handleEducationChange('tenth', 'state', e.target.value)} disabled={!isEditing} /></div>
+                                    <div><label className="block font-bold text-xs mb-1">City</label><NeoInput value={formData.education.tenth?.city} onChange={(e) => handleEducationChange('tenth', 'city', e.target.value)} disabled={!isEditing} maxLength={FIELD_LIMITS.currentCity} /></div>
+                                    <div><label className="block font-bold text-xs mb-1">State</label><NeoInput value={formData.education.tenth?.state} onChange={(e) => handleEducationChange('tenth', 'state', e.target.value)} disabled={!isEditing} maxLength={FIELD_LIMITS.state} /></div>
                                 </div>
                            </details>
 
                            <details className="group border-2 border-black bg-white dark:bg-zinc-900 open:bg-gray-50 dark:open:bg-zinc-800 transition-colors">
                                 <summary className="flex cursor-pointer items-center justify-between p-4 font-bold select-none dark:text-white">12th / Junior College<span className="text-xl group-open:rotate-180 transition-transform">▼</span></summary>
                                 <div className="p-4 border-t-2 border-black grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="md:col-span-2"><label className="block font-bold text-xs mb-1">College Name</label><NeoInput value={formData.education.juniorCollege?.collegeName} onChange={(e) => handleEducationChange('juniorCollege', 'collegeName', e.target.value)} disabled={!isEditing} /></div>
+                                    <div className="md:col-span-2"><label className="block font-bold text-xs mb-1">College Name</label><NeoInput value={formData.education.juniorCollege?.collegeName} onChange={(e) => handleEducationChange('juniorCollege', 'collegeName', e.target.value)} disabled={!isEditing} maxLength={FIELD_LIMITS.collegeName} /></div>
                                     <div>
                                         <label className="block font-bold text-xs mb-1">Board</label>
                                         <select 
@@ -794,18 +857,18 @@ export default function ProfilePage() {
                                         </select>
                                     </div>
                                     <div><label className="block font-bold text-xs mb-1">Year</label><NeoInput type="number" value={formData.education.juniorCollege?.year} onChange={(e) => handleEducationChange('juniorCollege', 'year', e.target.value)} disabled={!isEditing} /></div>
-                                    <div><label className="block font-bold text-xs mb-1">City</label><NeoInput value={formData.education.juniorCollege?.city} onChange={(e) => handleEducationChange('juniorCollege', 'city', e.target.value)} disabled={!isEditing} /></div>
-                                    <div><label className="block font-bold text-xs mb-1">State</label><NeoInput value={formData.education.juniorCollege?.state} onChange={(e) => handleEducationChange('juniorCollege', 'state', e.target.value)} disabled={!isEditing} /></div>
+                                    <div><label className="block font-bold text-xs mb-1">City</label><NeoInput value={formData.education.juniorCollege?.city} onChange={(e) => handleEducationChange('juniorCollege', 'city', e.target.value)} disabled={!isEditing} maxLength={FIELD_LIMITS.currentCity} /></div>
+                                    <div><label className="block font-bold text-xs mb-1">State</label><NeoInput value={formData.education.juniorCollege?.state} onChange={(e) => handleEducationChange('juniorCollege', 'state', e.target.value)} disabled={!isEditing} maxLength={FIELD_LIMITS.state} /></div>
                                 </div>
                            </details>
 
                            <details className="group border-2 border-black bg-white dark:bg-zinc-900 open:bg-gray-50 dark:open:bg-zinc-800 transition-colors">
                                 <summary className="flex cursor-pointer items-center justify-between p-4 font-bold select-none dark:text-white">Graduation<span className="text-xl group-open:rotate-180 transition-transform">▼</span></summary>
                                 <div className="p-4 border-t-2 border-black grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="md:col-span-2"><label className="block font-bold text-xs mb-1">College Name</label><NeoInput value={formData.education.graduation?.collegeName} onChange={(e) => handleEducationChange('graduation', 'collegeName', e.target.value)} disabled={!isEditing} /></div>
-                                    <div><label className="block font-bold text-xs mb-1">University</label><NeoInput value={formData.education.graduation?.university} onChange={(e) => handleEducationChange('graduation', 'university', e.target.value)} disabled={!isEditing} /></div>
-                                    <div><label className="block font-bold text-xs mb-1">Degree</label><NeoInput value={formData.education.graduation?.degree} onChange={(e) => handleEducationChange('graduation', 'degree', e.target.value)} disabled={!isEditing} /></div>
-                                    <div><label className="block font-bold text-xs mb-1">Specialization</label><NeoInput value={formData.education.graduation?.specialization} onChange={(e) => handleEducationChange('graduation', 'specialization', e.target.value)} disabled={!isEditing} placeholder="e.g. Computer Science" /></div>
+                                    <div className="md:col-span-2"><label className="block font-bold text-xs mb-1">College Name</label><NeoInput value={formData.education.graduation?.collegeName} onChange={(e) => handleEducationChange('graduation', 'collegeName', e.target.value)} disabled={!isEditing} maxLength={FIELD_LIMITS.collegeName} /></div>
+                                    <div><label className="block font-bold text-xs mb-1">University</label><NeoInput value={formData.education.graduation?.university} onChange={(e) => handleEducationChange('graduation', 'university', e.target.value)} disabled={!isEditing} maxLength={FIELD_LIMITS.university} /></div>
+                                    <div><label className="block font-bold text-xs mb-1">Degree</label><NeoInput value={formData.education.graduation?.degree} onChange={(e) => handleEducationChange('graduation', 'degree', e.target.value)} disabled={!isEditing} maxLength={FIELD_LIMITS.degree} /></div>
+                                    <div><label className="block font-bold text-xs mb-1">Specialization</label><NeoInput value={formData.education.graduation?.specialization} onChange={(e) => handleEducationChange('graduation', 'specialization', e.target.value)} disabled={!isEditing} placeholder="e.g. Computer Science" maxLength={FIELD_LIMITS.specialization} /></div>
                                     <div><label className="block font-bold text-xs mb-1">Percentage%</label><NeoInput type="number" value={formData.education.graduation?.percentage} onChange={(e) => handleEducationChange('graduation', 'percentage', e.target.value)} disabled={!isEditing} /></div>
                                     <div><label className="block font-bold text-xs mb-1">CGPA</label><NeoInput type="number" value={formData.education.graduation?.cgpa} onChange={(e) => handleEducationChange('graduation', 'cgpa', e.target.value)} disabled={!isEditing} /></div>
                                     <div><label className="block font-bold text-xs mb-1">Year</label><NeoInput type="number" value={formData.education.graduation?.year} onChange={(e) => handleEducationChange('graduation', 'year', e.target.value)} disabled={!isEditing} /></div>
@@ -823,18 +886,18 @@ export default function ProfilePage() {
                                             ))}
                                         </select>
                                     </div>
-                                    <div><label className="block font-bold text-xs mb-1">City</label><NeoInput value={formData.education.graduation?.city} onChange={(e) => handleEducationChange('graduation', 'city', e.target.value)} disabled={!isEditing} /></div>
-                                    <div><label className="block font-bold text-xs mb-1">State</label><NeoInput value={formData.education.graduation?.state} onChange={(e) => handleEducationChange('graduation', 'state', e.target.value)} disabled={!isEditing} /></div>
+                                    <div><label className="block font-bold text-xs mb-1">City</label><NeoInput value={formData.education.graduation?.city} onChange={(e) => handleEducationChange('graduation', 'city', e.target.value)} disabled={!isEditing} maxLength={FIELD_LIMITS.currentCity} /></div>
+                                    <div><label className="block font-bold text-xs mb-1">State</label><NeoInput value={formData.education.graduation?.state} onChange={(e) => handleEducationChange('graduation', 'state', e.target.value)} disabled={!isEditing} maxLength={FIELD_LIMITS.state} /></div>
                                 </div>
                            </details>
 
                            <details className="group border-2 border-black bg-white dark:bg-zinc-900 open:bg-gray-50 dark:open:bg-zinc-800 transition-colors">
                                 <summary className="flex cursor-pointer items-center justify-between p-4 font-bold select-none dark:text-white">Post Graduation<span className="text-xl group-open:rotate-180 transition-transform">▼</span></summary>
                                 <div className="p-4 border-t-2 border-black grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="md:col-span-2"><label className="block font-bold text-xs mb-1">College Name</label><NeoInput value={formData.education.postGraduation?.collegeName} onChange={(e) => handleEducationChange('postGraduation', 'collegeName', e.target.value)} disabled={!isEditing} /></div>
-                                    <div><label className="block font-bold text-xs mb-1">University</label><NeoInput value={formData.education.postGraduation?.university} onChange={(e) => handleEducationChange('postGraduation', 'university', e.target.value)} disabled={!isEditing} /></div>
-                                    <div><label className="block font-bold text-xs mb-1">Degree</label><NeoInput value={formData.education.postGraduation?.degree} onChange={(e) => handleEducationChange('postGraduation', 'degree', e.target.value)} disabled={!isEditing} /></div>
-                                    <div><label className="block font-bold text-xs mb-1">Specialization</label><NeoInput value={formData.education.postGraduation?.specialization} onChange={(e) => handleEducationChange('postGraduation', 'specialization', e.target.value)} disabled={!isEditing} placeholder="e.g. Data Science" /></div>
+                                    <div className="md:col-span-2"><label className="block font-bold text-xs mb-1">College Name</label><NeoInput value={formData.education.postGraduation?.collegeName} onChange={(e) => handleEducationChange('postGraduation', 'collegeName', e.target.value)} disabled={!isEditing} maxLength={FIELD_LIMITS.collegeName} /></div>
+                                    <div><label className="block font-bold text-xs mb-1">University</label><NeoInput value={formData.education.postGraduation?.university} onChange={(e) => handleEducationChange('postGraduation', 'university', e.target.value)} disabled={!isEditing} maxLength={FIELD_LIMITS.university} /></div>
+                                    <div><label className="block font-bold text-xs mb-1">Degree</label><NeoInput value={formData.education.postGraduation?.degree} onChange={(e) => handleEducationChange('postGraduation', 'degree', e.target.value)} disabled={!isEditing} maxLength={FIELD_LIMITS.degree} /></div>
+                                    <div><label className="block font-bold text-xs mb-1">Specialization</label><NeoInput value={formData.education.postGraduation?.specialization} onChange={(e) => handleEducationChange('postGraduation', 'specialization', e.target.value)} disabled={!isEditing} placeholder="e.g. Data Science" maxLength={FIELD_LIMITS.specialization} /></div>
                                     <div><label className="block font-bold text-xs mb-1">Percentage%</label><NeoInput type="number" value={formData.education.postGraduation?.percentage} onChange={(e) => handleEducationChange('postGraduation', 'percentage', e.target.value)} disabled={!isEditing} /></div>
                                     <div><label className="block font-bold text-xs mb-1">CGPA</label><NeoInput type="number" value={formData.education.postGraduation?.cgpa} onChange={(e) => handleEducationChange('postGraduation', 'cgpa', e.target.value)} disabled={!isEditing} /></div>
                                     <div><label className="block font-bold text-xs mb-1">Year</label><NeoInput type="number" value={formData.education.postGraduation?.year} onChange={(e) => handleEducationChange('postGraduation', 'year', e.target.value)} disabled={!isEditing} /></div>
@@ -852,8 +915,8 @@ export default function ProfilePage() {
                                             ))}
                                         </select>
                                     </div>
-                                    <div><label className="block font-bold text-xs mb-1">City</label><NeoInput value={formData.education.postGraduation?.city} onChange={(e) => handleEducationChange('postGraduation', 'city', e.target.value)} disabled={!isEditing} /></div>
-                                    <div><label className="block font-bold text-xs mb-1">State</label><NeoInput value={formData.education.postGraduation?.state} onChange={(e) => handleEducationChange('postGraduation', 'state', e.target.value)} disabled={!isEditing} /></div>
+                                    <div><label className="block font-bold text-xs mb-1">City</label><NeoInput value={formData.education.postGraduation?.city} onChange={(e) => handleEducationChange('postGraduation', 'city', e.target.value)} disabled={!isEditing} maxLength={FIELD_LIMITS.currentCity} /></div>
+                                    <div><label className="block font-bold text-xs mb-1">State</label><NeoInput value={formData.education.postGraduation?.state} onChange={(e) => handleEducationChange('postGraduation', 'state', e.target.value)} disabled={!isEditing} maxLength={FIELD_LIMITS.state} /></div>
                                 </div>
                            </details>
 
@@ -861,10 +924,10 @@ export default function ProfilePage() {
                            <details className="group border-2 border-black bg-white dark:bg-zinc-900 open:bg-gray-50 dark:open:bg-zinc-800 transition-colors">
                                 <summary className="flex cursor-pointer items-center justify-between p-4 font-bold select-none dark:text-white">Ph.D (Optional)<span className="text-xl group-open:rotate-180 transition-transform">▼</span></summary>
                                 <div className="p-4 border-t-2 border-black grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="md:col-span-2"><label className="block font-bold text-xs mb-1">University</label><NeoInput value={formData.education.phd?.university} onChange={(e) => handleEducationChange('phd', 'university', e.target.value)} disabled={!isEditing} /></div>
-                                    <div><label className="block font-bold text-xs mb-1">Field of Study</label><NeoInput value={formData.education.phd?.fieldOfStudy} onChange={(e) => handleEducationChange('phd', 'fieldOfStudy', e.target.value)} disabled={!isEditing} /></div>
+                                    <div className="md:col-span-2"><label className="block font-bold text-xs mb-1">University</label><NeoInput value={formData.education.phd?.university} onChange={(e) => handleEducationChange('phd', 'university', e.target.value)} disabled={!isEditing} maxLength={FIELD_LIMITS.university} /></div>
+                                    <div><label className="block font-bold text-xs mb-1">Field of Study</label><NeoInput value={formData.education.phd?.fieldOfStudy} onChange={(e) => handleEducationChange('phd', 'fieldOfStudy', e.target.value)} disabled={!isEditing} maxLength={FIELD_LIMITS.fieldOfStudy} /></div>
                                     <div><label className="block font-bold text-xs mb-1">Year</label><NeoInput type="number" value={formData.education.phd?.year} onChange={(e) => handleEducationChange('phd', 'year', e.target.value)} disabled={!isEditing} /></div>
-                                    <div className="md:col-span-2"><label className="block font-bold text-xs mb-1">Thesis Title</label><NeoInput value={formData.education.phd?.thesisTitle} onChange={(e) => handleEducationChange('phd', 'thesisTitle', e.target.value)} disabled={!isEditing} /></div>
+                                    <div className="md:col-span-2"><label className="block font-bold text-xs mb-1">Thesis Title</label><NeoInput value={formData.education.phd?.thesisTitle} onChange={(e) => handleEducationChange('phd', 'thesisTitle', e.target.value)} disabled={!isEditing} maxLength={FIELD_LIMITS.thesisTitle} /></div>
                                 </div>
                            </details>
 
@@ -892,6 +955,7 @@ export default function ProfilePage() {
                                                 value={l.language} 
                                                 onChange={(e) => handleLanguageChange(i, 'language', e.target.value)} 
                                                 disabled={!isEditing} 
+                                                maxLength={FIELD_LIMITS.language}
                                                 className="flex-grow border-0 focus:ring-0 bg-transparent"
                                              />
                                              <div className="w-px h-6 bg-gray-300 dark:bg-gray-600"></div>
@@ -948,11 +1012,11 @@ export default function ProfilePage() {
                                              <div className="grid md:grid-cols-2 gap-3 mt-1">
                                                   <div>
                                                       <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Name</label>
-                                                      <NeoInput placeholder="ex. AWS Solutions Architect" value={c.name} onChange={(e) => handleCertificationChange(i, 'name', e.target.value)} disabled={!isEditing} />
+                                                      <NeoInput placeholder="ex. AWS Solutions Architect" value={c.name} onChange={(e) => handleCertificationChange(i, 'name', e.target.value)} disabled={!isEditing} maxLength={FIELD_LIMITS.certificationName} />
                                                   </div>
                                                   <div>
                                                       <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Issuing Org</label>
-                                                      <NeoInput placeholder="ex. Amazon Web Services" value={c.issuingOrganization} onChange={(e) => handleCertificationChange(i, 'issuingOrganization', e.target.value)} disabled={!isEditing} />
+                                                      <NeoInput placeholder="ex. Amazon Web Services" value={c.issuingOrganization} onChange={(e) => handleCertificationChange(i, 'issuingOrganization', e.target.value)} disabled={!isEditing} maxLength={FIELD_LIMITS.issuingOrganization} />
                                                   </div>
                                                    <div>
                                                        <NeoDatePicker 
@@ -1020,10 +1084,10 @@ export default function ProfilePage() {
                                      <div key={idx} className="border-2 border-black p-4 relative bg-white dark:bg-zinc-900 shadow-neo-sm">
                                        {isEditing && <button onClick={() => removeExperience(idx)} className="absolute top-2 right-2 text-red-500 font-bold text-xs uppercase hover:underline">Remove</button>}
                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                           <div><label className="block font-bold text-xs mb-1 uppercase">Job Title</label><NeoInput value={exp.jobTitle} onChange={(e) => handleExperienceChange(idx, 'jobTitle', e.target.value)} disabled={!isEditing} /></div>
-                                           <div><label className="block font-bold text-xs mb-1 uppercase">Company</label><NeoInput value={exp.company} onChange={(e) => handleExperienceChange(idx, 'company', e.target.value)} disabled={!isEditing} /></div>
+                                           <div><label className="block font-bold text-xs mb-1 uppercase">Job Title</label><NeoInput value={exp.jobTitle} onChange={(e) => handleExperienceChange(idx, 'jobTitle', e.target.value)} disabled={!isEditing} maxLength={FIELD_LIMITS.jobTitle} /></div>
+                                           <div><label className="block font-bold text-xs mb-1 uppercase">Company</label><NeoInput value={exp.company} onChange={(e) => handleExperienceChange(idx, 'company', e.target.value)} disabled={!isEditing} maxLength={FIELD_LIMITS.company} /></div>
                                        </div>
-                                       <div className="mb-4"><label className="block font-bold text-xs mb-1 uppercase">Location</label><NeoInput value={exp.location} onChange={(e) => handleExperienceChange(idx, 'location', e.target.value)} disabled={!isEditing} /></div>
+                                       <div className="mb-4"><label className="block font-bold text-xs mb-1 uppercase">Location</label><NeoInput value={exp.location} onChange={(e) => handleExperienceChange(idx, 'location', e.target.value)} disabled={!isEditing} maxLength={FIELD_LIMITS.location} /></div>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                             <NeoDatePicker 
                                                 label="Start Date" 
@@ -1040,7 +1104,19 @@ export default function ProfilePage() {
                                               />
                                             )}
                                         </div>
-                                       <div className="mb-2"><textarea value={exp.description} onChange={(e) => handleExperienceChange(idx, 'description', e.target.value)} disabled={!isEditing} className="w-full border-2 border-black p-2 font-mono text-sm h-20 dark:bg-zinc-800 dark:text-white" placeholder="Roles..."></textarea></div>
+                                       <div className="mb-2">
+                                          <div className="flex justify-end mb-1">
+                                            <span className="text-[10px] font-mono text-gray-400">{(exp.description || '').length}/{FIELD_LIMITS.description}</span>
+                                          </div>
+                                          <textarea 
+                                            value={exp.description} 
+                                            onChange={(e) => handleExperienceChange(idx, 'description', e.target.value)} 
+                                            disabled={!isEditing} 
+                                            maxLength={FIELD_LIMITS.description}
+                                            className="w-full border-2 border-black p-2 font-mono text-sm h-20 dark:bg-zinc-800 dark:text-white resize-none" 
+                                            placeholder="Roles..."
+                                          />
+                                       </div>
                                        <div className="flex items-center gap-2">
                                           <NeoCheckbox 
                                             checked={exp.currentlyWorking} 
@@ -1120,7 +1196,7 @@ export default function ProfilePage() {
                                       </div>
                                     </div>
                                    <div><label className="text-xs font-bold block mb-1">Preferred Locations</label>
-                                     {isEditing? <NeoInput value={formData.preferredLocationsString} onChange={(e) => setFormData(p => ({...p, preferredLocationsString: e.target.value, jobPreferences: {...p.jobPreferences, preferredLocations: e.target.value.split(',').map(s=>s.trim())}}))} /> 
+                                      {isEditing? <NeoInput value={formData.preferredLocationsString} onChange={(e) => setFormData(p => ({...p, preferredLocationsString: e.target.value, jobPreferences: {...p.jobPreferences, preferredLocations: e.target.value.split(',').map(s=>s.trim()).filter(s => s !== '')}}))} /> 
                                      : <div className="flex gap-2">{formData.jobPreferences.preferredLocations.map(l=><NeoBadge key={l}>{l}</NeoBadge>)}</div>}
                                     </div>
                                     <div className="flex items-center gap-2 py-2">
@@ -1182,14 +1258,14 @@ export default function ProfilePage() {
                                </div>
                            </div>
 
-                           <div>
+                            <div>
                               <h4 className="font-bold uppercase mb-4">Social Links</h4>
-                             <div className="space-y-4">
-                                <DisplayField isEditing={isEditing} label="Portfolio URL" value={formData.portfolioUrl} name="portfolioUrl" onChange={handleInputChange} placeholder="https://yourportfolio.com" />
-                                <DisplayField isEditing={isEditing} label="LinkedIn URL" value={formData.linkedinUrl} name="linkedinUrl" onChange={handleInputChange} placeholder="https://linkedin.com/in/username" />
-                                <DisplayField isEditing={isEditing} label="GitHub URL" value={formData.githubUrl} name="githubUrl" onChange={handleInputChange} placeholder="https://github.com/username" />
-                             </div>
-                           </div>
+                              <div className="space-y-4">
+                                 <DisplayField isEditing={isEditing} label="Portfolio URL" value={formData.portfolioUrl} name="portfolioUrl" onChange={handleInputChange} placeholder="https://yourportfolio.com" maxLength={FIELD_LIMITS.portfolioUrl} />
+                                 <DisplayField isEditing={isEditing} label="LinkedIn URL" value={formData.linkedinUrl} name="linkedinUrl" onChange={handleInputChange} placeholder="https://linkedin.com/in/username" maxLength={FIELD_LIMITS.linkedinUrl} />
+                                 <DisplayField isEditing={isEditing} label="GitHub URL" value={formData.githubUrl} name="githubUrl" onChange={handleInputChange} placeholder="https://github.com/username" maxLength={FIELD_LIMITS.githubUrl} />
+                              </div>
+                            </div>
                       </div>
                   )}
               </div>

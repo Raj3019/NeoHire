@@ -90,7 +90,7 @@ export default function CandidateDashboard() {
   const colors = ['#FF6B6B', '#54A0FF', '#FFD026', '#2ECC71'];
 
   return (
-    <AuthGuard allowedRoles={['candidate']}>
+    <AuthGuard allowedRoles={['Employee']}>
       <ProfileCompletionBanner />
       <div className="max-w-7xl mx-auto px-4 py-8">
         <h1 className="text-4xl font-black uppercase mb-8 dark:text-white">Candidate <span className="text-neo-blue">Dashboard</span></h1>

@@ -1,5 +1,5 @@
 const express = require("express");
-const {registerEmployee, loginEmployee, logoutEmployee, profileEmployee, editEmployee, getMyApplications, employeeDashboard, uploadProfilePicture, uploadResume,recommendJobToEmployee, getApplicationById} = require("../controller/employee.controller")
+const {registerEmployee, loginEmployee, logoutEmployee, profileEmployee, editEmployee, getMyApplications, employeeDashboard, uploadProfilePicture, uploadResume,recommendJobToEmployee, getApplicationById, verifyEmail, resendVerificationEmail} = require("../controller/employee.controller")
 const {authenticateJWT} = require("../middleware/auth.middleware")
 const employeeRouter = express.Router();
 require("dotenv").config();
@@ -8,36 +8,42 @@ require("dotenv").config();
 const upload = require("../middleware/multer.middleware");
 
 //POST - SIGN-UP
+employeeRouter.post("/signup", registerEmployee)
 
-employeeRouter.post("/api/employee/signup", registerEmployee)
+
+// Email Verfication route
+employeeRouter.get('/verify-email/:token', verifyEmail)
+
+// Resend Verfication route
+employeeRouter.post('/resend-verification', resendVerificationEmail)
 
 //POST - LOGIN
-employeeRouter.post("/api/employee/login", loginEmployee)
+employeeRouter.post("/login", loginEmployee)
 
 // POST - LOGOUT
-employeeRouter.post("/api/employee/logout", authenticateJWT, logoutEmployee)
+employeeRouter.post("/logout", authenticateJWT, logoutEmployee)
 
 //GET - PROFILE
-employeeRouter.get("/api/employee/profile", authenticateJWT, profileEmployee)
+employeeRouter.get("/profile", authenticateJWT, profileEmployee)
 // PUT - PROFILE
 
-employeeRouter.put("/api/employee/profile/:id", authenticateJWT, editEmployee)
+employeeRouter.put("/profile/:id", authenticateJWT, editEmployee)
 //POST - RESUME UPLOAD
-employeeRouter.post("/api/employee/profile/resume", authenticateJWT, upload.single('resume'), uploadResume)
+employeeRouter.post("/profile/resume", authenticateJWT, upload.single('resume'), uploadResume)
 
-employeeRouter.post("/api/employee/profile/picture", authenticateJWT, upload.single('profilePicture'), uploadProfilePicture)
+employeeRouter.post("/profile/picture", authenticateJWT, upload.single('profilePicture'), uploadProfilePicture)
 
 // Dashboard
-employeeRouter.get("/api/employee/dashboard", authenticateJWT, employeeDashboard)
+employeeRouter.get("/dashboard", authenticateJWT, employeeDashboard)
 
 // GET - ALL APPLICATIONS
-employeeRouter.get("/api/employee/applications", authenticateJWT, getMyApplications)
+employeeRouter.get("/applications", authenticateJWT, getMyApplications)
 
 // GET - APPLICATION BY ID
-employeeRouter.get("api/employee/application/:jobId", authenticateJWT, getApplicationById)
+employeeRouter.get("application/:jobId", authenticateJWT, getApplicationById)
 
 //GET - RECOMMENDED JOBS
-employeeRouter.get("/api/employee/recommendations", authenticateJWT, recommendJobToEmployee)
+employeeRouter.get("/recommendations", authenticateJWT, recommendJobToEmployee)
 
 
 module.exports = employeeRouter

@@ -1,11 +1,11 @@
-//Recuter Model
+//Recruiter Model
 
 const mongoose = require("mongoose");
 
-const recurterSchema = new mongoose.Schema(
+const recruiterSchema = new mongoose.Schema(
   {
     fullName: {
-      type: String
+      type: String,
     },
     email: {
       type: String,
@@ -14,18 +14,19 @@ const recurterSchema = new mongoose.Schema(
       unique: true,
       trim: true,
     },
-    headline:{
-		type: String
-	  },
+    headline: {
+      type: String,
+    },
     profilePicture: {
-      type: String
+      type: String,
     },
     profilePicturePublicId: {
-      type: String
+      type: String,
     },
     password: {
       type: String,
-      required: true
+      minlength: 6,
+      required: true,
     },
     phone: {
       type: String,
@@ -55,20 +56,20 @@ const recurterSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      default: "Recuter",
+      default: "Recruiter",
     },
     gender: {
       type: String,
-      enum: ["Male", "Female"]
+      enum: ["Male", "Female", "Other"],
     },
-      skills: {
+    skills: {
       type: [String],
-      default: []
-	  },
-      experienceYears: {
+      default: [],
+    },
+    experienceYears: {
       type: Number,
-      default: 0
-	  },
+      default: 0,
+    },
     education: {
       tenth: {
         schoolName: String,
@@ -164,10 +165,10 @@ const recurterSchema = new mongoose.Schema(
       },
     ],
     currentRole: {
-      type: String
+      type: String,
     },
     currentEmployer: {
-      type: String
+      type: String,
     },
     companyURL: {
       type: String,
@@ -189,8 +190,8 @@ const recurterSchema = new mongoose.Schema(
       type: String,
     },
     resumePublicLinkId: {
-		type: String,
-	},
+      type: String,
+    },
     portfolioUrl: {
       type: String,
     },
@@ -204,6 +205,18 @@ const recurterSchema = new mongoose.Schema(
       industries: [String],
       jobTypes: [String],
     },
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    verificationToken: {
+      type: String,
+      default: null,
+    },
+    verificationTokenExpiry: {
+      type: Date,
+      default: null,
+    },
     jobs: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -211,9 +224,9 @@ const recurterSchema = new mongoose.Schema(
       },
     ],
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-const RecurterModel = mongoose.model("Recuter", recurterSchema);
+const RecruiterModel = mongoose.model("Recruiter", recruiterSchema);
 
-module.exports = RecurterModel;
+module.exports = RecruiterModel;

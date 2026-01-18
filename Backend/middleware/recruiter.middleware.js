@@ -1,11 +1,11 @@
-const Employee = require("../model/employee.model")
+const Recruiter = require("../model/recruiter.model")
 
-const checkEmployeeProfileComplete = async(req, res, next) =>{
+const checkRercuiterProfileComplete = async(req, res, next) =>{
   try {
-    const employee = await Employee.findById(req.user.id);
+    const recruiter = await Recruiter.findById(req.user.id);
 
-    if(!employee){
-      return res.status(404).json({message: "Employee not found"})
+    if(!recruiter){
+      return res.status(404).json({message: "Recruiter not found"})
     }
 
     const requiredFields = [
@@ -74,4 +74,4 @@ const checkEmployeeProfileComplete = async(req, res, next) =>{
   }
 }
 
-module.exports = checkEmployeeProfileComplete
+module.exports = checkRercuiterProfileComplete

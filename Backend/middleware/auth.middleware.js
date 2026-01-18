@@ -37,6 +37,8 @@ const authenticateRole = (requiredRole) => async(req, res, next) => {
   // console.log("User role:", req.user.role)
   // console.log("Required role:", requiredRole)
   if(req.user.role !== requiredRole){
+    console.log(req.user.role)
+    console.log(requiredRole);
     return res.status(403).json({ error: "Forbidden: insufficient permissions" });
   }
   next()

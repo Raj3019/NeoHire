@@ -156,7 +156,7 @@ export const getMissingProfileFields = (user) => {
     if (!user.education?.graduation?.degree) missing.push('education.graduation');
     if (!user.jobPreferences?.jobType || user.jobPreferences.jobType.length === 0) missing.push('jobPreferences.jobType');
     if (!user.jobPreferences?.workMode || user.jobPreferences.workMode.length === 0) missing.push('jobPreferences.workMode');
-  } else if (user.role === 'recruiter' || user.role === 'Recuter') {
+  } else if (user.role === 'recruiter' || user.role === 'Recruiter') {
     // Recruiter required
     // if (!user.currentRole) missing.push('currentRole');
     // if (!user.currentEmployer) missing.push('currentEmployer');
@@ -166,6 +166,30 @@ export const getMissingProfileFields = (user) => {
   }
 
   return missing;
+};
+
+export const formatDateTime = (date) => {
+  if (!date) return 'Not Specified';
+  try {
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return date;
+
+    const dateStr = d.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
+
+    const timeStr = d.toLocaleTimeString('en-GB', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+
+    return `${dateStr}, ${timeStr}`;
+  } catch (e) {
+    return date;
+  }
 };
 
 export const formatDate = (date) => {
@@ -182,4 +206,22 @@ export const formatDate = (date) => {
   } catch (e) {
     return date;
   }
+};
+export const getCurrencySymbol = (currencyCode) => {
+  if (!currencyCode) return '$';
+
+  const symbols = {
+    'USD': '$',
+    'INR': '₹',
+    'EUR': '€',
+    'GBP': '£',
+    'JPY': '¥',
+    'CAD': '$',
+    'AUD': '$',
+    'SGD': '$',
+    'AED': 'د.إ',
+    'SAR': '﷼',
+  };
+
+  return symbols[currencyCode.toUpperCase()] || currencyCode;
 };

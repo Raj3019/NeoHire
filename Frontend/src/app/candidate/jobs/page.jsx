@@ -5,7 +5,7 @@ import AuthGuard from '@/components/auth/AuthGuard';
 import { useDataStore } from '@/lib/store';
 import { NeoButton, NeoCard, NeoBadge, NeoInput } from '@/components/ui/neo';
 import { Search, SlidersHorizontal, X, ChevronLeft, ChevronRight } from 'lucide-react';
-import { cn, formatDate } from '@/lib/utils';
+import { cn, formatDate, getCurrencySymbol } from '@/lib/utils';
 import ProfileCompletionBanner from '@/components/shared/ProfileCompletionBanner';
 
 export default function CandidateJobs() {
@@ -58,8 +58,9 @@ export default function CandidateJobs() {
     if (!salary) return 'Not Disclosed';
     if (typeof salary === 'object') {
       const { min, max, currency } = salary;
+      const symbol = getCurrencySymbol(currency);
       if (min !== undefined && max !== undefined) {
-         return `${currency || '$'}${min.toLocaleString()} - ${currency || '$'}${max.toLocaleString()}`;
+         return `${symbol}${min.toLocaleString()} - ${symbol}${max.toLocaleString()}`;
       }
       return 'Competitive Salary';
     }
@@ -67,7 +68,7 @@ export default function CandidateJobs() {
   };
 
   return (
-    <AuthGuard allowedRoles={['candidate']}>
+    <AuthGuard allowedRoles={['Employee']}>
       <ProfileCompletionBanner />
       <div className="max-w-7xl mx-auto px-4 py-8">
         <h1 className="text-4xl font-black uppercase mb-8 dark:text-white">Available <span className="text-neo-green">Positions</span></h1>

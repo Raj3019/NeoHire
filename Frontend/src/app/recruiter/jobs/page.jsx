@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useAuthStore } from '@/lib/store';
 import { jobsAPI, recruiterAPI } from '@/lib/api';
 import { ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
-import { getMissingProfileFields, formatDate } from '@/lib/utils';
+import { getMissingProfileFields, formatDate, getCurrencySymbol } from '@/lib/utils';
 import ProfileCompletionBanner from '@/components/shared/ProfileCompletionBanner';
 
 const INITIAL_FORM_STATE = {
@@ -22,7 +22,7 @@ const INITIAL_FORM_STATE = {
     experienceLevel: 'Mid',
     salaryMin: 0,
     salaryMax: 0,
-    currency: 'USD',
+    currency: 'INR',
     applicationDeadline: '',
     openings: 1,
     status: 'Active',
@@ -64,7 +64,7 @@ export default function RecruiterJobs() {
   
   // Fetch profile on mount to ensure we have the latest jobs
   useEffect(() => {
-    fetchProfile('recruiter');
+    fetchProfile('Recruiter');
   }, []);
 
   // Sync jobs from user profile
@@ -140,7 +140,7 @@ export default function RecruiterJobs() {
       setSuccessMessage(`Candidate ${status.toLowerCase()} successfully!`);
       
       // Refresh profile to get updated applications
-      await fetchProfile('recruiter');
+      await fetchProfile('Recruiter');
       
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err) {
@@ -233,7 +233,7 @@ export default function RecruiterJobs() {
         }
         
         // Refresh profile to get updated job list
-        const profileRes = await fetchProfile('recruiter');
+        const profileRes = await fetchProfile('Recruiter');
         if (!profileRes.success) {
             console.warn("Profile refresh failed:", profileRes.error);
         }
@@ -251,7 +251,7 @@ export default function RecruiterJobs() {
   const selectedJob = jobs.find(j => j.id === selectedJobId);
 
   return (
-    <AuthGuard allowedRoles={['recruiter']}>
+    <AuthGuard allowedRoles={['Recruiter']}>
     <div className="min-h-screen bg-neo-bg dark:bg-zinc-950">
     <ProfileCompletionBanner />
     <div className="max-w-6xl mx-auto px-4 py-8">
@@ -471,9 +471,23 @@ export default function RecruiterJobs() {
                     <label className="block font-black uppercase mb-1 text-xs dark:text-white">Max Salary *</label>
                     <NeoInput type="number" name="salaryMax" value={formData.salaryMax} onChange={handleInputChange} required className="border-4" />
                 </div>
-                 <div>
+                 <div className="relative">
                     <label className="block font-black uppercase mb-1 text-xs dark:text-white">Currency *</label>
-                    <NeoInput name="currency" value={formData.currency ?? ''} onChange={handleInputChange} className="border-4" required placeholder="USD" />
+                    <div className="flex gap-2">
+                        <select 
+                            name="currency" 
+                            value={formData.currency || 'INR'} 
+                            onChange={handleInputChange} 
+                            className="w-full bg-white dark:bg-zinc-800 dark:text-white border-4 border-neo-black dark:border-white p-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-neo-yellow" 
+                            required
+                        >
+                            <option value="INR">INR (₹)</option>
+                            <option value="USD">USD ($)</option>
+                            <option value="EUR">EUR (€)</option>
+                            <option value="GBP">GBP (£)</option>
+                            <option value="AED">AED (د.إ)</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 

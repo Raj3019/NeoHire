@@ -14,8 +14,8 @@ const ProfileCompletionBanner = () => {
     if (!user) return null;
     
     // Support both Employee (candidate) and Recurter (recruiter) roles
-    const isCandidate = user.role === 'Employee' || user.role === 'candidate';
-    const isRecruiter = user.role === 'Recuter' || user.role === 'recruiter';
+    const isCandidate = user.role === 'Employee' || user.role?.toLowerCase() === 'employee' || user.role?.toLowerCase() === 'candidate';
+    const isRecruiter = user.role === 'Recruiter';
 
     if (!isCandidate && !isRecruiter) return null;
     

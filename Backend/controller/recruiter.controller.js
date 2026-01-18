@@ -1,0 +1,769 @@
+const Recruiter = require("../model/recruiter.model");
+const Application = require("../model/application.model");
+const jwt = require("jsonwebtoken");
+const jwtToken = process.env.JWT_TOKEN_Secret;
+const bcrypt = require("bcryptjs");
+const fs = require("fs");
+const Job = require("../model/job.model");
+const crypto = require("crypto");
+const {
+  RecruiterRegisterValidation,
+  RecruiterLoginValidation,
+} = require("../utils/validation.utlis");
+const { default: mongoose } = require("mongoose");
+const {
+  createNotification,
+  sendRealTimeNotification,
+} = require("../utils/notification.utlis");
+const {
+  deleteFromCloudinary,
+  uploadResumeToCloudnary,
+  uploadToCloudinary,
+  deleteResumeFromCloudinary,
+} = require("../utils/cloudnary.utlis");
+const { sendVerificationEmail } = require("../utils/emailService.utlis");
+// const salt = process.env.SALT
+
+//Register Controller
+const registerRecruiter = async (req, res) => {
+  try {
+    const validateBody = RecruiterRegisterValidation.safeParse(req.body);
+
+    if (!validateBody.success) {
+      const errors = validateBody.error.issues[0].message;
+      return res.status(400).json({
+        message: errors,
+      });
+    }
+
+    const { fullName, email, password } = validateBody.data;
+
+    const existingEmail = await Recruiter.findOne({ email });
+
+    if (existingEmail) {
+      return res
+        .status(409) // ✅ Changed from 401 to 409 (Conflict)
+        .json({ message: "Recruiter with this email already exists" });
+    }
+
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+    const verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    const recruiter = new Recruiter({
+      email,
+      fullName,
+      password: passwordHash,
+      verificationToken,
+      verificationTokenExpiry,
+      isVerified: false,
+    });
+
+    // ✅ FIX 1: Change 'employee' to 'recruiter' in URL
+    const verificationLink = `${process.env.FRONTEND_URL || "http://localhost:3001"}/verify-email/recruiter/${verificationToken}`;
+
+    // ✅ FIX 2: Send email BEFORE saving to database
+    try {
+      await sendVerificationEmail(email, verificationLink, fullName)
+    } catch (emailError) {
+      console.error('Email sending failed:', emailError);
+      return res.status(500).json({ 
+        message: "Failed to send verification email. Please try again.",
+        error: emailError.message 
+      });
+    }
+
+    // ✅ Only save if email sent successfully
+    await recruiter.save();
+
+    // ✅ Don't send token/user data before verification
+    return res.status(200).json({
+      message: "Registration successful! Please check your email to verify your account.",
+      email: recruiter.email
+    });
+  } catch (err) {
+    console.log(err)
+    return res.status(500).json({ 
+      message: "Registration failed. Please try again.",
+      error: err.message 
+    });
+  }
+};
+
+const verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.params;
+
+    const recruiter = await Recruiter.findOne({
+      verificationToken: token,
+      verificationTokenExpiry: { $gt: Date.now() },
+    });
+
+    if (!recruiter) {
+      return res.status(400).json({
+        message: "Invalid or expired verification token",
+      });
+    }
+
+    if (recruiter.isVerified) {
+      return res.status(400).json({
+        message: "Email already verified. You can login now.",
+      });
+    }
+
+    // ✅ FIX 3: Set to TRUE, not null
+    recruiter.isVerified = true;
+    recruiter.verificationToken = null;
+    recruiter.verificationTokenExpiry = null;
+
+    await recruiter.save();
+
+    res.status(200).json({
+      message: "Email verified successfully! You can now login.",
+    });
+  } catch (error) {
+    console.error("Verification error: ", error);
+    res.status(500).json({
+      message: "Server error during verification",
+      error: error.message,
+    });
+  }
+};
+
+const resendVerificationEmail = async (req, res) => {
+  try {
+    // ✅ FIX 4: Get email from body, not token from params
+    const {email} = req.body
+
+    if (!email) {
+      return res.status(400).json({
+        message: "Email is required"
+      });
+    }
+
+    const recruiter = await Recruiter.findOne({ email })
+
+    if (!recruiter) {
+      return res.status(404).json({
+        message: "Recruiter not found",
+      });
+    }
+
+    if (recruiter.isVerified) {
+      return res.status(400).json({
+        message: "Email already verified",
+      });
+    }
+
+    const verificationToken = crypto.randomBytes(32).toString('hex')
+    const verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000)
+
+    // ✅ FIX 5: Change 'employee' to 'recruiter' in URL
+    const verificationLink = `${process.env.FRONTEND_URL || 'http://localhost:3001'}/verify-email/recruiter/${verificationToken}`
+    
+    // ✅ Send email BEFORE updating database
+    try {
+      await sendVerificationEmail(email, verificationLink, recruiter.fullName)
+    } catch (emailError) {
+      console.error('Email resend failed:', emailError);
+      return res.status(500).json({ 
+        message: "Failed to resend verification email. Please try again.",
+        error: emailError.message 
+      });
+    }
+
+    // ✅ Only update if email sent successfully
+    recruiter.verificationToken = verificationToken
+    recruiter.verificationTokenExpiry = verificationTokenExpiry
+    await recruiter.save()
+
+    res.status(200).json({ message: 'Verification email resent successfully' })
+  } catch (error) {
+    console.error('Resend verification error', error);
+    res.status(500).json({ message: 'Server Error', error: error.message })
+  }
+}
+
+//Login Controller
+const loginRecruiter = async (req, res) => {
+  try {
+    const validateBody = RecruiterLoginValidation.safeParse(req.body);
+
+    if (!validateBody.success) {
+      const errors = validateBody.error.issues[0].message;
+      return res.status(400).json({
+        message: errors,
+      });
+    }
+
+    const { email, password } = validateBody.data;
+
+    const recruiter = await Recruiter.findOne({ email });
+
+    if (!recruiter) {
+      return res.status(401).json({ message: "Invalid Credentials" });
+    }
+
+    if (!recruiter.isVerified) {
+      return res.status(403).json({
+        message: "Please verify your email before logging in. Check your inbox for the verification link.",
+        needsVerification: true
+      })
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, recruiter.password);
+
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: "Invalid Credentials" });
+    }
+
+    const token = jwt.sign(
+      { id: recruiter._id, role: recruiter.role },
+      jwtToken,
+      { expiresIn: "1hr" },
+    );
+
+    // return res.status(200).json({ message: "Login Successful" , data: token});
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
+    return res.status(200).json({
+      message: "Login Successfully",
+      user: {
+        id: recruiter._id,
+        email: recruiter.email,
+        role: recruiter.role,
+      },
+    });
+  } catch (err) {
+    // console.log(err)
+    return res
+      .status(401)
+      .json({ message: "Unable to Login", error: err.message });
+  }
+};
+
+const uploadProfilePicture = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file Uploaded" });
+    }
+
+    const recruiterId = req.user.id;
+    const recruiter = await Recruiter.findById(recruiterId);
+    if (!recruiter) {
+      return res.status(404).json({ message: "Recruiter not found" });
+    }
+
+    if (recruiter.profilePicturePublicId) {
+      await deleteFromCloudinary(recruiter.profilePicturePublicId);
+    }
+
+    const result = await uploadToCloudinary(req.file.path);
+
+    recruiter.profilePicture = result.url;
+    recruiter.profilePicturePublicId = result.public_id;
+    await recruiter.save();
+
+    fs.unlinkSync(req.file.path);
+
+    res.status(200).json({
+      message: "Profile Picture uploaded succesfully",
+      profilePicture: result.url,
+    });
+  } catch (error) {
+    if (req.file && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
+    // console.log(error)
+    return res
+      .status(401)
+      .json({
+        message: "Unable to Upload Profile Picture",
+        error: error.message,
+      });
+  }
+};
+
+// Profile Controller
+const profileRecruiter = async (req, res) => {
+  try {
+    const recruiterId = req.user;
+
+    const recruiter = await Recruiter.findById(recruiterId.id)
+      .select("-password")
+      .populate({
+        path: "jobs",
+        select:
+          "_id title companyName location jobType salary status createdAt skillsRequired openings applicationDeadline",
+        populate: {
+          path: "appliedBy.applicant",
+          select:
+            "_id fullName email phone skills experienceYears currentJobTitle profilePicture",
+        },
+      });
+
+    if (!recruiter) {
+      return res.status(401).json({ message: "Invalid Profile" });
+    }
+
+    const jobsWithDetails = await Promise.all(
+      recruiter.jobs.map(async (job) => {
+        const applications = await Application.find({ job: job._id })
+          .populate(
+            "JobSeeker",
+            "_id fullName email phone skills experienceYears currentJobTitle profilePicture",
+          )
+          .select("_id status aiMatchScore resume appliedAt");
+
+        return {
+          ...job.toObject(),
+          totalApplications: applications.length,
+          applications: applications.map((app) => ({
+            _id: app._id,
+            applicant: app.JobSeeker,
+            status: app.status,
+            aiMatchScore: app.aiMatchScore,
+            resume: app.resume,
+            appliedAt: app.appliedAt,
+          })),
+        };
+      }),
+    );
+
+    return res.status(200).json({
+      data: {
+        ...recruiter.toObject(),
+        jobs: jobsWithDetails,
+      },
+      message: "Profile sucessfully fetched",
+    });
+  } catch (err) {
+    // console.log(err)
+    return res
+      .status(401)
+      .json({ message: "Unable to fetch profile", error: err.message });
+  }
+};
+
+const uploadResume = async (req, res) => {
+  try {
+    const recruiterId = req.user.id;
+    const recruiter = await Recruiter.findById(recruiterId);
+
+    if (recruiter.resumePublicLinkId) {
+      await deleteResumeFromCloudinary(recruiter.resumePublicLinkId);
+    }
+
+    const result = await uploadResumeToCloudnary(req.file.path);
+
+    recruiter.resumeFileURL = result.url;
+    recruiter.resumePublicLinkId = result.public_id;
+    await recruiter.save();
+
+    fs.unlinkSync(req.file.path);
+
+    res.status(200).json({
+      message: "Resume Uploaded Successfully",
+      resumeLink: result.url,
+    });
+  } catch (error) {
+    if (req.file && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
+    // console.log(error)
+    res.status(500).json({ message: error.message });
+  }
+};
+
+//Edit Pofile
+
+const editRecruiter = async (req, res) => {
+  try {
+    const recruiterId = req.params.id;
+
+    if (req.body.password) {
+      req.body.password = await bcrypt.hash(req.body.password, 10);
+    }
+
+    const recruiter = await Recruiter.findByIdAndUpdate(recruiterId, req.body, {
+      new: true,
+    }).select("-password");
+
+    if (!recruiter) {
+      return res.status(401).json({ message: "Invalid profile" });
+    }
+
+    return res
+      .status(200)
+      .json({ data: recruiter, message: "Profile edited sucessfully" });
+  } catch (err) {
+    // console.log(err)
+    return res
+      .status(401)
+      .json({ message: "Unable to Edit Profile", error: err.message });
+  }
+};
+
+// Recuter dashboard
+
+// const recuterDashboard = async(req, res) => {
+//   try{
+//     const recuterId = req.user.id;
+//     // fetch all the jobs created by this recuter (including applied and non applied)
+//     const jobs = await Job.find({postedBy: recuterId})
+//     // const findEmployee = await Job.find({appliedBy: Job.appliedBy})
+//     // // return res.json({data: findJob})
+
+//     // const dashboard = await Job.find({
+//     //   $and:[
+//     //     {findJob},
+//     //     {findEmployee}
+//     //   ]
+//     // })
+//     //
+//     //
+//     // I NEED TO UNDERSTAND THIS
+//     const jobsWithApplicants = await Promise.all(jobs.map(async (job) => {
+//           const applications = await Application.find({ job: job._id })
+//             .populate('JobSeeker', 'fullName email'); // populate employee info
+
+//           return {
+//             job,
+//             applicants: applications.map(app => ({
+//               employee: app.JobSeeker,
+//               resume: app.resume
+//             }))
+//           };
+//         }));
+
+//     return res.status(200).json({data: jobsWithApplicants})
+//   }catch(err){
+//     console.log(err)
+//     return res.status(401).json({message: "Unable to fetch dashboard"})
+//   }
+// }
+
+// GET all jobs posted by recruiter with application stats [COMPLEX]
+const getAllJobsByRecruiter = async (req, res) => {
+  try {
+    const recruiterId = req.user.id;
+
+    // Find all jobs posted by this recruiter
+    const jobs = await Job.find({ postedBy: recruiterId })
+      .select(
+        "title companyName location jobType salary status createdAt skillsRequired applicationDeadline",
+      )
+      .sort({ createdAt: -1 });
+
+    // Get application counts and stats for each job
+    const jobsWithStats = await Promise.all(
+      jobs.map(async (job) => {
+        const totalApplications = await Application.countDocuments({
+          job: job._id,
+        });
+
+        const statusBreakdown = await Application.aggregate([
+          { $match: { job: job._id } },
+          {
+            $group: {
+              _id: "$status",
+              count: { $sum: 1 },
+            },
+          },
+        ]);
+
+        // Get average AI score for this job's applications
+        const avgScoreResult = await Application.aggregate([
+          { $match: { job: job._id } },
+          {
+            $group: {
+              _id: null,
+              avgScore: { $avg: "$aiMatchScore.overallScore" },
+            },
+          },
+        ]);
+
+        const avgScore =
+          avgScoreResult.length > 0 ? avgScoreResult[0].avgScore : 0;
+
+        return {
+          ...job.toObject(),
+          stats: {
+            totalApplications,
+            avgMatchScore: avgScore ? Math.round(avgScore) : 0,
+            statusBreakdown: statusBreakdown.reduce(
+              (acc, curr) => {
+                acc[curr._id] = curr.count;
+                return acc;
+              },
+              {
+                Applied: 0,
+                Shortlist: 0,
+                Accept: 0,
+                Reject: 0,
+              },
+            ),
+          },
+        };
+      }),
+    );
+
+    return res.status(200).json({
+      success: true,
+      count: jobsWithStats.length,
+      data: jobsWithStats,
+    });
+  } catch (err) {
+    // console.log(err);
+    return res.status(500).json({
+      message: "Failed to fetch jobs",
+      error: err.message,
+    });
+  }
+};
+
+const getApplicationsByJob = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    const recruiterId = req.user.id;
+    const { status } = req.query; // Optional filter: ?status=Pending
+
+    // Security: Verify this job belongs to the recruiter
+    const job = await Job.findById(jobId);
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+
+    if (job.postedBy.toString() !== recruiterId) {
+      return res
+        .status(403)
+        .json({ message: "Unauthorized: This is not your job" });
+    }
+
+    // Build filter
+    const filter = { job: jobId };
+    if (status) {
+      filter.status = status; // Filter by status if provided
+    }
+
+    // Get all applications with candidate details
+    const applications = await Application.find(filter)
+      .populate(
+        "JobSeeker",
+        "fullName email phone profilePicture skills experienceYears currentJobTitle location",
+      )
+      .sort({ "aiMatchScore.overallScore": -1 }); // Sort by AI score (best first)
+
+    return res.status(200).json({
+      success: true,
+      jobTitle: job.title,
+      count: applications.length,
+      data: applications,
+    });
+  } catch (err) {
+    // console.log(err);
+    return res.status(500).json({
+      message: "Failed to fetch applications",
+      error: err.message,
+    });
+  }
+};
+
+// update application status
+const updateApplicationStatus = async (req, res) => {
+  try {
+    const { applicationId } = req.params;
+    const { status } = req.body;
+    const recruiterId = req.user.id;
+
+    //validate status input
+    const validateStatuses = [
+      "Applied",
+      "Pending",
+      "Shortlist",
+      "Accept",
+      "Reject",
+    ];
+    if (!validateStatuses.includes(status)) {
+      return res.status(400).json({ message: "Invalid Status" });
+    }
+
+    //Find the application
+    const application = await Application.findById(applicationId);
+    if (!application) {
+      return res.status(404).json({ message: "Application not found" });
+    }
+
+    // FIX 1: Fetch the related job to get job details
+    const job = await Job.findById(application.job);
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+
+    // Security check: Verify this job belongs to the recruiter
+    if (job.postedBy.toString() !== recruiterId) {
+      return res.status(403).json({ message: "Unauthorized access" });
+    }
+
+    application.status = status;
+    await application.save();
+
+    await Job.updateOne(
+      { _id: application.job, "appliedBy.applicant": application.JobSeeker },
+      { $set: { "appliedBy.$.status": status } },
+    );
+
+    // FIX 2: Create notification with correct field names
+    const notification = await createNotification({
+      recipient: application.JobSeeker, // ✅ Use JobSeeker (not candidateId)
+      recipientModel: "Employee",
+      type: "STATUS_CHANGED",
+      title: "Application Status Updated",
+      message: `Your application for ${job.title} has been ${status}`, // ✅ job is now defined
+      relatedJob: job._id, // ✅ job is now defined
+      relatedApplication: application._id,
+    });
+
+    // Send real-time notification if candidate is online
+    const io = req.app.get("io");
+    const userSockets = req.app.get("userSockets");
+    sendRealTimeNotification(
+      io,
+      userSockets,
+      application.JobSeeker,
+      notification,
+    ); // ✅ Use JobSeeker
+
+    return res.status(200).json({
+      success: true,
+      message: "Application Status Updated",
+      data: application,
+    });
+  } catch (err) {
+    console.error("Error in updateApplicationStatus:", err); // ✅ Better error logging
+    return res.status(500).json({
+      message: "Failed to update Status",
+      error: err.message,
+    });
+  }
+};
+
+// get application overall stats
+const getJobApplicationStats = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    const recruiterId = req.user.id;
+
+    //verify job belong to recruiter
+    const job = await Job.findOne({ _id: jobId, postedBy: recruiterId });
+    if (!job) {
+      return res.status(400).json({ message: "Job not found" });
+    }
+
+    //Aggregate statistcs by status
+    const stats = await Application.aggregate([
+      { $match: { job: mongoose.Types.ObjectId(jobId) } },
+      {
+        $group: {
+          _id: "$status", //GroupBy: Applied, Pending, Accepted
+          count: { $sum: 1 }, //count applications in each status
+          avgScore: { $avg: "$aiMatchScore.overallScore" }, //Average AI Score
+        },
+      },
+    ]);
+
+    //get total count
+    const total = await Application.countDocuments({ job: jobId });
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        total,
+        byStatus: stats,
+      },
+    });
+  } catch (err) {
+    // console.log(err)
+    return res.status(500).json({
+      message: "Failed to fetch stats",
+      error: err.message,
+    });
+  }
+};
+
+const getAllCandidates = async (req, res) => {
+  try {
+    const recruiterId = req.user.id;
+
+    const recruiter = await Recruiter.findById(recruiterId).populate({
+      path: "jobs",
+      populate: {
+        path: "appliedBy.applicant",
+      },
+    });
+
+    if (!recruiter) {
+      return res.status(404).json({ message: "Recruiter not found" });
+    }
+
+    const getCandidates = recruiter.jobs.map((job) => ({
+      applicants: job.appliedBy.map((a) => ({
+        profilePicture: a.applicant?.profilePicture,
+        fullName: a.applicant?.fullName,
+        email: a.applicant?.email,
+        skills: a.applicant?.skills,
+        currentJobTitle: a.applicant?.currentJobTitle,
+      })),
+    }));
+
+    return res.status(200).json({ data: getCandidates });
+  } catch (error) {
+    // console.log(error)
+    return res.status(500).json({ message: "Unable to fetch talents" });
+  }
+};
+
+const logoutRecruiter = async (req, res) => {
+  try {
+    const recruiter = req.user;
+
+    if (!recruiter) {
+      return res.status(401).json({ message: "Recruiter not found" });
+    }
+
+    //  res.clear
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+    });
+    return res.status(201).json({ message: "logout sucessfully" });
+  } catch (err) {
+    return res.status(401).json({ message: "Logout failed" });
+  }
+};
+
+module.exports = {
+  registerRecruiter,
+  verifyEmail,
+  resendVerificationEmail,
+  loginRecruiter,
+  logoutRecruiter,
+  profileRecruiter,
+  editRecruiter,
+  uploadProfilePicture,
+  uploadResume,
+  getJobApplicationStats,
+  getAllJobsByRecruiter,
+  updateApplicationStatus,
+  getAllCandidates,
+  getApplicationsByJob,
+  // recuterDashboard
+};

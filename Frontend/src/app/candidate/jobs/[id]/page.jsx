@@ -4,7 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AuthGuard from '@/components/auth/AuthGuard';
 import { useAuthStore, useDataStore } from '@/lib/store';
-import { getMissingProfileFields, formatDate } from '@/lib/utils';
+import { getMissingProfileFields, formatDate, getCurrencySymbol } from '@/lib/utils';
 import { jobsAPI } from '@/lib/api';
 import { NeoCard, NeoButton, NeoBadge } from '@/components/ui/neo';
 import ProfileCompletionBanner from '@/components/shared/ProfileCompletionBanner';
@@ -238,8 +238,9 @@ export default function JobDetailsPage() {
     if (!salary) return 'Not Disclosed';
     if (typeof salary === 'object') {
       const { min, max, currency } = salary;
+      const symbol = getCurrencySymbol(currency);
       if (min !== undefined && max !== undefined) {
-         return `${currency || '$'}${min.toLocaleString()} - ${currency || '$'}${max.toLocaleString()}`;
+         return `${symbol}${min.toLocaleString()} - ${symbol}${max.toLocaleString()}`;
       }
       return 'Competitive Salary';
     }
@@ -248,7 +249,7 @@ export default function JobDetailsPage() {
 
   if (!job) {
     return (
-      <AuthGuard allowedRoles={['candidate']}>
+      <AuthGuard allowedRoles={['Employee']}>
         {error ? (
             <div className="min-h-[50vh] flex items-center justify-center">
                 <NeoCard className="border-4 border-red-500 p-8 text-center bg-white dark:bg-zinc-900 max-w-lg shadow-neo-lg">
@@ -269,7 +270,7 @@ export default function JobDetailsPage() {
   }
 
   return (
-    <AuthGuard allowedRoles={['candidate']}>
+    <AuthGuard allowedRoles={['Employee']}>
       <ProfileCompletionBanner />
       <div className="max-w-7xl mx-auto px-4 py-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
         

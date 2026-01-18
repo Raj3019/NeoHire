@@ -8,7 +8,7 @@ const connectToDB = require('./database/config.database')
 require('dotenv').config()
 const PORT = process.env.PORT || 3000
 const employeeRouter = require("./routers/employee.router")
-const recuterRoute = require('./routers/recurter.router')
+const recruiterRoute = require('./routers/recruiter.router')
 const jobRouter = require("./routers/job.router")
 const applicationRouter = require("./routers/application.router")
 const notificationRouter = require('./routers/notification.router')
@@ -85,9 +85,9 @@ app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser())
 
 
-app.use('/', employeeRouter)
-app.use('/', recuterRoute)
-app.use('/', jobRouter)
+app.use('/api/employee', employeeRouter)
+app.use('/api/recruiter', recruiterRoute)
+app.use('/api', jobRouter)
 app.use('/', applicationRouter)
 app.use('/api/notifications', notificationRouter)
 
