@@ -12,6 +12,7 @@ const recruiterRoute = require('./routers/recruiter.router')
 const jobRouter = require("./routers/job.router")
 const applicationRouter = require("./routers/application.router")
 const notificationRouter = require('./routers/notification.router')
+const roastResumeRouter = require('./routers/resumeRoast.router')
 const frontendURL = process.env.FRONTEND_URL
 
 const server = http.createServer(app)
@@ -48,8 +49,8 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     //Find which userID has this socket.id
-    for(let [userId, socketId] of userSockets.entries()){
-      if(socketId === socket.id){
+    for (let [userId, socketId] of userSockets.entries()) {
+      if (socketId === socket.id) {
         userSockets.delete(userId)
         console.log(`User ${userId} disconnected`)
         console.log(`Total online users: ${userSockets.size}`)
@@ -68,7 +69,7 @@ app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (mobile apps, Postman, server-to-server)
     if (!origin) return callback(null, true);
-    
+
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
@@ -90,6 +91,7 @@ app.use('/api/recruiter', recruiterRoute)
 app.use('/api', jobRouter)
 app.use('/', applicationRouter)
 app.use('/api/notifications', notificationRouter)
+app.use('/api/try', roastResumeRouter)
 
 app.get('/', (req, res) => {
   res.send("Hello World")

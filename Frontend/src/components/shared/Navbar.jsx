@@ -95,23 +95,24 @@ const NavbarContent = () => {
       return (
         <>
           <Link href={isRecruiterMode ? "/?mode=recruiter" : "/"} className={baseClass}>HOME</Link>
+          <Link href="/roast" className={`${baseClass} ${activeStyle('/roast')}`}>ROAST</Link>
           <Link href={isRecruiterMode ? "/?mode=recruiter#about" : "/about"} className={baseClass}>ABOUT</Link>
           <Link href={isRecruiterMode ? "/?mode=recruiter#features" : "/#features"} className={baseClass}>FEATURES</Link>
           <Link href={isRecruiterMode ? "/?mode=recruiter#pricing" : "/#pricing"} className={baseClass}>PRICING</Link>
           
-          <div className={mobile ? "my-4" : "inline-block ml-2"}>
+          <div className={mobile ? "my-3" : "inline-block ml-2"}>
             <NeoButton 
               variant={isRecruiterMode ? "primary" : "secondary"} 
               onClick={() => { toggleRecruiterMode(); setIsMobileMenuOpen(false); }} 
-              className={`text-xs sm:text-sm px-3 ${isRecruiterMode ? 'bg-neo-orange text-white hover:bg-red-400' : ''} ${mobile ? 'w-full' : ''}`}
+              className={`text-xs px-3 py-1.5 ${isRecruiterMode ? 'bg-neo-orange text-white hover:bg-red-400' : ''} ${mobile ? 'w-full' : ''}`}
             >
-              {isRecruiterMode ? '→ RECRUITER MODE' : '→ CANDIDATE MODE'}
+              {isRecruiterMode ? '→ RECRUITER' : '→ CANDIDATE'}
             </NeoButton>
           </div>
           
-          <div className={mobile ? "mt-2" : "inline-block ml-2"}>
+          <div className={mobile ? "mt-2" : "inline-block ml-1"}>
              <Link href={`/login${isRecruiterMode ? '?mode=recruiter' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
-                <NeoButton className={`${mobile ? 'w-full' : ''} ${isRecruiterMode ? 'bg-neo-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black shadow-neo-sm' : ''}`}>LOGIN</NeoButton>
+                <NeoButton className={`text-xs px-4 py-1.5 ${mobile ? 'w-full' : ''} ${isRecruiterMode ? 'bg-neo-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black shadow-neo-sm' : ''}`}>LOGIN</NeoButton>
              </Link>
           </div>
         </>
@@ -122,6 +123,7 @@ const NavbarContent = () => {
       return (
         <>
           <Link href="/candidate/dashboard" className={`${baseClass} ${activeStyle('/candidate/dashboard')}`}>DASHBOARD</Link>
+          <Link href="/roast" className={`${baseClass} ${activeStyle('/roast')}`}>ROAST</Link>
           <Link href="/candidate/jobs" className={`${baseClass} ${activeStyle('/candidate/jobs')}`}>JOBS</Link>
           <Link href="/candidate/applications" className={`${baseClass} ${activeStyle('/candidate/applications')}`}>APPS</Link>
         </>

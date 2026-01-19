@@ -256,4 +256,16 @@ export const notificationAPI = {
   },
 };
 
+// Try/Tools API endpoints
+export const tryAPI = {
+  roastResume: async (formData) => {
+    const response = await api.post('/try/roast-my-resume', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+};
+
 export default api;

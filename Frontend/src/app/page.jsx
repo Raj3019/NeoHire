@@ -119,7 +119,7 @@ const Content = () => {
                  <p className="text-xs font-bold mt-2 uppercase text-gray-500">(Click badge to toggle mode demo)</p>
               </div>
               
-              <h1 className="text-6xl md:text-8xl lg:text-9xl font-black uppercase tracking-tighter text-neo-black dark:text-white leading-[0.85] mb-8 drop-shadow-[4px_4px_0px_rgba(255,255,255,1)] dark:drop-shadow-[4px_4px_0px_rgba(0,0,0,0)]">
+              <h1 className="text-5xl md:text-7xl lg:text-8xl font-black uppercase tracking-tighter text-neo-black dark:text-white leading-[0.85] mb-8 drop-shadow-[3px_3px_0px_rgba(255,255,255,1)] dark:drop-shadow-[3px_3px_0px_rgba(0,0,0,0)]">
                 {isRecruiterMode ? (
                     <>
                         <span className="text-neo-orange block transform -rotate-1">HIRE</span>
@@ -135,23 +135,23 @@ const Content = () => {
                 )}
               </h1>
     
-              <p className="text-xl md:text-3xl font-mono mb-12 max-w-3xl mx-auto text-neo-black dark:text-white font-bold bg-white dark:bg-zinc-800 p-6 border-4 border-neo-black dark:border-white shadow-neo-lg dark:shadow-[8px_8px_0px_0px_#ffffff] transform rotate-1">
+              <p className="text-lg md:text-2xl font-mono mb-10 max-w-3xl mx-auto text-neo-black dark:text-white font-bold bg-white dark:bg-zinc-800 p-5 border-4 border-neo-black dark:border-white shadow-neo-md dark:shadow-[6px_6px_0px_0px_#ffffff] transform rotate-1">
                 {isRecruiterMode 
                   ? "Stop sorting through thousands of irrelevant resumes. Our AI ranks candidates by relevance, skill, and reliability instantly."
-                  : "The ATS system hates you. We teach you how to fight back. Optimize your resume, cheat the system (legally), and secure the bag."
+                  : "The ATS system hates you. We teach you how to fight back. Optimize your resume, beat the system, and secure the bag."
                 }
               </p>
     
-              <div className="flex flex-col sm:flex-row gap-6 justify-center w-full max-w-lg">
+              <div className="flex flex-col sm:flex-row gap-5 justify-center w-full max-w-lg">
                 <button 
                     onClick={() => router.push(`/register${isRecruiterMode ? '?mode=recruiter' : ''}`)} 
-                    className={`group relative px-8 py-5 text-white font-black text-2xl border-4 border-neo-black dark:border-white shadow-neo-lg dark:shadow-[8px_8px_0px_0px_#ffffff] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all ${isRecruiterMode ? 'bg-neo-orange' : 'bg-neo-black dark:bg-zinc-800'}`}
+                    className={`group relative px-6 py-4 text-white font-black text-xl border-4 border-neo-black dark:border-white shadow-neo-md dark:shadow-[6px_6px_0px_0px_#ffffff] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all ${isRecruiterMode ? 'bg-neo-orange' : 'bg-neo-black dark:bg-zinc-800'}`}
                 >
                     {isRecruiterMode ? 'START HIRING' : 'LAUNCH CAREER'}
                 </button>
                 <button 
                     onClick={() => document.getElementById('pricing').scrollIntoView({behavior: 'smooth'})} 
-                    className="px-8 py-5 bg-white dark:bg-zinc-900 text-neo-black dark:text-white font-black text-2xl border-4 border-neo-black dark:border-white shadow-neo-lg dark:shadow-[8px_8px_0px_0px_#ffffff] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all"
+                    className="px-6 py-4 bg-white dark:bg-zinc-900 text-neo-black dark:text-white font-black text-xl border-4 border-neo-black dark:border-white shadow-neo-md dark:shadow-[6px_6px_0px_0px_#ffffff] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all"
                 >
                     VIEW PRICING
                 </button>

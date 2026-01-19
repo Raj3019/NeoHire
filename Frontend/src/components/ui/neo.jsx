@@ -6,13 +6,13 @@ import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, en
 
 // --- Button ---
 const buttonVariants = cva(
-  "font-bold py-2 px-6 border-2 border-neo-black dark:border-white transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none font-mono text-sm sm:text-base inline-flex items-center justify-center",
+  "font-bold py-2 px-5 border-2 border-neo-black dark:border-white transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none font-mono text-sm sm:text-base inline-flex items-center justify-center",
   {
     variants: {
       variant: {
         primary: "bg-neo-yellow text-neo-black shadow-neo dark:shadow-[4px_4px_0px_0px_#ffffff] hover:bg-[#ffe066]",
         secondary: "bg-white text-neo-black shadow-neo dark:shadow-[4px_4px_0px_0px_#ffffff] hover:bg-gray-50 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700",
-        danger: "bg-neo-pink text-white shadow-neo dark:shadow-[4px_4px_0px_0px_#ffffff] hover:brightness-110",
+        danger: "bg-neo-red text-white shadow-neo dark:shadow-[4px_4px_0px_0px_#ffffff] hover:bg-red-600",
         ghost: "bg-transparent border-transparent shadow-none hover:bg-gray-100 dark:hover:bg-zinc-800 dark:text-white border-none active:translate-x-0 active:translate-y-0",
         outline: "bg-transparent border-2 border-neo-black text-neo-black hover:bg-gray-100", // Added outline as generic fallback
       },
@@ -106,7 +106,7 @@ const badgeVariants = cva(
       variant: {
         green: "bg-neo-green text-white",
         blue: "bg-neo-blue text-white",
-        pink: "bg-neo-pink text-white",
+        pink: "bg-neo-red text-white",
         red: "bg-neo-red text-white",
         yellow: "bg-neo-yellow text-neo-black",
         outline: "bg-white text-neo-black", // Fallback

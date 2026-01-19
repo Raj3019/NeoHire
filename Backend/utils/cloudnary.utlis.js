@@ -28,7 +28,7 @@ const uploadToCloudinary = async (filePath, folder = "profilePicture") => {
 
 const deleteFromCloudinary = async (public_id) => {
     try {
-        await cloudnary.uploader.destroy(public_id)              // Removes image from Cloudinary
+        await cloudnary.uploader.destroy(public_id)              
         return true
     } catch (error) {
         throw new Error(`Cloudnary deleted failed: ${error.message}`)
@@ -44,7 +44,25 @@ const uploadResumeToCloudnary = async (filePath, folder = "resume") => {
             use_filename: true,
             unique_filename: true,
             format: 'pdf',
-            // flags: 'attachment',
+            access_mode: 'public'
+        })
+        return {
+            url: resume.secure_url,
+            public_id: resume.public_id
+        }
+    } catch (error) {
+        throw new Error(`Cloudinary upload failed: ${error.message}`)
+    }
+}
+
+const uploadRoastResumeToCloudnary = async (filePath, folder = "roastResume") => {
+    try {
+        const resume = await cloudnary.uploader.upload(filePath, {
+            folder: folder,
+            resource_type: 'auto',
+            use_filename: true,
+            unique_filename: true,
+            format: 'pdf',
             access_mode: 'public'
         })
         return {
@@ -65,4 +83,4 @@ const deleteResumeFromCloudinary = async(public_id) => {
     }
 }
 
-module.exports = {uploadToCloudinary, deleteFromCloudinary, uploadResumeToCloudnary, deleteResumeFromCloudinary}
+module.exports = {uploadToCloudinary, deleteFromCloudinary, uploadResumeToCloudnary,uploadRoastResumeToCloudnary, deleteResumeFromCloudinary}

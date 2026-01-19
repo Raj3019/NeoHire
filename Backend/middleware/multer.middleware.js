@@ -7,7 +7,9 @@ const storage = multer.diskStorage({
         if (file.fieldname === 'profilePicture') {
             return cb(null, 'profilePicture/') 
         }else if (file.fieldname === 'resume')
-            return cb(null, 'resume/')  
+            return cb(null, 'resume/')
+        else if (file.fieldname === 'roastResume')
+            return cb(null, 'roastResume/')      
         else{
             cb(null, 'uploads/')
         }       
@@ -28,7 +30,7 @@ const fileFilter = (req, file, cb) => {
         } else {
             cb(new Error('Invalid file type. Only JPEG, JPG, and PNG are allowed.'), false);
         }
-    }else if (file.fieldname === 'resume'){
+    }else if (file.fieldname === 'resume' || file.fieldname === 'roastResume'){
         const allowedTypes = ['application/pdf', 'application/msword']
         if(allowedTypes.includes(file.mimetype)){
             cb(null, true);
@@ -40,6 +42,6 @@ const fileFilter = (req, file, cb) => {
     }
 }
 
-const upload = multer({ storage: storage, limits: { fileSize: 5 * 1024 * 1024 }, fileFilter: fileFilter });
+const upload = multer({ storage: storage, limits: { fileSize: 2 * 1024 * 1024, files: 1 }, fileFilter: fileFilter });
 
 module.exports = upload;

@@ -198,3 +198,22 @@ input[type="date"] {
 .dark .custom-scrollbar::-webkit-scrollbar-thumb {
   background: #888;
 }
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.animate-shake {
+  animation: shake 0.2s ease-in-out infinite;
+}
+
+@keyframes loading-bar {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+.animate-loading-bar {
+  animation: loading-bar 2s infinite linear;
+}
