@@ -21,6 +21,7 @@ const server = http.createServer(app)
 const allowedOrigins = [
   frontendURL,
   'https://www.neohire.site',
+  'https://neohire.site',
   'http://localhost:3000',
   'http://localhost:3001',
   'http://localhost:8080'
@@ -41,6 +42,10 @@ io.on('connection', (socket) => {
   console.log('User Connected: ', socket.id)
 
   socket.on('register', (userId) => {
+    if (!userId) {
+      console.log('Register event received without userId');
+      return;
+    }
     userSockets.set(userId.toString(), socket.id)
     console.log(`User ${userId} registered with socket ${socket.id}`);
     console.log(`Total online users: ${userSockets.size}`)
