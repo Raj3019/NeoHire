@@ -20,7 +20,7 @@ const server = http.createServer(app)
 // Allow both public frontend URL and localhost for development
 const allowedOrigins = [
   frontendURL,
-  'https://www.neohire.site'
+  'https://www.neohire.site',
   'http://localhost:3000',
   'http://localhost:3001',
   'http://localhost:8080'
@@ -28,7 +28,7 @@ const allowedOrigins = [
 
 
 const io = socketIO(server, {
-  cros: {
+  cors: {
     origin: allowedOrigins,
     methods: ['GET', 'POST'],
     credentials: true
