@@ -1,10 +1,19 @@
 import axios from 'axios';
 import { cookieStorage, scrubStorage } from './utils';
 
+// ✅ Use environment variable in production, relative path in development
+const getBaseURL = () => {
+  // In production, use the backend Railway URL
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return `${process.env.NEXT_PUBLIC_API_URL}/api`;
+  }
+  // In development, use Next.js proxy
+  return '/api';
+};
+
 // Create axios instance with base configuration
-// Use relative path /api to proxy through Next.js rewrites (avoids cross-origin cookie issues)
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: getBaseURL(),
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
