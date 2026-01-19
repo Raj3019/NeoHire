@@ -11,7 +11,7 @@ const multer = require("multer");
 const upload = multer({ dest: 'resume/' , limits: { fileSize: 5 * 1024 * 1024 }})
 
 applicationRouter.post(
-  "/api/job/:id",
+  "/:id",
   authenticateJWT,
   authenticateRole("Employee"),
   upload.single("resume"),
@@ -20,7 +20,7 @@ applicationRouter.post(
 );
 
 applicationRouter.post(
-  "/api/job/score/:id",
+  "/score/:id",
   authenticateJWT,
   authenticateRole("Employee"),
   upload.single("resume"),

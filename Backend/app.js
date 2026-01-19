@@ -67,19 +67,12 @@ app.set('io', io)
 app.set('userSockets', userSockets)
 
 app.use(cors({
-  origin: (origin, callback) => {
-    // Allow requests with no origin (mobile apps, Postman, server-to-server)
-    if (!origin) return callback(null, true);
-
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: allowedOrigins,
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
+  exposedHeaders: ["Set-Cookie"],
+  optionsSuccessStatus: 200
 }))
 
 app.options('*', cors())
@@ -90,8 +83,8 @@ app.use(cookieParser())
 
 app.use('/api/employee', employeeRouter)
 app.use('/api/recruiter', recruiterRoute)
-app.use('/api', jobRouter)
-app.use('/', applicationRouter)
+app.use('/api/jobs', jobRouter)
+app.use('/api/applications', applicationRouter)
 app.use('/api/notifications', notificationRouter)
 app.use('/api/try', roastResumeRouter)
 

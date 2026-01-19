@@ -6,17 +6,17 @@ const jobRouter = express.Router()
 
 //create Job
 
-jobRouter.post('/job/create', authenticateJWT, authenticateRole("Recruiter"), createJob, checkRercuiterProfileComplete)
+jobRouter.post('/create', authenticateJWT, authenticateRole("Recruiter"), createJob, checkRercuiterProfileComplete)
 
 //edit job
 
-jobRouter.put('/job/:id', authenticateJWT, authenticateRole("Recruiter"), editJob)
+jobRouter.put('/:id', authenticateJWT, authenticateRole("Recruiter"), editJob)
 
 
 //Get Jobs
-jobRouter.get('/jobs', authenticateJWT, listJobs)
+jobRouter.get('/', authenticateJWT, listJobs)
 
 //Get Job [id]
-jobRouter.get('/job/:id', authenticateJWT, getJobById)
+jobRouter.get('/:id', authenticateJWT, getJobById)
 
 module.exports = jobRouter;
