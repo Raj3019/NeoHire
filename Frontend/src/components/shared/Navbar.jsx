@@ -110,7 +110,7 @@ const NavbarContent = () => {
             </NeoButton>
           </div>
           
-          <div className={mobile ? "mt-2" : "inline-block ml-1"}>
+          <div className={mobile ? "mt-2" : "inline-block ml-4"}>
              <Link href={`/login${isRecruiterMode ? '?mode=recruiter' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
                 <NeoButton className={`text-xs px-4 py-1.5 ${mobile ? 'w-full' : ''} ${isRecruiterMode ? 'bg-neo-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black shadow-neo-sm' : ''}`}>LOGIN</NeoButton>
              </Link>

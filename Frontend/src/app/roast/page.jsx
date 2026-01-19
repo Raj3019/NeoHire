@@ -44,6 +44,7 @@ export default function RoastPage() {
         }
 
         setLoading(true);
+        setProgress(0); // Reset progress immediately
         setError(null);
         setRoastData(null);
         
@@ -92,6 +93,7 @@ export default function RoastPage() {
         setFile(null);
         setRoastData(null);
         setError(null);
+        setProgress(0); // Ensure progress is reset
         if (fileInputRef.current) fileInputRef.current.value = '';
     };
 
