@@ -8,6 +8,9 @@ import ScrollToTop from "@/components/shared/ScrollToTop";
 export const metadata = {
   title: "NeoHire AI",
   description: "The brutal hiring platform.",
+  icons: {
+    icon: "/neohire_logo.png",
+  },
 };
 
 export default function RootLayout({ children }) {
