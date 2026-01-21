@@ -82,7 +82,9 @@ export default function RoastPage() {
                 setError(result.message || 'The AI is too stunned by your resume to roast it. Try again.');
             }
         } catch (err) {
-            setError(err.response?.data?.message || 'Server had a breakdown reading your resume. Try again?');
+            console.log(err);
+            setError(err.response?.data?.message);
+            // setError(err.response?.data?.message || 'Server had a breakdown reading your resume. Try again?');
         } finally {
             clearInterval(stageInterval);
             setLoading(false);
