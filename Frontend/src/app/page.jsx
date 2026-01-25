@@ -70,24 +70,23 @@ const Content = () => {
   
     const activeTestimonials = isRecruiterMode ? recruiterTestimonials : candidateTestimonials;
     
-    // Anti-flash: if we have a valid token/session, don't show the landing page
-    // because a redirect to dashboard is likely coming soon.
+    // Normal loading state during hydration for guests
+    if (!mounted) {
+        return <div className="min-h-screen bg-neo-bg"></div>;
+    }
+
+    // After mounting, we can check auth state safely
     
     // 1. If we are hydrated and clearly authenticated
-    if (mounted && isAuthenticated && user) {
+    if (isAuthenticated && user) {
         return <div className="min-h-screen bg-neo-bg flex items-center justify-center font-black text-2xl uppercase tracking-tighter">Redirecting to Dashboard...</div>;
     }
     
-    // 2. If we aren't hydrated yet but see an auth hint in cookies/storage
-    // We show a loading/restoring state immediately to prevent landing page flash
+    // 2. If we have an auth hint but aren't fully loaded in state yet
     if (hasValidAuth()) {
         return <div className="min-h-screen bg-neo-bg flex items-center justify-center font-black text-2xl uppercase tracking-tighter italic text-neo-blue">Restoring your session...</div>;
     }
 
-    // 3. Normal loading state during hydration for guests
-    if (!mounted) {
-        return <div className="min-h-screen bg-neo-bg"></div>;
-    }
 
     return (
         <div className="bg-neo-bg overflow-x-hidden transition-colors duration-200">

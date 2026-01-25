@@ -42,8 +42,8 @@ export const cookieStorage = {
 export const scrubStorage = () => {
   if (typeof document === 'undefined') return;
 
-  // Clear known cookies
-  const cookies = ['auth-storage', 'data-storage', 'token', 'authToken', 'jwt'];
+  // Clear known cookies including Better Auth session
+  const cookies = ['auth-storage', 'data-storage', 'token', 'authToken', 'jwt', 'neohire_session'];
   cookies.forEach(name => {
     document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
     // Also try clearing with different paths just in case
@@ -76,13 +76,13 @@ export const scrubStorage = () => {
 export const hasValidAuth = () => {
   if (typeof window === 'undefined') return false;
 
-  // 1. Check for explicit token cookies (non-httpOnly ones)
-  const token = cookieStorage.getItem('token') ||
-    cookieStorage.getItem('authToken') ||
-    cookieStorage.getItem('jwt');
-  if (token && token !== 'undefined' && token !== 'null') return true;
+  // 1. Check for Better Auth session cookie (httpOnly, so we check document.cookie)
+  // Note: httpOnly cookies can't be read via JS, but we can check if it exists in the string
+  if (typeof document !== 'undefined' && document.cookie.includes('neohire_session')) {
+    return true;
+  }
 
-  // 2. Check for auth-storage in COOKIES
+  // 2. Check for auth-storage in COOKIES (Zustand persisted state)
   const authCookie = cookieStorage.getItem('auth-storage');
   if (authCookie) {
     try {

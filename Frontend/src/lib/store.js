@@ -161,16 +161,11 @@ export const useAuthStore = create(
         }
       },
 
-      // Logout function - calls backend API and clears token and user data
+      // Logout function - calls Better Auth API and clears user data
       logout: async () => {
         try {
-          // Get current user role to call the correct logout endpoint
-          const state = get();
-          const role = state.user?.role;
-          const api = (role === 'Recruiter') ? recruiterAPI : employeeAPI;
-
-          // Call logout API (don't wait for success, proceed with local logout)
-          await api.logout().catch(() => { });
+          // Better Auth uses unified logout endpoint (both APIs point to same endpoint)
+          await employeeAPI.logout().catch(() => { });
         } catch (error) {
           // Ignore errors since we're logging out anyway
         } finally {

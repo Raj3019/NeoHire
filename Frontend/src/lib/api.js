@@ -14,20 +14,18 @@ const getBaseURL = () => {
 // Create axios instance with base configuration
 const api = axios.create({
   baseURL: getBaseURL(),
-  withCredentials: true,
+  withCredentials: true, // Critical: This sends cookies with requests
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Request interceptor to add token from cookies if available
+// Request interceptor - Better Auth uses session cookies automatically
+// No need to manually add Authorization header
 api.interceptors.request.use(
   (config) => {
-    // Manually extract token from cookies if browser doesn't send it or backend needs header
-    const token = cookieStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+    // Better Auth manages authentication via httpOnly cookies
+    // The browser automatically sends cookies with withCredentials: true
     return config;
   },
   (error) => {
@@ -39,9 +37,12 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Get the request URL to check if it's a login/signup request
+    // Get the request URL to check if it's an auth request
     const requestUrl = error.config?.url || '';
-    const isAuthRequest = requestUrl.includes('/login') || requestUrl.includes('/signup');
+    // Better Auth endpoints pattern
+    const isAuthRequest = requestUrl.includes('/auth/sign-in') ||
+      requestUrl.includes('/auth/sign-up') ||
+      requestUrl.includes('/auth/');
 
     if (error.response?.status === 401 && !isAuthRequest) {
       // Don't auto-logout for profile requests - might be a backend route mismatch
@@ -58,15 +59,23 @@ api.interceptors.response.use(
   }
 );
 
+
 // Employee API endpoints
 export const employeeAPI = {
   login: async (email, password) => {
-    const response = await api.post('/employee/login', { email, password });
+    // Better Auth uses unified endpoint
+    const response = await api.post('/auth/sign-in/email', { email, password });
     return response.data;
   },
 
   signup: async (email, password, confirmPassword, fullName) => {
-    const response = await api.post('/employee/signup', { email, password, confirmPassword, fullName });
+    // Better Auth signup with role
+    const response = await api.post('/auth/sign-up/email', {
+      email,
+      password,
+      name: fullName,
+      role: 'Employee'
+    });
     return response.data;
   },
 
@@ -85,7 +94,8 @@ export const employeeAPI = {
   },
 
   logout: async () => {
-    const response = await api.post('/employee/logout');
+    // Better Auth logout endpoint
+    const response = await api.post('/auth/sign-out');
     return response.data;
   },
   updateProfilePicture: async (formData) => {
@@ -117,12 +127,15 @@ export const employeeAPI = {
   },
 
   verifyEmail: async (token) => {
-    const response = await api.get(`/employee/verify-email/${token}`);
+    // Better Auth handles verification via callback URL
+    // This is typically handled automatically by clicking email link
+    const response = await api.get(`/auth/verify-email?token=${token}`);
     return response.data;
   },
 
   resendVerification: async (email) => {
-    const response = await api.post('/employee/resend-verification', { email });
+    // Better Auth unified resend endpoint
+    const response = await api.post('/auth/send-verification-email', { email });
     return response.data;
   },
 };
@@ -130,12 +143,19 @@ export const employeeAPI = {
 // Recruiter API endpoints
 export const recruiterAPI = {
   login: async (email, password) => {
-    const response = await api.post('/recruiter/login', { email, password });
+    // Better Auth uses unified endpoint
+    const response = await api.post('/auth/sign-in/email', { email, password });
     return response.data;
   },
 
   signup: async (email, password, confirmPassword, fullName) => {
-    const response = await api.post('/recruiter/signup', { email, password, confirmPassword, fullName });
+    // Better Auth signup with role
+    const response = await api.post('/auth/sign-up/email', {
+      email,
+      password,
+      name: fullName,
+      role: 'Recruiter'
+    });
     return response.data;
   },
 
@@ -154,7 +174,8 @@ export const recruiterAPI = {
   },
 
   logout: async () => {
-    const response = await api.post('/recruiter/logout');
+    // Better Auth logout endpoint
+    const response = await api.post('/auth/sign-out');
     return response.data;
   },
   updateProfile: async (id, data) => {
@@ -192,11 +213,13 @@ export const recruiterAPI = {
     return response.data;
   },
   verifyEmail: async (token) => {
-    const response = await api.get(`/recruiter/verify-email/${token}`);
+    // Better Auth handles verification via callback URL
+    const response = await api.get(`/auth/verify-email?token=${token}`);
     return response.data;
   },
   resendVerification: async (email) => {
-    const response = await api.post('/recruiter/resend-verification', { email });
+    // Better Auth unified resend endpoint
+    const response = await api.post('/auth/send-verification-email', { email });
     return response.data;
   },
 };
