@@ -13,6 +13,8 @@ const jobRouter = require("./routers/job.router")
 const applicationRouter = require("./routers/application.router")
 const notificationRouter = require('./routers/notification.router')
 const roastResumeRouter = require('./routers/resumeRoast.router')
+const {auth} = require("./lib/auth.lib")
+const {toNodeHandler} = require("better-auth/node")
 const frontendURL = process.env.FRONTEND_URL
 
 const server = http.createServer(app)
@@ -84,7 +86,8 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser())
 
-
+// toNodeHandler -> Converts our auth instance to an Express-compatible handler
+app.all('/api/auth/*path', toNodeHandler(auth))
 app.use('/api/employee', employeeRouter)
 app.use('/api/recruiter', recruiterRoute)
 app.use('/api/jobs', jobRouter)

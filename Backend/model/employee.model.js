@@ -4,6 +4,11 @@
 const mongoose = require('mongoose')
 
 const employeeSchema = new mongoose.Schema({
+	betterAuthUserId:{
+		type: String,
+		unique: true,
+		required: true
+	},
 	fullName: {
 		type: String
 	},
@@ -17,10 +22,6 @@ const employeeSchema = new mongoose.Schema({
 		type: String,
 		lowercase: true,
 		unique: true
-	},
-	password: {
-		minlength: 6,
-		type: String,
 	},
 	phone: {
 		type: String,
@@ -213,18 +214,6 @@ const employeeSchema = new mongoose.Schema({
 			ref: "Application",
 		},
 	],
-	isVerified:{
-		type: Boolean,
-		default: false
-	},
-	verificationToken:{
-		type: String,
-		default: null
-	},
-	verificationTokenExpiry:{
-		type: Date,
-		default: null
-	}
 }, { timestamps: true })
 
 const Employee = mongoose.model("Employee", employeeSchema)

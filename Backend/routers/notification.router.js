@@ -1,11 +1,11 @@
 const express = require('express');
 const notificationRouter = express.Router();
 const notificationModel = require('../model/notification.model');
-const { authenticateJWT } = require('../middleware/auth.middleware');
+const { authenticateSession } = require('../middleware/auth.middleware');
 
 
 // GET /api/notifications
-notificationRouter.get('/', authenticateJWT, async (req, res) => {
+notificationRouter.get('/', authenticateSession, async (req, res) => {
   try {
     const userId = req.user.id
     const userType = req.user.role
@@ -49,7 +49,7 @@ notificationRouter.get('/', authenticateJWT, async (req, res) => {
 })
 
 // Patch /api/notification/:id/read
-notificationRouter.patch('/:id/read', authenticateJWT, async (req, res) => {
+notificationRouter.patch('/:id/read', authenticateSession, async (req, res) => {
   try {
     const notification = await notificationModel.findByIdAndUpdate(
       {
@@ -73,7 +73,7 @@ notificationRouter.patch('/:id/read', authenticateJWT, async (req, res) => {
 //PATCH /api/notification/read-all
 //mark all notification as read for the logged-in user
 
-notificationRouter.patch('/read-all', authenticateJWT, async (req, res) => {
+notificationRouter.patch('/read-all', authenticateSession, async (req, res) => {
   try {
     await notificationModel.updateMany(
       {
@@ -93,7 +93,7 @@ notificationRouter.patch('/read-all', authenticateJWT, async (req, res) => {
 
 // DELETE /api/notification/:id
 // Deletes a specific notification
-notificationRouter.delete('/:id', authenticateJWT, async (req, res) => {
+notificationRouter.delete('/:id', authenticateSession, async (req, res) => {
   try {
     const notification = await notificationModel.findOneAndDelete({
       _id: req.params.id,

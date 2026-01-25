@@ -4,6 +4,11 @@ const mongoose = require("mongoose");
 
 const recruiterSchema = new mongoose.Schema(
   {
+    betterAuthUserId:{
+      type: String,
+      required: true,
+      unique: true
+    },
     fullName: {
       type: String,
     },
@@ -22,11 +27,6 @@ const recruiterSchema = new mongoose.Schema(
     },
     profilePicturePublicId: {
       type: String,
-    },
-    password: {
-      type: String,
-      minlength: 6,
-      required: true,
     },
     phone: {
       type: String,
@@ -205,18 +205,6 @@ const recruiterSchema = new mongoose.Schema(
       industries: [String],
       jobTypes: [String],
     },
-    isVerified: {
-      type: Boolean,
-      default: false,
-    },
-    verificationToken: {
-      type: String,
-      default: null,
-    },
-    verificationTokenExpiry: {
-      type: Date,
-      default: null,
-    },
     jobs: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -227,6 +215,6 @@ const recruiterSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-const RecruiterModel = mongoose.model("Recruiter", recruiterSchema);
+const Recruiter = mongoose.model("Recruiter", recruiterSchema);
 
-module.exports = RecruiterModel;
+module.exports = Recruiter;

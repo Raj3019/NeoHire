@@ -1,7 +1,7 @@
 const express = require("express");
 const applicationRouter = express.Router();
 const {
-  authenticateJWT,
+  authenticateSession,
   authenticateRole,
 } = require("../middleware/auth.middleware");
 const {applyJob, checkScore} = require("../controller/application.controller");
@@ -12,7 +12,7 @@ const upload = multer({ dest: 'resume/' , limits: { fileSize: 5 * 1024 * 1024 }}
 
 applicationRouter.post(
   "/:id",
-  authenticateJWT,
+  authenticateSession,
   authenticateRole("Employee"),
   upload.single("resume"),
   checkEmployeeProfileComplete,
@@ -21,7 +21,7 @@ applicationRouter.post(
 
 applicationRouter.post(
   "/score/:id",
-  authenticateJWT,
+  authenticateSession,
   authenticateRole("Employee"),
   upload.single("resume"),
   checkScore

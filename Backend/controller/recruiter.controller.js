@@ -24,231 +24,6 @@ const {
 const { sendVerificationEmail } = require("../utils/emailService.utlis");
 // const salt = process.env.SALT
 
-//Register Controller
-const registerRecruiter = async (req, res) => {
-  try {
-    const validateBody = RecruiterRegisterValidation.safeParse(req.body);
-
-    if (!validateBody.success) {
-      const errors = validateBody.error.issues[0].message;
-      return res.status(400).json({
-        message: errors,
-      });
-    }
-
-    const { fullName, email, password } = validateBody.data;
-
-    const existingEmail = await Recruiter.findOne({ email });
-
-    if (existingEmail) {
-      return res
-        .status(409) // ✅ Changed from 401 to 409 (Conflict)
-        .json({ message: "Recruiter with this email already exists" });
-    }
-
-    const verificationToken = crypto.randomBytes(32).toString("hex");
-    const verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
-
-    const passwordHash = await bcrypt.hash(password, 10);
-
-    const recruiter = new Recruiter({
-      email,
-      fullName,
-      password: passwordHash,
-      verificationToken,
-      verificationTokenExpiry,
-      isVerified: false,
-    });
-
-    // ✅ FIX 1: Change 'employee' to 'recruiter' in URL
-    const verificationLink = `${process.env.FRONTEND_URL || "http://localhost:3001"}/verify-email/recruiter/${verificationToken}`;
-
-    // ✅ FIX 2: Send email BEFORE saving to database
-    try {
-      await sendVerificationEmail(email, verificationLink, fullName)
-    } catch (emailError) {
-      console.error('Email sending failed:', emailError);
-      return res.status(500).json({ 
-        message: "Failed to send verification email. Please try again.",
-        error: emailError.message 
-      });
-    }
-
-    // ✅ Only save if email sent successfully
-    await recruiter.save();
-
-    // ✅ Don't send token/user data before verification
-    return res.status(200).json({
-      message: "Registration successful! Please check your email to verify your account.",
-      email: recruiter.email
-    });
-  } catch (err) {
-    console.log(err)
-    return res.status(500).json({ 
-      message: "Registration failed. Please try again.",
-      error: err.message 
-    });
-  }
-};
-
-const verifyEmail = async (req, res) => {
-  try {
-    const { token } = req.params;
-
-    const recruiter = await Recruiter.findOne({
-      verificationToken: token,
-      verificationTokenExpiry: { $gt: Date.now() },
-    });
-
-    if (!recruiter) {
-      return res.status(400).json({
-        message: "Invalid or expired verification token",
-      });
-    }
-
-    if (recruiter.isVerified) {
-      return res.status(400).json({
-        message: "Email already verified. You can login now.",
-      });
-    }
-
-    // ✅ FIX 3: Set to TRUE, not null
-    recruiter.isVerified = true;
-    recruiter.verificationToken = null;
-    recruiter.verificationTokenExpiry = null;
-
-    await recruiter.save();
-
-    res.status(200).json({
-      message: "Email verified successfully! You can now login.",
-    });
-  } catch (error) {
-    console.error("Verification error: ", error);
-    res.status(500).json({
-      message: "Server error during verification",
-      error: error.message,
-    });
-  }
-};
-
-const resendVerificationEmail = async (req, res) => {
-  try {
-    // ✅ FIX 4: Get email from body, not token from params
-    const {email} = req.body
-
-    if (!email) {
-      return res.status(400).json({
-        message: "Email is required"
-      });
-    }
-
-    const recruiter = await Recruiter.findOne({ email })
-
-    if (!recruiter) {
-      return res.status(404).json({
-        message: "Recruiter not found",
-      });
-    }
-
-    if (recruiter.isVerified) {
-      return res.status(400).json({
-        message: "Email already verified",
-      });
-    }
-
-    const verificationToken = crypto.randomBytes(32).toString('hex')
-    const verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000)
-
-    // ✅ FIX 5: Change 'employee' to 'recruiter' in URL
-    const verificationLink = `${process.env.FRONTEND_URL || 'http://localhost:3001'}/verify-email/recruiter/${verificationToken}`
-    
-    // ✅ Send email BEFORE updating database
-    try {
-      await sendVerificationEmail(email, verificationLink, recruiter.fullName)
-    } catch (emailError) {
-      console.error('Email resend failed:', emailError);
-      return res.status(500).json({ 
-        message: "Failed to resend verification email. Please try again.",
-        error: emailError.message 
-      });
-    }
-
-    // ✅ Only update if email sent successfully
-    recruiter.verificationToken = verificationToken
-    recruiter.verificationTokenExpiry = verificationTokenExpiry
-    await recruiter.save()
-
-    res.status(200).json({ message: 'Verification email resent successfully' })
-  } catch (error) {
-    console.error('Resend verification error', error);
-    res.status(500).json({ message: 'Server Error', error: error.message })
-  }
-}
-
-//Login Controller
-const loginRecruiter = async (req, res) => {
-  try {
-    const validateBody = RecruiterLoginValidation.safeParse(req.body);
-
-    if (!validateBody.success) {
-      const errors = validateBody.error.issues[0].message;
-      return res.status(400).json({
-        message: errors,
-      });
-    }
-
-    const { email, password } = validateBody.data;
-
-    const recruiter = await Recruiter.findOne({ email });
-
-    if (!recruiter) {
-      return res.status(401).json({ message: "Invalid Credentials" });
-    }
-
-    if (!recruiter.isVerified) {
-      return res.status(403).json({
-        message: "Please verify your email before logging in. Check your inbox for the verification link.",
-        needsVerification: true
-      })
-    }
-
-    const isPasswordValid = await bcrypt.compare(password, recruiter.password);
-
-    if (!isPasswordValid) {
-      return res.status(401).json({ message: "Invalid Credentials" });
-    }
-
-    const token = jwt.sign(
-      { id: recruiter._id, role: recruiter.role },
-      jwtToken,
-      { expiresIn: "1hr" },
-    );
-
-    // return res.status(200).json({ message: "Login Successful" , data: token});
-
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
-
-    return res.status(200).json({
-      message: "Login Successfully",
-      user: {
-        id: recruiter._id,
-        email: recruiter.email,
-        role: recruiter.role,
-      },
-    });
-  } catch (err) {
-    // console.log(err)
-    return res
-      .status(401)
-      .json({ message: "Unable to Login", error: err.message });
-  }
-};
-
 const uploadProfilePicture = async (req, res) => {
   try {
     if (!req.file) {
@@ -256,7 +31,7 @@ const uploadProfilePicture = async (req, res) => {
     }
 
     const recruiterId = req.user.id;
-    const recruiter = await Recruiter.findById(recruiterId);
+    const recruiter = await Recruiter.findOne({betterAuthUserId: recruiterId});
     if (!recruiter) {
       return res.status(404).json({ message: "Recruiter not found" });
     }
@@ -296,7 +71,7 @@ const profileRecruiter = async (req, res) => {
   try {
     const recruiterId = req.user;
 
-    const recruiter = await Recruiter.findById(recruiterId.id)
+    const recruiter = await Recruiter.findOne({betterAuthUserId: recruiterId.id})
       .select("-password")
       .populate({
         path: "jobs",
@@ -355,7 +130,7 @@ const profileRecruiter = async (req, res) => {
 const uploadResume = async (req, res) => {
   try {
     const recruiterId = req.user.id;
-    const recruiter = await Recruiter.findById(recruiterId);
+    const recruiter = await Recruiter.findOne({betterAuthUserId: recruiterId});
 
     if (recruiter.resumePublicLinkId) {
       await deleteResumeFromCloudinary(recruiter.resumePublicLinkId);
@@ -702,7 +477,7 @@ const getAllCandidates = async (req, res) => {
   try {
     const recruiterId = req.user.id;
 
-    const recruiter = await Recruiter.findById(recruiterId).populate({
+    const recruiter = await Recruiter.findOne({betterAuthUserId:recruiterId}).populate({
       path: "jobs",
       populate: {
         path: "appliedBy.applicant",
@@ -730,32 +505,7 @@ const getAllCandidates = async (req, res) => {
   }
 };
 
-const logoutRecruiter = async (req, res) => {
-  try {
-    const recruiter = req.user;
-
-    if (!recruiter) {
-      return res.status(401).json({ message: "Recruiter not found" });
-    }
-
-    //  res.clear
-    res.clearCookie("token", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
-    });
-    return res.status(201).json({ message: "logout sucessfully" });
-  } catch (err) {
-    return res.status(401).json({ message: "Logout failed" });
-  }
-};
-
 module.exports = {
-  registerRecruiter,
-  verifyEmail,
-  resendVerificationEmail,
-  loginRecruiter,
-  logoutRecruiter,
   profileRecruiter,
   editRecruiter,
   uploadProfilePicture,

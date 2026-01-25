@@ -1,47 +1,46 @@
-const jwt = require("jsonwebtoken")
-const jwtToken = process.env.JWT_TOKEN_Secret
+const {auth} = require("../lib/auth.lib")
 
-const authenticateJWT = async(req, res, next) => {
+//fromNodeHeaders converts Express request headers to Better Auth format
+const {fromNodeHeaders} = require("better-auth/node")
 
-  let token = req.cookies.token
+const authenticateSession = async (req, res,next) => {
+  try {
+    const session = await auth.api.getSession({
+      headers: fromNodeHeaders(req.headers)  //convert express headers
+    }) 
 
-  // const token = req.headers["authorization"]?.split(" ")[1];
-  
-  if(!token){
-    token = req.headers["authorization"]?.split(" ")[1];
-  }
+    if (!session) {
+      return res.status(401).json({error: "Access denied, not authenticated"})
+    }
 
-  if(!token){
-    return res.status(403).json({error: "Access denied, token missing"})
-  }
-  
-  try{
-    const decoded = jwt.verify(token, jwtToken)
-    req.user = decoded;
-    // console.log(decoded)
-    // console.log(" JWT decoded:", decoded)
+    req.user = session.user
+    req.session = session.session
+
     next()
-  }catch(error){
-    // console.log(" JWT verification failed:", error.message)
-    return res.status(401).json({message: "Invalid or expired token", error: error.message})
+  } catch (error) {
+    console.error("Session authenication error: ", error);
+    return res.status(401).json({
+      message: "Invalid or expired session",
+      error: error.message
+    })
   }
 }
 
-const authenticateRole = (requiredRole) => async(req, res, next) => {
-  // console.log("🔍 authenticateRole called with required role:", requiredRole)
-  if(!req.user){
-    // console.log("No req.user found")
-    return res.status(401).json({err: "Unauthozied user"})
+const authenticateRole = (requiredRole) =>  async (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({error: "Unauthorized user"})
   }
-  // console.log("User from token:", req.user)
-  // console.log("User role:", req.user.role)
-  // console.log("Required role:", requiredRole)
-  if(req.user.role !== requiredRole){
-    console.log(req.user.role)
-    console.log(requiredRole);
+
+  if (req.user.role !== requiredRole) {
+    console.log(`Role mismatch: User has ${req.user.role}, needs ${requiredRole}`);
     return res.status(403).json({ error: "Forbidden: insufficient permissions" });
   }
+
   next()
 }
 
-module.exports = {authenticateJWT, authenticateRole};
+
+module.exports = {
+  authenticateSession,
+  authenticateRole
+}

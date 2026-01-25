@@ -271,7 +271,7 @@ const applyJob = async (req, res) => {
     
     // Option 1: Use existing resume from profile
     if (useExistingResume === 'true') {
-      const employee = await Employee.findById(employeeId);
+      const employee = await Employee.findOne({betterAuthUserId: employeeId});
       
       if (!employee.resumeFileURL) {
         return res.status(400).json({ 
@@ -372,7 +372,7 @@ const applyJob = async (req, res) => {
     }
     
     // Notify recruiter about the new application
-    const employee = await Employee.findById(employeeId)
+    const employee = await Employee.findOne({betterAuthUserId: employeeId})
     const notification = await createNotification({
       recipient: recuterId,
       recipientModel: 'Recruiter',
@@ -537,7 +537,7 @@ const checkScore = async(req, res) => {
     
     // Option 1: Use existing resume
     if (useExistingResume === 'true') {
-      const employee = await Employee.findById(employeeId);
+      const employee = await Employee.findOne({betterAuthUserId: employeeId});
       
       if (!employee.resumeFileURL) {
         return res.status(400).json({ 

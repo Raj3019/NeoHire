@@ -1,53 +1,36 @@
 const express = require("express")
-const {registerRecruiter, loginRecruiter, profileRecruiter,logoutRecruiter, editRecruiter, getApplicationsByJob, updateApplicationStatus, getJobApplicationStats, getAllJobsByRecruiter, uploadResume, uploadProfilePicture, getAllCandidates, verifyEmail, resendVerificationEmail} = require("../controller/recruiter.controller")
-const {authenticateJWT} = require("../middleware/auth.middleware")
+const { profileRecruiter, editRecruiter, getApplicationsByJob, updateApplicationStatus, getJobApplicationStats, getAllJobsByRecruiter, uploadResume, uploadProfilePicture, getAllCandidates} = require("../controller/recruiter.controller")
+const {authenticateSession} = require("../middleware/auth.middleware")
 const recruiterRouter = express.Router()
 const upload = require("../middleware/multer.middleware");
 
-
-// Register
-recruiterRouter.post("/signup", registerRecruiter) 
-
-// Email Verfication route
-recruiterRouter.get('/verify-email/:token', verifyEmail)
-
-// Resend Verfication route
-recruiterRouter.post('/resend-verification', resendVerificationEmail)
-
-//Login
-recruiterRouter.post("/login", loginRecruiter)
-
-//logout 
-recruiterRouter.post("/logout",authenticateJWT, logoutRecruiter)
-
-
 //Profile
-recruiterRouter.get("/profile", authenticateJWT, profileRecruiter)
+recruiterRouter.get("/profile", authenticateSession, profileRecruiter)
 
 //Edit Profile
-recruiterRouter.put("/profile/:id",authenticateJWT, editRecruiter)
+recruiterRouter.put("/profile/:id",authenticateSession, editRecruiter)
 
 // Get All Candidate
-recruiterRouter.get("/talents", authenticateJWT, getAllCandidates)
+recruiterRouter.get("/talents", authenticateSession, getAllCandidates)
 
-recruiterRouter.post("/profile/resume", authenticateJWT, upload.single('resume'), uploadResume)
+recruiterRouter.post("/profile/resume", authenticateSession, upload.single('resume'), uploadResume)
 
-recruiterRouter.post("/profile/picture", authenticateJWT, upload.single('profilePicture'), uploadProfilePicture)
+recruiterRouter.post("/profile/picture", authenticateSession, upload.single('profilePicture'), uploadProfilePicture)
 
 //Recuter Dashboard
-// recuterRouter.get("/api/recuter/dashboard", authenticateJWT, recuterDashboard)
+// recuterRouter.get("/api/recuter/dashboard", authenticateSession, recuterDashboard)
 
 // GET - ALL APPLICATIONS
-recruiterRouter.get("/applications", authenticateJWT, getAllJobsByRecruiter)
+recruiterRouter.get("/applications", authenticateSession, getAllJobsByRecruiter)
 
 //GET Single Application
-recruiterRouter.get("/applications/:applicationId/application", authenticateJWT, getApplicationsByJob)
+recruiterRouter.get("/applications/:applicationId/application", authenticateSession, getApplicationsByJob)
 
 
 // POST - UPDATE APPLICATION STATS
-recruiterRouter.put("/update/:applicationId/status", authenticateJWT, updateApplicationStatus)
+recruiterRouter.put("/update/:applicationId/status", authenticateSession, updateApplicationStatus)
 
 //GET - OVERALL APPLICATION STATS
-recruiterRouter.get("/overall/:jobId/stats", authenticateJWT, getJobApplicationStats)
+recruiterRouter.get("/overall/:jobId/stats", authenticateSession, getJobApplicationStats)
 
 module.exports = recruiterRouter
