@@ -31,6 +31,17 @@
   --shadow-neo-lg: 8px 8px 0px 0px #1E1E1E;
   --shadow-neo-xl: 12px 12px 0px 0px #1E1E1E;
 
+  /* Professional Palette (Refined) */
+  --color-admin-bg: #09090b;
+  --color-admin-card: #18181b;
+  --color-admin-border: #27272a;
+  --color-admin-accent: var(--color-neo-blue);
+
+  /* Refined Shadows */
+  --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  --shadow-soft: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-deep: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+
   --animate-marquee: marquee 25s linear infinite;
   --animate-marquee-reverse: marquee-reverse 25s linear infinite;
 
@@ -112,6 +123,37 @@ body {
 /* Utilities */
 .neo-border {
   border: 3px solid var(--color-neo-black);
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dark .glass {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.admin-card {
+  background: var(--color-neo-white);
+  border: 1px solid #e5e7eb;
+  border-radius: 1rem;
+  box-shadow: var(--shadow-soft);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dark .admin-card {
+  background: var(--color-admin-card);
+  border: 1px solid var(--color-admin-border);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+}
+
+.admin-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-deep);
 }
 
 /* Custom Scrollbar - Reference style */
@@ -200,9 +242,19 @@ input[type="date"] {
 }
 
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-5px); }
-  75% { transform: translateX(5px); }
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(-5px);
+  }
+
+  75% {
+    transform: translateX(5px);
+  }
 }
 
 .animate-shake {
@@ -210,10 +262,73 @@ input[type="date"] {
 }
 
 @keyframes loading-bar {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(200%); }
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(200%);
+  }
 }
 
 .animate-loading-bar {
   animation: loading-bar 2s infinite linear;
+}
+
+/* Coming Soon Tooltip for Mock Buttons */
+.mock-btn {
+  position: relative;
+}
+
+.mock-btn::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) scale(0.9);
+  background-color: #1E1E1E;
+  color: #FFFFFF;
+  padding: 6px 12px;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+  border: 2px solid #FFFFFF;
+  box-shadow: 3px 3px 0px 0px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 100;
+}
+
+.mock-btn::before {
+  content: '';
+  position: absolute;
+  bottom: calc(100% + 2px);
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: #1E1E1E;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 100;
+}
+
+.mock-btn:hover::after,
+.mock-btn:hover::before {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) scale(1);
+}
+
+.dark .mock-btn::after {
+  background-color: #FFFFFF;
+  color: #1E1E1E;
+  border-color: #1E1E1E;
+}
+
+.dark .mock-btn::before {
+  border-top-color: #FFFFFF;
 }

@@ -43,9 +43,12 @@ function LoginForm() {
           const storedUser = stored?.user || (stored?.isAuthenticated ? stored : null);
           const storedRole = storedUser?.role;
           if (storedRole) {
-            const isRec = (storedRole === 'Recruiter' || storedRole?.toLowerCase() === 'recruiter');
-            const redirectTo = isRec ? '/recruiter/dashboard' : '/candidate/dashboard';
-            // console.log('Login page: redirecting from cookie:', { storedRole, redirectTo });
+            const roleLower = storedRole.toLowerCase();
+            let redirectTo = '/candidate/dashboard';
+            
+            if (roleLower === 'admin') redirectTo = '/admin/dashboard';
+            else if (roleLower === 'recruiter') redirectTo = '/recruiter/dashboard';
+
             router.replace(redirectTo);
             return;
           }
@@ -55,7 +58,7 @@ function LoginForm() {
       }
 
       // If we have token but no suitable stored role, try to restore session (auto-detect)
-      if (!user || !user.role) {
+      if (!user || (user.role?.toLowerCase() !== 'admin' && user.role?.toLowerCase() !== 'recruiter' && user.role?.toLowerCase() !== 'employee')) {
         const tryRestoreSession = async () => {
           await fetchProfile();
         };
@@ -67,10 +70,12 @@ function LoginForm() {
     // Fallback: check store state and redirect
     const hasAuth = (isAuthenticated && user && user.email);
     if (hasAuth) {
-      const userRole = user?.role;
-      const isRecruiterRole = (userRole === 'Recruiter' || userRole?.toLowerCase() === 'recruiter');
-      const redirectTo = isRecruiterRole ? '/recruiter/dashboard' : '/candidate/dashboard';
-      // console.log('Login page redirecting:', { userRole, redirectTo });
+      const userRole = user?.role?.toLowerCase();
+      let redirectTo = '/candidate/dashboard';
+      
+      if (userRole === 'admin') redirectTo = '/admin/dashboard';
+      else if (userRole === 'recruiter') redirectTo = '/recruiter/dashboard';
+
       router.replace(redirectTo);
     }
   }, [mounted, isAuthenticated, user, router, isRecruiter, fetchProfile]);
@@ -87,8 +92,11 @@ function LoginForm() {
       const result = await login(formData.email, formData.password, role);
       
       if (result.success) {
-        // Redirect based on role
-        router.push(role === 'Recruiter' ? '/recruiter/dashboard' : '/candidate/dashboard');
+        // Redirect based on actual role from result
+        const actualRole = result.user?.role?.toLowerCase();
+        if (actualRole === 'admin') router.push('/admin/dashboard');
+        else if (actualRole === 'recruiter') router.push('/recruiter/dashboard');
+        else router.push('/candidate/dashboard');
       } else {
         // Show error message and stop loading
         setError(result.error || 'Login failed. Please check your credentials.');

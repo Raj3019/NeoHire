@@ -10,6 +10,10 @@ import { useNotificationSocket } from '@/lib/notificationStore';
 
 const NavbarContent = () => {
   const pathname = usePathname();
+  const isAdminRoute = pathname?.startsWith('/admin');
+
+  if (isAdminRoute) return null;
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, logout, isAuthenticated } = useAuthStore();

@@ -300,4 +300,32 @@ export const tryAPI = {
   },
 };
 
+// Admin API endpoints
+export const adminAPI = {
+  getDashboard: async () => {
+    const response = await api.get('/admin/dashboard');
+    return response.data;
+  },
+  getUsers: async (params) => {
+    const response = await api.get('/admin/users', { params });
+    return response.data;
+  },
+  updateUserStatus: async (id, data) => {
+    const response = await api.patch(`/admin/users/${id}/status`, data);
+    return response.data;
+  },
+  getJobs: async (params) => {
+    const response = await api.get('/admin/jobs', { params });
+    return response.data;
+  },
+  updateJobStatus: async (id, data) => {
+    const response = await api.patch(`/admin/jobs/${id}`, data);
+    return response.data;
+  },
+  deleteJob: async (id) => {
+    const response = await api.delete(`/admin/jobs/${id}`);
+    return response.data;
+  },
+};
+
 export default api;

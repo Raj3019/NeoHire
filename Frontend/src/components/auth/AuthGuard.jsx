@@ -117,7 +117,9 @@ export default function AuthGuard({ children, allowedRoles }) {
 
     // If authenticated but wrong role, redirect to appropriate dashboard
     if (!isAllowed) {
-      if (userRole === 'Recruiter') {
+      if (userRole === 'Admin') {
+        router.push('/admin/dashboard');
+      } else if (userRole === 'Recruiter') {
         router.push('/recruiter/dashboard');
       } else {
         router.push('/candidate/dashboard');

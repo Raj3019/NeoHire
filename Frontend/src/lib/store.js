@@ -30,24 +30,26 @@ export const useAuthStore = create(
             // Continue with basic user data if profile fetch fails
           }
 
-          // Determine the correct role: Employee for candidates, Recruiter for recruiters
-          const userRole = (role === 'Recruiter' || role?.toLowerCase() === 'recruiter') ? 'Recruiter' : 'Employee';
-
-          // Build user object carefully - ensure role is not overwritten
-          // Normalize profile data: handle cases where it's in response.data or response directly
+          // Build user object
           const profileInfo = profileData?.data || profileData?.profile || profileData?.user || profileData || {};
 
-          // Remove success, message and any 'role' field from profile data that might be job title
+          // Get role from profile (DB) or fallback to login type
+          let finalRole = profileInfo.role || role || 'Employee';
+          const normalized = finalRole.toLowerCase();
+
+          if (normalized === 'admin') finalRole = 'Admin';
+          else if (normalized === 'recruiter') finalRole = 'Recruiter';
+          else finalRole = 'Employee';
+
           const { success: _s, message: _m, role: _, ...cleanProfileInfo } = profileInfo;
 
           const user = {
             ...cleanProfileInfo,
             email,
-            role: userRole,
+            role: finalRole,
             isAuthenticated: true,
           };
 
-          // console.log('User object after login:', { role: user.role, email, userRole });
           set({ user, isAuthenticated: true, isLoading: false });
           return { success: true, user };
         } catch (error) {
@@ -101,15 +103,24 @@ export const useAuthStore = create(
         try {
           const currentUserRole = get().user?.role;
 
-          // Helper to build user object from response
+          // Build user object from response
           const buildUser = (response, requestedRole) => {
             const profileData = response.data || response.profile || response.user || response;
             const { success: _s, message: _m, ...cleanData } = profileData;
-            const finalRole = cleanData.role || requestedRole || currentUserRole || 'employee';
+
+            // Priority: profileData.role (from DB) > requestedRole > currentRole
+            let finalRole = cleanData.role || requestedRole || currentUserRole || 'Employee';
+
+            // Normalize role string
+            const normalized = finalRole.toLowerCase();
+            if (normalized === 'admin') finalRole = 'Admin';
+            else if (normalized === 'recruiter') finalRole = 'Recruiter';
+            else finalRole = 'Employee';
+
             return {
               ...cleanData,
               recentApplicationJob: response.recentApplicationJob,
-              role: (finalRole === 'Recruiter' || finalRole?.toLowerCase() === 'recruiter') ? 'Recruiter' : 'Employee',
+              role: finalRole,
               isAuthenticated: true,
             };
           };
