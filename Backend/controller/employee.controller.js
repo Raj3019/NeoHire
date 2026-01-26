@@ -129,19 +129,26 @@ const uploadResume = async (req, res) => {
 const profileEmployee = async (req, res) => {
   try {
     const user = req.user
-    // console.log(user.id)
 
     const employee = await Employee.findOne({ betterAuthUserId: req.user.id }).select('-password')
     if (!employee) {
       return res.status(401).json({ message: "Employee with this id not found" })
     }
-    // const appliedJob = employee.appliedJobs
+
     const recentApplication = await Application.find({ JobSeeker: user.id }).sort({ appliedAt: -1 })
       .populate('job', 'title companyName location workType jobType salary status')
-      .select('job status appliedAt aiMatchScore resume') // Include aiMatchScore
+      .select('job status appliedAt aiMatchScore resume')
 
     const recentApplicationJob = recentApplication ? recentApplication : null
-    return res.status(200).json({ data: employee, recentApplicationJob })
+
+    // Include role from the authenticated user (Better Auth session)
+    return res.status(200).json({
+      data: {
+        ...employee.toObject(),
+        role: req.user.role  // This comes from Better Auth session
+      },
+      recentApplicationJob
+    })
   } catch (err) {
     return res.status(401).json({ message: "Employee profile not found" })
   }

@@ -15,6 +15,7 @@ const notificationRouter = require('./routers/notification.router')
 const roastResumeRouter = require('./routers/resumeRoast.router')
 const {auth} = require("./lib/auth.lib")
 const {toNodeHandler} = require("better-auth/node")
+const adminRouter = require('./routers/admin.router')
 const frontendURL = process.env.FRONTEND_URL
 
 const server = http.createServer(app)
@@ -94,6 +95,7 @@ app.use('/api/jobs', jobRouter)
 app.use('/api/applications', applicationRouter)
 app.use('/api/notifications', notificationRouter)
 app.use('/api/try', roastResumeRouter)
+app.use('/api/admin', adminRouter)
 
 app.get('/', (req, res) => {
   res.send("Hello World")

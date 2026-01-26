@@ -75,7 +75,12 @@ const employeeSchema = new mongoose.Schema({
 	role: {
     	type: String,
     	default: "Employee"
-  	},
+  },
+	status:{
+		type: String,
+		enum: ["Active", "Suspended", "Banned"],
+		default: "Active"
+	},
 	education: {
 		tenth: {
 			schoolName: String,

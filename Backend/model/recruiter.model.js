@@ -58,6 +58,11 @@ const recruiterSchema = new mongoose.Schema(
       type: String,
       default: "Recruiter",
     },
+    status:{
+		type: String,
+		enum: ["Active", "Suspended", "Banned"],
+		default: "Active"
+	},
     gender: {
       type: String,
       enum: ["Male", "Female", "Other"],
@@ -180,11 +185,6 @@ const recruiterSchema = new mongoose.Schema(
     socials: {
       linkedin: String,
       twitter: String,
-    },
-    status: {
-      type: String,
-      enum: ["active", "inactive", "suspended"],
-      default: "active",
     },
     resumeFileURL: {
       type: String,

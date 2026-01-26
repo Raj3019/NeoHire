@@ -31,7 +31,7 @@ const uploadProfilePicture = async (req, res) => {
     }
 
     const recruiterId = req.user.id;
-    const recruiter = await Recruiter.findOne({betterAuthUserId: recruiterId});
+    const recruiter = await Recruiter.findOne({ betterAuthUserId: recruiterId });
     if (!recruiter) {
       return res.status(404).json({ message: "Recruiter not found" });
     }
@@ -71,7 +71,7 @@ const profileRecruiter = async (req, res) => {
   try {
     const recruiterId = req.user;
 
-    const recruiter = await Recruiter.findOne({betterAuthUserId: recruiterId.id})
+    const recruiter = await Recruiter.findOne({ betterAuthUserId: recruiterId.id })
       .select("-password")
       .populate({
         path: "jobs",
@@ -116,6 +116,7 @@ const profileRecruiter = async (req, res) => {
       data: {
         ...recruiter.toObject(),
         jobs: jobsWithDetails,
+        role: req.user.role  // Include role from Better Auth session
       },
       message: "Profile sucessfully fetched",
     });
@@ -130,7 +131,7 @@ const profileRecruiter = async (req, res) => {
 const uploadResume = async (req, res) => {
   try {
     const recruiterId = req.user.id;
-    const recruiter = await Recruiter.findOne({betterAuthUserId: recruiterId});
+    const recruiter = await Recruiter.findOne({ betterAuthUserId: recruiterId });
 
     if (recruiter.resumePublicLinkId) {
       await deleteResumeFromCloudinary(recruiter.resumePublicLinkId);
@@ -477,7 +478,7 @@ const getAllCandidates = async (req, res) => {
   try {
     const recruiterId = req.user.id;
 
-    const recruiter = await Recruiter.findOne({betterAuthUserId:recruiterId}).populate({
+    const recruiter = await Recruiter.findOne({ betterAuthUserId: recruiterId }).populate({
       path: "jobs",
       populate: {
         path: "appliedBy.applicant",

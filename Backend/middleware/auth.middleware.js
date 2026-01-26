@@ -1,16 +1,16 @@
-const {auth} = require("../lib/auth.lib")
+const { auth } = require("../lib/auth.lib")
 
 //fromNodeHeaders converts Express request headers to Better Auth format
-const {fromNodeHeaders} = require("better-auth/node")
+const { fromNodeHeaders } = require("better-auth/node")
 
-const authenticateSession = async (req, res,next) => {
+const authenticateSession = async (req, res, next) => {
   try {
     const session = await auth.api.getSession({
       headers: fromNodeHeaders(req.headers)  //convert express headers
-    }) 
+    })
 
     if (!session) {
-      return res.status(401).json({error: "Access denied, not authenticated"})
+      return res.status(401).json({ error: "Access denied, not authenticated" })
     }
 
     req.user = session.user
@@ -26,9 +26,9 @@ const authenticateSession = async (req, res,next) => {
   }
 }
 
-const authenticateRole = (requiredRole) =>  async (req, res, next) => {
+const authenticateRole = (requiredRole) => async (req, res, next) => {
   if (!req.user) {
-    return res.status(401).json({error: "Unauthorized user"})
+    return res.status(401).json({ error: "Unauthorized user" })
   }
 
   if (req.user.role !== requiredRole) {
