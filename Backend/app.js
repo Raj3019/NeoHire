@@ -16,6 +16,8 @@ const roastResumeRouter = require('./routers/resumeRoast.router')
 const {auth} = require("./lib/auth.lib")
 const {toNodeHandler} = require("better-auth/node")
 const adminRouter = require('./routers/admin.router')
+const autoApplyRouter = require('./routers/autoApply.router')
+const { initAutoApplyCron } = require("./services/autoApplyCron.services");
 const frontendURL = process.env.FRONTEND_URL
 
 const server = http.createServer(app)
@@ -73,6 +75,7 @@ io.on('connection', (socket) => {
 
 app.set('io', io)
 app.set('userSockets', userSockets)
+initAutoApplyCron(io, userSockets)
 
 app.use(cors({
   origin: allowedOrigins,
@@ -96,6 +99,7 @@ app.use('/api/applications', applicationRouter)
 app.use('/api/notifications', notificationRouter)
 app.use('/api/try', roastResumeRouter)
 app.use('/api/admin', adminRouter)
+app.use('/api/auto-apply', autoApplyRouter)
 
 app.get('/', (req, res) => {
   res.send("Hello World")

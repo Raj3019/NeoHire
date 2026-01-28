@@ -4,7 +4,7 @@
 const mongoose = require('mongoose')
 
 const employeeSchema = new mongoose.Schema({
-	betterAuthUserId:{
+	betterAuthUserId: {
 		type: String,
 		unique: true,
 		required: true
@@ -15,7 +15,7 @@ const employeeSchema = new mongoose.Schema({
 	about: {
 		type: String,
 	},
-	headline:{
+	headline: {
 		type: String
 	},
 	email: {
@@ -27,12 +27,12 @@ const employeeSchema = new mongoose.Schema({
 		type: String,
 		maxlength: 10,
 		unique: true,
-		sparse: true 
+		sparse: true
 	},
 	dateOfBirth: {
-    type: Date,
-  },
-	gender:{
+		type: Date,
+	},
+	gender: {
 		type: String,
 		enum: ["Male", "Female", "Other"],
 	},
@@ -40,8 +40,8 @@ const employeeSchema = new mongoose.Schema({
 		type: String,
 	},
 	profilePicturePublicId: {
-        type: String,
-    },
+		type: String,
+	},
 	currentCity: {
 		type: String,
 	},
@@ -73,10 +73,10 @@ const employeeSchema = new mongoose.Schema({
 		default: []
 	},
 	role: {
-    	type: String,
-    	default: "Employee"
-  },
-	status:{
+		type: String,
+		default: "Employee"
+	},
+	status: {
 		type: String,
 		enum: ["Active", "Suspended", "Banned"],
 		default: "Active"
@@ -212,6 +212,10 @@ const employeeSchema = new mongoose.Schema({
 	},
 	githubUrl: {
 		type: String,
+	},
+	autoApplyEnabled: {
+		type: Boolean,
+		default: false
 	},
 	appliedJobs: [
 		{

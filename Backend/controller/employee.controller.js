@@ -31,19 +31,24 @@ const uploadProfilePicture = async (req, res) => {
     const result = await uploadToCloudinary(req.file.path)
 
     // Use findByIdAndUpdate to only update profile picture fields without triggering full document validation
-    await Employee.findByIdAndUpdate(
-      employeeId,
+    const updatedEmployee = await Employee.findByIdAndUpdate(
+      employee._id,
       {
         profilePicture: result.url,
         profilePicturePublicId: result.public_id
       },
-      { runValidators: false } // Skip validation since we're only updating profile picture fields
+      { runValidators: false, new: true }
     );
 
     fs.unlinkSync(req.file.path);
 
+    // Verify the update was successful
+    if (!updatedEmployee || updatedEmployee.profilePicture !== result.url) {
+      return res.status(500).json({ message: "Failed to save profile picture to database" });
+    }
+
     res.status(200).json({
-      message: "Profile picture uploaded sucessfully",
+      message: "Profile picture uploaded successfully",
       profilePicture: result.url
     })
 
@@ -135,9 +140,10 @@ const profileEmployee = async (req, res) => {
       return res.status(401).json({ message: "Employee with this id not found" })
     }
 
-    const recentApplication = await Application.find({ JobSeeker: user.id }).sort({ appliedAt: -1 })
+    // FIX: Use employee._id (MongoDB ObjectId) instead of user.id (Better Auth string)
+    const recentApplication = await Application.find({ JobSeeker: employee._id }).sort({ appliedAt: -1 })
       .populate('job', 'title companyName location workType jobType salary status')
-      .select('job status appliedAt aiMatchScore resume')
+      .select('job status appliedAt aiMatchScore resume appliedVia')
 
     const recentApplicationJob = recentApplication ? recentApplication : null
 

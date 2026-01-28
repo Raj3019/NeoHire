@@ -1,24 +1,24 @@
 // Application model
- 
+
 const mongoose = require("mongoose")
 
 const applicationSchema = new mongoose.Schema({
-  job:{
+  job: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Job",
     required: true
   },
-  JobSeeker:{
+  JobSeeker: {
     type: mongoose.Schema.Types.ObjectId,
-    ref:"Employee", 
+    ref: "Employee",
     required: true
   },
-  postedBy:{
-    type:mongoose.Schema.Types.ObjectId,
+  postedBy: {
+    type: mongoose.Schema.Types.ObjectId,
     ref: "Recruiter",
     required: true
   },
-  resume:{
+  resume: {
     type: String,
     required: true
   },
@@ -49,22 +49,27 @@ const applicationSchema = new mongoose.Schema({
       min: 0,
       max: 100
     },
-  calculatedAt: {
+    calculatedAt: {
       type: Date,
       default: Date.now
+    },
+    insights: {
+      type: String
+    },
+    matchedSkills: [String],
+    missingSkills: [String],
   },
-  insights: {
-    type: String 
-  },
-  matchedSkills: [String],
-  missingSkills: [String],  
-  },
-  appliedAt:{
+  appliedAt: {
     type: Date,
     default: Date.now,
     required: true
+  },
+  appliedVia: {
+    type: String,
+    enum: ['manual', 'auto-apply'],
+    default: "manual"
   }
-}, {timestamps: true})
+}, { timestamps: true })
 
 const Application = mongoose.model("Application", applicationSchema)
 

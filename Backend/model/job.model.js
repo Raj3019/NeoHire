@@ -40,8 +40,9 @@ const jobSchema = new mongoose.Schema({
     type: [String],
     required:[true, "Skill is required"]
   },
-  experienceLevel: {
-    type: String       // need enum here
+  experienceRequired: {
+    min: { type: Number, default: 0 },
+    max: { type: Number, default: 50 }
   },
   salary:{
     min:{type: Number, required: [true, "Minimum Salary is required"]},
