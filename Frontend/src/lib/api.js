@@ -265,6 +265,24 @@ export const jobsAPI = {
   },
 };
 
+// Auto-Apply API endpoints
+export const autoApplyAPI = {
+  getStatus: async () => {
+    const response = await api.get('/auto-apply/status');
+    return response.data;
+  },
+
+  toggle: async (enabled) => {
+    const response = await api.post('/auto-apply/toggle', { enabled });
+    return response.data;
+  },
+
+  getHistory: async () => {
+    const response = await api.get('/auto-apply/history');
+    return response.data;
+  }
+};
+
 // Notification API endpoints
 export const notificationAPI = {
   getNotifications: async (params = {}) => {

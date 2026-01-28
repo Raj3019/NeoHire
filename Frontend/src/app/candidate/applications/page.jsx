@@ -4,7 +4,7 @@ import AuthGuard from '@/components/auth/AuthGuard';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/store';
 import { NeoCard, NeoBadge, NeoButton, NeoInput } from '@/components/ui/neo';
-import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search, Sparkles } from 'lucide-react';
 import ProfileCompletionBanner from '@/components/shared/ProfileCompletionBanner';
 import { formatDate } from '@/lib/utils';
 
@@ -117,6 +117,21 @@ export default function CandidateApplications() {
                                           {app.job.location}
                                       </span>
                                   )}
+                                  {/* Auto-Apply (Premium) vs Manual Tag */}
+                                  {app.appliedVia === 'auto-apply' ? (
+                                    <span className="relative inline-flex items-center gap-1.5 px-3 py-1 text-xs font-black uppercase border-2 border-amber-600 bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 text-amber-900 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] overflow-hidden group">
+                                      <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                                      <Sparkles className="w-3.5 h-3.5" />
+                                      <span>Pro Auto</span>
+                                    </span>
+                                  ) : (
+                                    <NeoBadge 
+                                      variant="blue" 
+                                      className="rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-xs uppercase px-3 py-1"
+                                    >
+                                      ✍️ Manual
+                                    </NeoBadge>
+                                  )}
                                   <NeoBadge variant={getStatusColor(app.status)} className="rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-xs uppercase px-3 py-1">
                                       {app.status}
                                   </NeoBadge>
@@ -125,7 +140,9 @@ export default function CandidateApplications() {
 
                           <div className="flex items-center gap-6">
                               <div className="text-right">
-                                  <span className="block text-[10px] font-black uppercase text-gray-400 dark:text-gray-500 mb-0 leading-none">AI Match</span>
+                                  <span className="block text-[10px] font-black uppercase text-gray-400 dark:text-gray-500 mb-0 leading-none">
+                                    {app.appliedVia === 'auto-apply' ? 'Skills Match' : 'AI Score'}
+                                  </span>
                                   <span className={`text-3xl font-black leading-none ${getScoreColor(matchScore)}`}>{matchScore}%</span>
                               </div>
                               
