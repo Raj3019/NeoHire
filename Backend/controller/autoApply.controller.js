@@ -1,7 +1,7 @@
 const Employee = require("../model/employee.model")
 const Application = require("../model/application.model")
 const Job = require("../model/job.model")
-const { calculateSkillMatch, calculateExperienceMatch, calculateOverallMatch, hasAlreadyApplied } = require("../utils/autoApply.utils")
+const { calculateSkillMatch, hasAlreadyApplied } = require("../utils/autoApply.utils")
 const { createNotification, sendRealTimeNotification } = require('../utils/notification.utlis');
 
 const THRESHOLD = 80;

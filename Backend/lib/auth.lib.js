@@ -64,6 +64,29 @@ const auth = betterAuth({
     }
   },
 
+  advanced:{
+    ipAddress:{
+      ipv6Subnet: 64,
+    }
+  },
+
+  rateLimit:{
+    enabled: true,
+    window: 60,
+    max: 50,
+
+    customRules:{
+      "/sign-up/email":{
+        window: 300,
+        max: 5
+      },
+      "/sign-up/email":{
+        window: 3600,
+        max: 3
+      },
+    }
+  },
+
   user: {
     additionalFields: {
       role: {
@@ -91,9 +114,9 @@ const auth = betterAuth({
           try {
             // Create Employee or Recruiter profile based on user.role
             if (user.role === 'Employee') {
-              await Employee.create({ betterAuthUserId: user.id, email: user.email, fullName: user.name })
+              await Employee.create({ betterAuthUserId: user.id, email: user.email, fullName: user.fullName })
             } else if (user.role === 'Recruiter') {
-              await Recruiter.create({ betterAuthUserId: user.id, email: user.email, fullName: user.name })
+              await Recruiter.create({ betterAuthUserId: user.id, email: user.email, fullName: user.fullName })
             }
           } catch (error) {
             console.error("Profile creation failed:", error);

@@ -18,6 +18,7 @@ const {toNodeHandler} = require("better-auth/node")
 const adminRouter = require('./routers/admin.router')
 const autoApplyRouter = require('./routers/autoApply.router')
 const { initAutoApplyCron } = require("./services/autoApplyCron.services");
+const {generalLimiter} = require("./middleware/rateLimit.middleware")
 const frontendURL = process.env.FRONTEND_URL
 
 const server = http.createServer(app)
@@ -89,6 +90,7 @@ app.use(cors({
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser())
+app.use('/api', generalLimiter)
 
 // toNodeHandler -> Converts our auth instance to an Express-compatible handler
 app.all('/api/auth/*path', toNodeHandler(auth))

@@ -3,6 +3,7 @@ const { profileRecruiter, editRecruiter, getApplicationsByJob, updateApplication
 const {authenticateSession} = require("../middleware/auth.middleware")
 const recruiterRouter = express.Router()
 const upload = require("../middleware/multer.middleware");
+const { uploadLimiter } = require("../middleware/rateLimit.middleware");
 
 //Profile
 recruiterRouter.get("/profile", authenticateSession, profileRecruiter)
@@ -13,9 +14,9 @@ recruiterRouter.put("/profile/:id",authenticateSession, editRecruiter)
 // Get All Candidate
 recruiterRouter.get("/talents", authenticateSession, getAllCandidates)
 
-recruiterRouter.post("/profile/resume", authenticateSession, upload.single('resume'), uploadResume)
+recruiterRouter.post("/profile/resume", authenticateSession,uploadLimiter, upload.single('resume'), uploadResume)
 
-recruiterRouter.post("/profile/picture", authenticateSession, upload.single('profilePicture'), uploadProfilePicture)
+recruiterRouter.post("/profile/picture", authenticateSession, uploadLimiter, upload.single('profilePicture'), uploadProfilePicture)
 
 //Recuter Dashboard
 // recuterRouter.get("/api/recuter/dashboard", authenticateSession, recuterDashboard)
