@@ -16,7 +16,7 @@ function RegisterForm() {
   const roleParam = searchParams.get('role');
   const isRecruiter = mode === 'recruiter' || roleParam === 'recruiter';
   const role = isRecruiter ? 'Recruiter' : 'Employee';
-  
+
   const { login, signup, isAuthenticated, user, fetchProfile } = useAuthStore();
   const [formData, setFormData] = useState({ email: '', password: '', confirmPassword: '', fullName: '' });
   const [isLoading, setIsLoading] = useState(false);
@@ -86,7 +86,9 @@ function RegisterForm() {
       // Clear status after 5 seconds
       setTimeout(() => setResendStatus(''), 5000);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to resend verification email.');
+      if (!err.isHandled) {
+        setError(err.response?.data?.message || 'Failed to resend verification email.');
+      }
       setIsLoading(false);
     }
   };
@@ -94,7 +96,7 @@ function RegisterForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     // Clear any existing errors
     setError('');
 
@@ -107,7 +109,7 @@ function RegisterForm() {
 
     try {
       const result = await signup(formData.email, formData.password, formData.confirmPassword, role, formData.fullName);
-      
+
       if (result.success) {
         if (result.requiresVerification) {
           setSuccessMessage(result.message); // Use result.message directly from the store's signup
@@ -118,12 +120,16 @@ function RegisterForm() {
         }
       } else {
         // Show error message and stop loading
-        setError(result.error || 'Signup failed. Please try again.');
+        if (!result.isHandled) {
+          setError(result.error || 'Signup failed. Please try again.');
+        }
         setIsLoading(false);
       }
     } catch (err) {
       // Handle unexpected errors
-      console.error('Signup error:', err);
+      if (!err.isHandled) {
+        console.error('Signup error:', err);
+      }
       setError('An unexpected error occurred. Please try again.');
       setIsLoading(false);
     }
@@ -138,7 +144,7 @@ function RegisterForm() {
     <div className="min-h-[calc(100vh-80px)] flex items-center justify-center bg-neo-bg dark:bg-zinc-950 p-4 transition-colors text-neo-black">
       <NeoCard className="w-full max-w-md relative pt-10">
         <div className={`absolute top-0 left-0 w-full h-2 ${isRecruiter ? 'bg-neo-orange' : 'bg-neo-yellow'}`}></div>
-        
+
         <h2 className="text-3xl font-black text-center mb-6 uppercase mt-2 dark:text-white">
           Join Us
           <span className={`block text-sm font-mono mt-1 ${isRecruiter ? 'text-neo-orange' : 'text-neo-blue'}`}>
@@ -148,7 +154,7 @@ function RegisterForm() {
 
         {error && (
           <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border-2 border-neo-black dark:border-red-400 shadow-neo-sm relative">
-            <button 
+            <button
               onClick={() => setError('')}
               className="absolute top-2 right-2 text-neo-black dark:text-red-400 dark:hover:text-red-200 font-bold text-xl leading-none"
               aria-label="Dismiss error"
@@ -182,11 +188,11 @@ function RegisterForm() {
                 <Check className="w-4 h-4 stroke-[4px]" />
               </div>
             </div>
-            
+
             <h2 className="text-2xl font-black uppercase text-neo-black dark:text-white mb-3 tracking-tight leading-none">
               Check Your <span className={cn("font-mono", isRecruiter ? "text-neo-orange" : "text-neo-blue")}>Inbox</span>
             </h2>
-            
+
             <p className="font-mono text-[13px] text-gray-500 dark:text-gray-400 mb-6 max-w-[280px]">
               We've sent a magic link to your email. Click it to activate your account.
             </p>
@@ -212,8 +218,8 @@ function RegisterForm() {
                   <span className="text-green-600 dark:text-green-400 animate-pulse">{resendStatus}</span>
                 ) : (
                   <>
-                    Didn't receive anything? Check spam or <button 
-                      onClick={handleResend} 
+                    Didn't receive anything? Check spam or <button
+                      onClick={handleResend}
                       disabled={isLoading}
                       className="text-neo-pink underline hover:text-pink-600 disabled:opacity-50 disabled:no-underline"
                     >
@@ -228,8 +234,8 @@ function RegisterForm() {
           <>
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <div className="space-y-1">
-                 <label className="block font-bold text-sm dark:text-white uppercase tracking-tight">Full Name</label>
-                 <NeoInput
+                <label className="block font-bold text-sm dark:text-white uppercase tracking-tight">Full Name</label>
+                <NeoInput
                   type="text"
                   placeholder="John Doe"
                   value={formData.fullName}
@@ -239,8 +245,8 @@ function RegisterForm() {
                 />
               </div>
               <div className="space-y-1">
-                 <label className="block font-bold text-sm dark:text-white uppercase tracking-tight">Email Address</label>
-                 <NeoInput
+                <label className="block font-bold text-sm dark:text-white uppercase tracking-tight">Email Address</label>
+                <NeoInput
                   type="email"
                   placeholder="you@example.com"
                   value={formData.email}
@@ -250,9 +256,9 @@ function RegisterForm() {
                 />
               </div>
               <div className="space-y-1">
-                 <label className="block font-bold text-sm dark:text-white uppercase tracking-tight">Password</label>
-                 <div className="relative">
-                   <NeoInput
+                <label className="block font-bold text-sm dark:text-white uppercase tracking-tight">Password</label>
+                <div className="relative">
+                  <NeoInput
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
                     value={formData.password}
@@ -269,12 +275,12 @@ function RegisterForm() {
                   >
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
-                 </div>
+                </div>
               </div>
               <div className="space-y-1">
-                 <label className="block font-bold text-sm dark:text-white uppercase tracking-tight">Confirm Password</label>
-                 <div className="relative">
-                   <NeoInput
+                <label className="block font-bold text-sm dark:text-white uppercase tracking-tight">Confirm Password</label>
+                <div className="relative">
+                  <NeoInput
                     type={showConfirmPassword ? "text" : "password"}
                     placeholder="••••••••"
                     value={formData.confirmPassword}
@@ -291,13 +297,13 @@ function RegisterForm() {
                   >
                     {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
-                 </div>
+                </div>
               </div>
 
-              <NeoButton 
-                type="submit" 
-                size="lg" 
-                className="w-full mt-4 bg-neo-black text-white hover:bg-zinc-800" 
+              <NeoButton
+                type="submit"
+                size="lg"
+                className="w-full mt-4 bg-neo-black text-white hover:bg-zinc-800"
                 isLoading={isLoading}
                 disabled={isLoading}
               >

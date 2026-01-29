@@ -54,8 +54,13 @@ export const useAuthStore = create(
           return { success: true, user };
         } catch (error) {
           const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Login failed. Please try again.';
-          set({ error: errorMessage, isLoading: false });
-          return { success: false, error: errorMessage };
+          // Only set local error if not already handled by global toast (429/500)
+          if (!error.isHandled) {
+            set({ error: errorMessage, isLoading: false });
+          } else {
+            set({ isLoading: false });
+          }
+          return { success: false, error: errorMessage, isHandled: error.isHandled };
         }
       },
 
@@ -85,8 +90,13 @@ export const useAuthStore = create(
           return { success: true, user };
         } catch (error) {
           const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Signup failed. Please try again.';
-          set({ error: errorMessage, isLoading: false });
-          return { success: false, error: errorMessage };
+          // Only set local error if not already handled by global toast (429/500)
+          if (!error.isHandled) {
+            set({ error: errorMessage, isLoading: false });
+          } else {
+            set({ isLoading: false });
+          }
+          return { success: false, error: errorMessage, isHandled: error.isHandled };
         }
       },
 
@@ -166,9 +176,14 @@ export const useAuthStore = create(
           if (error.response?.status === 401 || error.response?.status === 403) {
             set({ user: null, isAuthenticated: false, error: errorMessage, isLoading: false });
           } else {
-            set({ isLoading: false });
+            // Check for rate limit/server error before setting local error
+            if (!error.isHandled) {
+              set({ error: errorMessage, isLoading: false });
+            } else {
+              set({ isLoading: false });
+            }
           }
-          return { success: false, error: errorMessage };
+          return { success: false, error: errorMessage, isHandled: error.isHandled };
         }
       },
 

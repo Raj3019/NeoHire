@@ -10,28 +10,28 @@ import { getMissingProfileFields, formatDate, getCurrencySymbol } from '@/lib/ut
 import ProfileCompletionBanner from '@/components/shared/ProfileCompletionBanner';
 
 const INITIAL_FORM_STATE = {
-    id: '',
-    title: '',
-    description: '',
-    location: '',
-    jobType: 'Full-time',
-    workType: 'On-site',
-    company: '',
-    department: '',
-    skillsRequired: [],
-    experienceLevel: 'Mid',
-    salaryMin: 0,
-    salaryMax: 0,
-    currency: 'INR',
-    applicationDeadline: '',
-    openings: 1,
-    status: 'Active',
-    industry: '',
-    benefits: [],
-    educationRequired: '',
-    jobRequirements: [],
-    postedBy: 'r1',
-    applicantsCount: 0
+  id: '',
+  title: '',
+  description: '',
+  location: '',
+  jobType: 'Full-time',
+  workType: 'On-site',
+  company: '',
+  department: '',
+  skillsRequired: [],
+  experienceLevel: 'Mid',
+  salaryMin: 0,
+  salaryMax: 0,
+  currency: 'INR',
+  applicationDeadline: '',
+  openings: 1,
+  status: 'Active',
+  industry: '',
+  benefits: [],
+  educationRequired: '',
+  jobRequirements: [],
+  postedBy: 'r1',
+  applicantsCount: 0
 };
 
 export default function RecruiterJobs() {
@@ -42,17 +42,17 @@ export default function RecruiterJobs() {
   const [selectedJobId, setSelectedJobId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-  
+
   // Form State
   const [formData, setFormData] = useState(INITIAL_FORM_STATE);
   const [isEditing, setIsEditing] = useState(false);
   const [isFormLoading, setIsFormLoading] = useState(false);
   const [error, setError] = useState('');
   const [expandedInsightId, setExpandedInsightId] = useState(null);
-  
+
   const missingFields = getMissingProfileFields(user);
   const isProfileIncomplete = missingFields.length > 0;
-  
+
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
@@ -61,7 +61,7 @@ export default function RecruiterJobs() {
   const [activeTab, setActiveTab] = useState('All');
 
   const TABS = ['All', 'Applied', 'Pending', 'Shortlist', 'Accept', 'Reject'];
-  
+
   // Fetch profile on mount to ensure we have the latest jobs
   useEffect(() => {
     fetchProfile('Recruiter');
@@ -70,24 +70,24 @@ export default function RecruiterJobs() {
   // Sync jobs from user profile
   useEffect(() => {
     if (user && user.jobs) {
-        const mappedJobs = user.jobs.map(j => ({
-            ...j,
-            id: j._id || j.id, // Ensure ID availability
-            // Map nested salary object to flat structure for form/display consistency
-            salaryMin: j.salary?.min || 0,
-            salaryMax: j.salary?.max || 0,
-            currency: j.salary?.currency || 'USD',
-            // Prefer the applications array if populated with rich data, otherwise appliedBy
-            applicantsCount: j.applications?.length || j.appliedBy?.length || 0,
-            // Ensure we have an array to iterate over. Priority: applications (rich data) -> appliedBy (ids) -> empty
-            applications: (j.applications && j.applications.length > 0) ? j.applications : (j.appliedBy || [])
-        })).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        setJobs(mappedJobs);
+      const mappedJobs = user.jobs.map(j => ({
+        ...j,
+        id: j._id || j.id, // Ensure ID availability
+        // Map nested salary object to flat structure for form/display consistency
+        salaryMin: j.salary?.min || 0,
+        salaryMax: j.salary?.max || 0,
+        currency: j.salary?.currency || 'USD',
+        // Prefer the applications array if populated with rich data, otherwise appliedBy
+        applicantsCount: j.applications?.length || j.appliedBy?.length || 0,
+        // Ensure we have an array to iterate over. Priority: applications (rich data) -> appliedBy (ids) -> empty
+        applications: (j.applications && j.applications.length > 0) ? j.applications : (j.appliedBy || [])
+      })).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setJobs(mappedJobs);
     }
   }, [user]);
 
-  const filteredJobs = jobs.filter(job => 
-    (job.title && job.title.toLowerCase().includes(searchTerm.toLowerCase())) || 
+  const filteredJobs = jobs.filter(job =>
+    (job.title && job.title.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (job.department && job.department.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
@@ -119,10 +119,10 @@ export default function RecruiterJobs() {
   };
 
   const handleViewCandidates = (jobId) => {
-      setSelectedJobId(jobId);
-      setCurrentAppPage(1); // Reset modal pagination
-      setActiveTab('All'); // Reset tab
-      setCandidateModalOpen(true);
+    setSelectedJobId(jobId);
+    setCurrentAppPage(1); // Reset modal pagination
+    setActiveTab('All'); // Reset tab
+    setCandidateModalOpen(true);
   };
 
   const handleUpdateStatus = async (jobId, applicationId, status) => {
@@ -133,62 +133,66 @@ export default function RecruiterJobs() {
       setTimeout(() => setError(''), 3000);
       return;
     }
-    
+
     try {
       setError('');
       await recruiterAPI.updateApplicationStatus(jobId, applicationId, status);
       setSuccessMessage(`Candidate ${status.toLowerCase()} successfully!`);
-      
+
       // Refresh profile to get updated applications
       await fetchProfile('Recruiter');
-      
+
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err) {
-      console.error('Error updating application status:', err.response?.data || err.message);
-      setError(err.response?.data?.message || 'Failed to update status. Please try again.');
-      setTimeout(() => setError(''), 3000);
+      if (!err.isHandled) {
+        console.error('Error updating application status:', err.response?.data || err.message);
+        setError(err.response?.data?.message || 'Failed to update status. Please try again.');
+        setTimeout(() => setError(''), 3000);
+      }
     }
   };
 
   const handleOpenCreate = () => {
-      setFormData(INITIAL_FORM_STATE);
-      setIsEditing(false);
-      setIsModalOpen(true);
+    setFormData(INITIAL_FORM_STATE);
+    setIsEditing(false);
+    setIsModalOpen(true);
   };
 
   const handleOpenEdit = async (job) => {
-      setIsEditing(true);
-      setIsModalOpen(true);
-      setIsFormLoading(true);
-      setError('');
+    setIsEditing(true);
+    setIsModalOpen(true);
+    setIsFormLoading(true);
+    setError('');
 
-      try {
-          const res = await jobsAPI.getById(job.id);
-          const jobData = res.data || res;
-          
-          setFormData({
-              ...INITIAL_FORM_STATE,
-              ...jobData,
-              id: jobData._id || jobData.id,
-              // Map nested objects if they exist
-              salaryMin: jobData.salary?.min || jobData.salaryMin || 0,
-              salaryMax: jobData.salary?.max || jobData.salaryMax || 0,
-              currency: jobData.salary?.currency || jobData.currency || 'USD',
-              company: jobData.companyName || jobData.company || '',
-              jobRequirements: jobData.jobRequirements || jobData.jobRequirement || jobData.requirements || jobData.requirement || [],
-          });
-      } catch (err) {
-          console.error("Error fetching job details:", err);
-          setError("Failed to load job details. Please try again.");
-          // Fallback to local data if API fails
-          setFormData({
-              ...INITIAL_FORM_STATE,
-              ...job,
-              company: job.companyName || job.company || '',
-          });
-      } finally {
-          setIsFormLoading(false);
+    try {
+      const res = await jobsAPI.getById(job.id);
+      const jobData = res.data || res;
+
+      setFormData({
+        ...INITIAL_FORM_STATE,
+        ...jobData,
+        id: jobData._id || jobData.id,
+        // Map nested objects if they exist
+        salaryMin: jobData.salary?.min || jobData.salaryMin || 0,
+        salaryMax: jobData.salary?.max || jobData.salaryMax || 0,
+        currency: jobData.salary?.currency || jobData.currency || 'USD',
+        company: jobData.companyName || jobData.company || '',
+        jobRequirements: jobData.jobRequirements || jobData.jobRequirement || jobData.requirements || jobData.requirement || [],
+      });
+    } catch (err) {
+      if (!err.isHandled) {
+        console.error("Error fetching job details:", err);
+        setError("Failed to load job details. Please try again.");
       }
+      // Fallback to local data if API fails
+      setFormData({
+        ...INITIAL_FORM_STATE,
+        ...job,
+        company: job.companyName || job.company || '',
+      });
+    } finally {
+      setIsFormLoading(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -197,54 +201,56 @@ export default function RecruiterJobs() {
     setError('');
 
     try {
-        // Validation
-        if (!formData.title || !formData.company || !formData.description) {
-            setError("Title, Company, and Description are required.");
-            setIsFormLoading(false);
-            return;
-        }
+      // Validation
+      if (!formData.title || !formData.company || !formData.description) {
+        setError("Title, Company, and Description are required.");
+        setIsFormLoading(false);
+        return;
+      }
 
-        const payload = {
-            ...formData,
-            salary: {
-                min: Number(formData.salaryMin) || 0,
-                max: Number(formData.salaryMax) || 0,
-                currency: formData.currency || 'USD'
-            },
-            skillsRequired: typeof formData.skillsRequired === 'string' 
-                ? formData.skillsRequired.split(',').map(s => s.trim()).filter(s => s !== '')
-                : formData.skillsRequired,
-            benefits: typeof formData.benefits === 'string'
-                ? formData.benefits.split(',').map(s => s.trim()).filter(s => s !== '')
-                : formData.benefits,
-            jobRequirements: formData.jobRequirements,
-            companyName: formData.company
-        };
+      const payload = {
+        ...formData,
+        salary: {
+          min: Number(formData.salaryMin) || 0,
+          max: Number(formData.salaryMax) || 0,
+          currency: formData.currency || 'USD'
+        },
+        skillsRequired: typeof formData.skillsRequired === 'string'
+          ? formData.skillsRequired.split(',').map(s => s.trim()).filter(s => s !== '')
+          : formData.skillsRequired,
+        benefits: typeof formData.benefits === 'string'
+          ? formData.benefits.split(',').map(s => s.trim()).filter(s => s !== '')
+          : formData.benefits,
+        jobRequirements: formData.jobRequirements,
+        companyName: formData.company
+      };
 
-        if (isEditing) {
-            await jobsAPI.update(formData.id, payload);
-            setSuccessMessage('Job updated successfully!');
-        } else {
-            const res = await jobsAPI.create(payload);
-            if (res.success === false) {
-                throw new Error(res.error || "Failed to create job");
-            }
-            setSuccessMessage('Job posted successfully!');
+      if (isEditing) {
+        await jobsAPI.update(formData.id, payload);
+        setSuccessMessage('Job updated successfully!');
+      } else {
+        const res = await jobsAPI.create(payload);
+        if (res.success === false) {
+          throw new Error(res.error || "Failed to create job");
         }
-        
-        // Refresh profile to get updated job list
-        const profileRes = await fetchProfile('Recruiter');
-        if (!profileRes.success) {
-            console.warn("Profile refresh failed:", profileRes.error);
-        }
-        
-        setIsModalOpen(false);
-        setTimeout(() => setSuccessMessage(''), 3000);
+        setSuccessMessage('Job posted successfully!');
+      }
+
+      // Refresh profile to get updated job list
+      const profileRes = await fetchProfile('Recruiter');
+      if (!profileRes.success) {
+        console.warn("Profile refresh failed:", profileRes.error);
+      }
+
+      setIsModalOpen(false);
+      setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err) {
+      if (!err.isHandled) {
         console.error("Error saving job:", err);
         setError(err.message || err.response?.data?.message || "Failed to save job. Please try again.");
+      }
     } finally {
-        setIsFormLoading(false);
+      setIsFormLoading(false);
     }
   };
 
@@ -252,394 +258,392 @@ export default function RecruiterJobs() {
 
   return (
     <AuthGuard allowedRoles={['Recruiter']}>
-    <div className="min-h-screen bg-neo-bg dark:bg-zinc-950">
-    <ProfileCompletionBanner />
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      {successMessage && (
-        <div className="fixed top-24 right-4 z-[9999] animate-in slide-in-from-right-5">
-          <div className="bg-neo-green border-2 border-neo-black dark:border-white px-6 py-3 shadow-neo dark:shadow-[4px_4px_0px_0px_#ffffff]">
-            <p className="text-white font-bold">{successMessage}</p>
-          </div>
-        </div>
-      )}
-      
-      {/* Header with Search */}
-      <div className="flex flex-col md:flex-row justify-between items-end mb-8 border-b-4 border-neo-black dark:border-white pb-4 gap-4">
-        <div>
-            <h1 className="text-4xl md:text-5xl font-black uppercase leading-none mb-2 dark:text-white">Job <span className="text-neo-orange">Management</span></h1>
-            <p className="font-mono text-gray-600 dark:text-gray-400 font-bold">Manage postings and view applicants</p>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto items-end">
-            <div className="w-full sm:w-64">
-                <label className="block text-xs font-black uppercase mb-1 dark:text-white">Search Jobs / Dept</label>
-                <NeoInput 
-                    placeholder="Search..." 
-                    className="border-4 h-12"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                />
-            </div>
-            <NeoButton onClick={handleOpenCreate} className="bg-neo-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 shadow-neo-md h-12 whitespace-nowrap">+ POST JOB</NeoButton>
-        </div>
-      </div>
-
-      {/* Jobs List */}
-      <div className="space-y-6">
-        {displayedJobs.length === 0 ? (
-            <div className="text-center py-12 border-4 border-dashed border-gray-300 dark:border-zinc-700 font-mono text-gray-400 bg-gray-50 dark:bg-zinc-900">
-                NO JOBS FOUND.
-            </div>
-        ) : (
-            displayedJobs.map(job => (
-                <NeoCard key={job.id} className="flex flex-col lg:flex-row justify-between items-start lg:items-center border-4 shadow-neo-md hover:shadow-neo-lg transition-all hover:translate-x-1 gap-4">
-                    <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                            <h3 className="text-2xl font-black uppercase dark:text-white">{job.title}</h3>
-                            <span className={`text-xs font-bold px-3 py-1 border-2 border-black rounded-full dark:border-white ${job.status === 'active' || job.status === 'Active' ? 'bg-neo-green text-white' : job.status === 'Draft' ? 'bg-neo-yellow text-black' : 'bg-gray-200 text-gray-500'}`}>
-                                {job.status}
-                            </span>
-                        </div>
-                        <p className="font-mono text-xs text-gray-500 dark:text-gray-400 mb-2">{job.companyName || job.company} • {job.location} • Closes: {formatDate(job.applicationDeadline || job.deadline || job.application_deadline || job.applicationdeadline || job.ApplicationDeadline || job.closingDate)}</p>
-                        <div className="flex flex-wrap gap-2 mt-2">
-                            <span className="text-xs font-mono font-bold bg-neo-yellow text-black px-2 py-1 border-2 border-black uppercase">
-                                Dept: {job.department}
-                            </span>
-                            <span className="text-xs font-mono font-bold bg-neo-black text-white px-2 py-1 border-2 border-black dark:border-white">
-                                {job.applicantsCount} Candidates
-                            </span>
-                            <span className="text-xs font-mono font-bold bg-white text-black px-2 py-1 border-2 border-black dark:border-white">
-                                Openings: {job.openings}
-                            </span>
-                        </div>
-                    </div>
-                    <div className="flex gap-2 w-full lg:w-auto">
-                        <NeoButton variant="secondary" onClick={() => handleOpenEdit(job)} className="text-sm font-bold flex-1 lg:flex-none">EDIT</NeoButton>
-                        <NeoButton 
-                                className="bg-neo-blue text-white border-neo-black dark:border-white text-sm font-bold flex-1 lg:flex-none hover:bg-blue-400 shadow-neo-sm h-full"
-                                onClick={() => handleViewCandidates(job.id)}
-                            >
-                                VIEW TALENT
-                            </NeoButton>
-                    </div>
-                </NeoCard>
-            ))
-        )}
-
-        {/* Pagination Controls */}
-        {totalPages > 1 && (
-          <div className="flex flex-wrap justify-center items-center gap-3 mt-6 py-6 border-t-2 border-gray-100 dark:border-zinc-800">
-            <button 
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="p-2 border-2 border-neo-black dark:border-white bg-white dark:bg-zinc-800 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_#fff] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neo-yellow dark:hover:bg-neo-yellow dark:hover:text-black transition-colors"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            
-            <div className="flex gap-2">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                <button
-                  key={page}
-                  onClick={() => handlePageChange(page)}
-                  className={`w-10 h-10 flex items-center justify-center border-2 font-black text-sm transition-all ${
-                    currentPage === page 
-                    ? "bg-neo-blue text-white border-neo-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] translate-x-[-1px] translate-y-[-1px]" 
-                    : "bg-white dark:bg-zinc-800 text-neo-black dark:text-white border-neo-black dark:border-white hover:bg-gray-100 dark:hover:bg-zinc-700 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_#fff]"
-                  }`}
-                >
-                  {page}
-                </button>
-              ))}
-            </div>
-
-            <button 
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className="p-2 border-2 border-neo-black dark:border-white bg-white dark:bg-zinc-800 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_#fff] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neo-yellow dark:hover:bg-neo-yellow dark:hover:text-black transition-colors"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* CREATE/EDIT JOB MODAL */}
-      <NeoModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={isEditing ? "EDIT JOB POST" : "CREATE NEW JOB POST"} maxWidth="max-w-4xl">
-          {isFormLoading && !formData.title && isEditing ? (
-              <div className="flex justify-center items-center py-20">
-                  <div className="animate-spin rounded-full h-12 w-12 border-4 border-neo-orange border-t-transparent"></div>
+      <div className="min-h-screen bg-neo-bg dark:bg-zinc-950">
+        <ProfileCompletionBanner />
+        <div className="max-w-6xl mx-auto px-4 py-8">
+          {successMessage && (
+            <div className="fixed top-24 right-4 z-[9999] animate-in slide-in-from-right-5">
+              <div className="bg-neo-green border-2 border-neo-black dark:border-white px-6 py-3 shadow-neo dark:shadow-[4px_4px_0px_0px_#ffffff]">
+                <p className="text-white font-bold">{successMessage}</p>
               </div>
-          ) : (
-          <form onSubmit={handleSubmit} className="space-y-6 p-2">
-            {error && (
-                <div className="bg-red-50 border-2 border-red-500 p-3 mb-4 text-red-700 font-bold">
-                    {error}
-                </div>
+            </div>
+          )}
+
+          {/* Header with Search */}
+          <div className="flex flex-col md:flex-row justify-between items-end mb-8 border-b-4 border-neo-black dark:border-white pb-4 gap-4">
+            <div>
+              <h1 className="text-4xl md:text-5xl font-black uppercase leading-none mb-2 dark:text-white">Job <span className="text-neo-orange">Management</span></h1>
+              <p className="font-mono text-gray-600 dark:text-gray-400 font-bold">Manage postings and view applicants</p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto items-end">
+              <div className="w-full sm:w-64">
+                <label className="block text-xs font-black uppercase mb-1 dark:text-white">Search Jobs / Dept</label>
+                <NeoInput
+                  placeholder="Search..."
+                  className="border-4 h-12"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              <NeoButton onClick={handleOpenCreate} className="bg-neo-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 shadow-neo-md h-12 whitespace-nowrap">+ POST JOB</NeoButton>
+            </div>
+          </div>
+
+          {/* Jobs List */}
+          <div className="space-y-6">
+            {displayedJobs.length === 0 ? (
+              <div className="text-center py-12 border-4 border-dashed border-gray-300 dark:border-zinc-700 font-mono text-gray-400 bg-gray-50 dark:bg-zinc-900">
+                NO JOBS FOUND.
+              </div>
+            ) : (
+              displayedJobs.map(job => (
+                <NeoCard key={job.id} className="flex flex-col lg:flex-row justify-between items-start lg:items-center border-4 shadow-neo-md hover:shadow-neo-lg transition-all hover:translate-x-1 gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h3 className="text-2xl font-black uppercase dark:text-white">{job.title}</h3>
+                      <span className={`text-xs font-bold px-3 py-1 border-2 border-black rounded-full dark:border-white ${job.status === 'active' || job.status === 'Active' ? 'bg-neo-green text-white' : job.status === 'Draft' ? 'bg-neo-yellow text-black' : 'bg-gray-200 text-gray-500'}`}>
+                        {job.status}
+                      </span>
+                    </div>
+                    <p className="font-mono text-xs text-gray-500 dark:text-gray-400 mb-2">{job.companyName || job.company} • {job.location} • Closes: {formatDate(job.applicationDeadline || job.deadline || job.application_deadline || job.applicationdeadline || job.ApplicationDeadline || job.closingDate)}</p>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      <span className="text-xs font-mono font-bold bg-neo-yellow text-black px-2 py-1 border-2 border-black uppercase">
+                        Dept: {job.department}
+                      </span>
+                      <span className="text-xs font-mono font-bold bg-neo-black text-white px-2 py-1 border-2 border-black dark:border-white">
+                        {job.applicantsCount} Candidates
+                      </span>
+                      <span className="text-xs font-mono font-bold bg-white text-black px-2 py-1 border-2 border-black dark:border-white">
+                        Openings: {job.openings}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 w-full lg:w-auto">
+                    <NeoButton variant="secondary" onClick={() => handleOpenEdit(job)} className="text-sm font-bold flex-1 lg:flex-none">EDIT</NeoButton>
+                    <NeoButton
+                      className="bg-neo-blue text-white border-neo-black dark:border-white text-sm font-bold flex-1 lg:flex-none hover:bg-blue-400 shadow-neo-sm h-full"
+                      onClick={() => handleViewCandidates(job.id)}
+                    >
+                      VIEW TALENT
+                    </NeoButton>
+                  </div>
+                </NeoCard>
+              ))
             )}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex flex-wrap justify-center items-center gap-3 mt-6 py-6 border-t-2 border-gray-100 dark:border-zinc-800">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="p-2 border-2 border-neo-black dark:border-white bg-white dark:bg-zinc-800 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_#fff] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neo-yellow dark:hover:bg-neo-yellow dark:hover:text-black transition-colors"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+
+                <div className="flex gap-2">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                    <button
+                      key={page}
+                      onClick={() => handlePageChange(page)}
+                      className={`w-10 h-10 flex items-center justify-center border-2 font-black text-sm transition-all ${currentPage === page
+                        ? "bg-neo-blue text-white border-neo-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] translate-x-[-1px] translate-y-[-1px]"
+                        : "bg-white dark:bg-zinc-800 text-neo-black dark:text-white border-neo-black dark:border-white hover:bg-gray-100 dark:hover:bg-zinc-700 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_#fff]"
+                        }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="p-2 border-2 border-neo-black dark:border-white bg-white dark:bg-zinc-800 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_#fff] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neo-yellow dark:hover:bg-neo-yellow dark:hover:text-black transition-colors"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* CREATE/EDIT JOB MODAL */}
+          <NeoModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={isEditing ? "EDIT JOB POST" : "CREATE NEW JOB POST"} maxWidth="max-w-4xl">
+            {isFormLoading && !formData.title && isEditing ? (
+              <div className="flex justify-center items-center py-20">
+                <div className="animate-spin rounded-full h-12 w-12 border-4 border-neo-orange border-t-transparent"></div>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-6 p-2">
+                {error && (
+                  <div className="bg-red-50 border-2 border-red-500 p-3 mb-4 text-red-700 font-bold">
+                    {error}
+                  </div>
+                )}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
                     <label className="block font-black uppercase mb-1 text-xs dark:text-white">Job Title *</label>
                     <NeoInput name="title" value={formData.title ?? ''} onChange={handleInputChange} required className="border-4" />
-                </div>
-                 <div>
+                  </div>
+                  <div>
                     <label className="block font-black uppercase mb-1 text-xs dark:text-white">Company Name *</label>
                     <NeoInput name="company" value={formData.company || formData.companyName || ''} onChange={handleInputChange} required className="border-4" />
+                  </div>
                 </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                 <div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
                     <label className="block font-black uppercase mb-1 text-xs dark:text-white">Department *</label>
                     <NeoInput name="department" value={formData.department ?? ''} onChange={handleInputChange} required className="border-4" />
-                </div>
-                 <div>
+                  </div>
+                  <div>
                     <label className="block font-black uppercase mb-1 text-xs dark:text-white">Industry *</label>
-                    <NeoInput name="industry" value={formData.industry ?? ''} onChange={handleInputChange}required className="border-4" />
+                    <NeoInput name="industry" value={formData.industry ?? ''} onChange={handleInputChange} required className="border-4" />
+                  </div>
                 </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                 <div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div>
                     <label className="block font-black uppercase mb-1 text-xs dark:text-white">Location *</label>
                     <NeoInput name="location" value={formData.location ?? ''} onChange={handleInputChange} required className="border-4" />
-                </div>
-                <div>
+                  </div>
+                  <div>
                     <label className="block font-black uppercase mb-1 text-xs dark:text-white">Job Type *</label>
                     <select name="jobType" value={formData.jobType || 'Full-time'} onChange={handleInputChange} className="w-full bg-white dark:bg-zinc-800 dark:text-white border-4 border-neo-black dark:border-white p-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-neo-yellow" required>
-                        <option value="Full-time">Full-time</option>
-                        <option value="Part-time">Part-time</option>
-                        <option value="Contract">Contract</option>
-                        <option value="Internship">Internship</option>
-                        <option value="Freelance">Freelance</option>
+                      <option value="Full-time">Full-time</option>
+                      <option value="Part-time">Part-time</option>
+                      <option value="Contract">Contract</option>
+                      <option value="Internship">Internship</option>
+                      <option value="Freelance">Freelance</option>
                     </select>
-                </div>
-                 <div>
+                  </div>
+                  <div>
                     <label className="block font-black uppercase mb-1 text-xs dark:text-white">Work Type *</label>
                     <select name="workType" value={formData.workType || 'On-site'} onChange={handleInputChange} className="w-full bg-white dark:bg-zinc-800 dark:text-white border-4 border-neo-black dark:border-white p-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-neo-yellow" required>
-                        <option value="On-site">On-site</option>
-                        <option value="Remote">Remote</option>
-                        <option value="Hybrid">Hybrid</option>
+                      <option value="On-site">On-site</option>
+                      <option value="Remote">Remote</option>
+                      <option value="Hybrid">Hybrid</option>
                     </select>
+                  </div>
                 </div>
-            </div>
 
-            <div>
-                <label className="block font-black uppercase mb-1 text-xs dark:text-white">Job Description *</label>
-                <textarea name="description" value={formData.description ?? ''} onChange={handleInputChange} className="w-full h-40 bg-white dark:bg-zinc-800 dark:text-white border-4 border-neo-black dark:border-white p-3 font-mono text-sm focus:outline-none focus:ring-4 focus:ring-neo-orange placeholder:text-gray-400" placeholder="Describe the role..." required></textarea>
-            </div>
+                <div>
+                  <label className="block font-black uppercase mb-1 text-xs dark:text-white">Job Description *</label>
+                  <textarea name="description" value={formData.description ?? ''} onChange={handleInputChange} className="w-full h-40 bg-white dark:bg-zinc-800 dark:text-white border-4 border-neo-black dark:border-white p-3 font-mono text-sm focus:outline-none focus:ring-4 focus:ring-neo-orange placeholder:text-gray-400" placeholder="Describe the role..." required></textarea>
+                </div>
 
-            <div>
-                <label className="block font-black uppercase mb-1 text-xs dark:text-white">Job Requirements *</label>
-                <textarea 
-                    name="jobRequirements" 
-                    value={Array.isArray(formData.jobRequirements) ? formData.jobRequirements.join('\n') : (formData.jobRequirements || '')} 
-                    onChange={handleInputChange} 
-                    className="w-full h-48 bg-white dark:bg-zinc-800 dark:text-white border-4 border-neo-black dark:border-white p-3 font-mono text-sm focus:outline-none focus:ring-4 focus:ring-neo-blue placeholder:text-gray-400" 
-                    placeholder="Key Responsibilities:&#10;- Bullet 1&#10;- Bullet 2&#10;&#10;Qualifications:&#10;- Bullet 1" 
+                <div>
+                  <label className="block font-black uppercase mb-1 text-xs dark:text-white">Job Requirements *</label>
+                  <textarea
+                    name="jobRequirements"
+                    value={Array.isArray(formData.jobRequirements) ? formData.jobRequirements.join('\n') : (formData.jobRequirements || '')}
+                    onChange={handleInputChange}
+                    className="w-full h-48 bg-white dark:bg-zinc-800 dark:text-white border-4 border-neo-black dark:border-white p-3 font-mono text-sm focus:outline-none focus:ring-4 focus:ring-neo-blue placeholder:text-gray-400"
+                    placeholder="Key Responsibilities:&#10;- Bullet 1&#10;- Bullet 2&#10;&#10;Qualifications:&#10;- Bullet 1"
                     required
-                ></textarea>
-            </div>
+                  ></textarea>
+                </div>
 
-            <div>
-                <label className="block font-black uppercase mb-1 text-xs dark:text-white">Skills Required (Comma separated) *</label>
-                <NeoInput name="skillsRequired" value={Array.isArray(formData.skillsRequired) ? formData.skillsRequired.join(', ') : (formData.skillsRequired || '')} onChange={(e) => handleArrayInput(e, 'skillsRequired')} required className="border-4" />
-            </div>
+                <div>
+                  <label className="block font-black uppercase mb-1 text-xs dark:text-white">Skills Required (Comma separated) *</label>
+                  <NeoInput name="skillsRequired" value={Array.isArray(formData.skillsRequired) ? formData.skillsRequired.join(', ') : (formData.skillsRequired || '')} onChange={(e) => handleArrayInput(e, 'skillsRequired')} required className="border-4" />
+                </div>
 
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                 <div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
                     <label className="block font-black uppercase mb-1 text-xs dark:text-white">Experience Level *</label>
                     <select name="experienceLevel" value={formData.experienceLevel || 'Mid'} onChange={handleInputChange} className="w-full bg-white dark:bg-zinc-800 dark:text-white border-4 border-neo-black dark:border-white p-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-neo-yellow" required>
-                        <option value="Junior">Junior</option>
-                        <option value="Mid">Mid</option>
-                        <option value="Senior">Senior</option>
-                        <option value="Lead">Lead</option>
-                        <option value="Executive">Executive</option>
+                      <option value="Junior">Junior</option>
+                      <option value="Mid">Mid</option>
+                      <option value="Senior">Senior</option>
+                      <option value="Lead">Lead</option>
+                      <option value="Executive">Executive</option>
                     </select>
-                </div>
-                 <div>
+                  </div>
+                  <div>
                     <label className="block font-black uppercase mb-1 text-xs dark:text-white">Education Required *</label>
                     <NeoInput name="educationRequired" value={formData.educationRequired ?? ''} onChange={handleInputChange} className="border-4" required />
+                  </div>
                 </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                 <div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div>
                     <label className="block font-black uppercase mb-1 text-xs dark:text-white">Min Salary *</label>
-                    <NeoInput type="number" name="salaryMin" value={formData.salaryMin} onChange={handleInputChange} required className="border-4"  />
-                </div>
-                 <div>
+                    <NeoInput type="number" name="salaryMin" value={formData.salaryMin} onChange={handleInputChange} required className="border-4" />
+                  </div>
+                  <div>
                     <label className="block font-black uppercase mb-1 text-xs dark:text-white">Max Salary *</label>
                     <NeoInput type="number" name="salaryMax" value={formData.salaryMax} onChange={handleInputChange} required className="border-4" />
-                </div>
-                 <div className="relative">
+                  </div>
+                  <div className="relative">
                     <label className="block font-black uppercase mb-1 text-xs dark:text-white">Currency *</label>
                     <div className="flex gap-2">
-                        <select 
-                            name="currency" 
-                            value={formData.currency || 'INR'} 
-                            onChange={handleInputChange} 
-                            className="w-full bg-white dark:bg-zinc-800 dark:text-white border-4 border-neo-black dark:border-white p-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-neo-yellow" 
-                            required
-                        >
-                            <option value="INR">INR (₹)</option>
-                            <option value="USD">USD ($)</option>
-                            <option value="EUR">EUR (€)</option>
-                            <option value="GBP">GBP (£)</option>
-                            <option value="AED">AED (د.إ)</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                 <div>
-                    <label className="block font-black uppercase mb-1 text-xs dark:text-white">Deadline *</label>
-                    <NeoDatePicker 
-                        name="applicationDeadline" 
-                        value={formData.applicationDeadline ? formData.applicationDeadline.split('T')[0] : ''} 
-                        onChange={handleInputChange} 
-                        minDate={new Date().toISOString().split('T')[0]}
-                        className="border-4"
+                      <select
+                        name="currency"
+                        value={formData.currency || 'INR'}
+                        onChange={handleInputChange}
+                        className="w-full bg-white dark:bg-zinc-800 dark:text-white border-4 border-neo-black dark:border-white p-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-neo-yellow"
                         required
-                    />
+                      >
+                        <option value="INR">INR (₹)</option>
+                        <option value="USD">USD ($)</option>
+                        <option value="EUR">EUR (€)</option>
+                        <option value="GBP">GBP (£)</option>
+                        <option value="AED">AED (د.إ)</option>
+                      </select>
+                    </div>
+                  </div>
                 </div>
-                 <div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div>
+                    <label className="block font-black uppercase mb-1 text-xs dark:text-white">Deadline *</label>
+                    <NeoDatePicker
+                      name="applicationDeadline"
+                      value={formData.applicationDeadline ? formData.applicationDeadline.split('T')[0] : ''}
+                      onChange={handleInputChange}
+                      minDate={new Date().toISOString().split('T')[0]}
+                      className="border-4"
+                      required
+                    />
+                  </div>
+                  <div>
                     <label className="block font-black uppercase mb-1 text-xs dark:text-white">Openings *</label>
                     <NeoInput type="number" name="openings" value={formData.openings} onChange={handleInputChange} required className="border-4" />
-                </div>
-                 <div>
+                  </div>
+                  <div>
                     <label className="block font-black uppercase mb-1 text-xs dark:text-white">Status *</label>
-                     <select name="status" value={formData.status || 'Draft'} onChange={handleInputChange} required className="w-full bg-white dark:bg-zinc-800 dark:text-white border-4 border-neo-black dark:border-white p-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-neo-yellow">
-                        <option value="Active">Active</option>
-                        {/* <option value="Draft">Draft</option> */}
-                        {/* <option value="Paused">Paused</option> */}
-                        <option value="Closed">Closed</option>
+                    <select name="status" value={formData.status || 'Draft'} onChange={handleInputChange} required className="w-full bg-white dark:bg-zinc-800 dark:text-white border-4 border-neo-black dark:border-white p-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-neo-yellow">
+                      <option value="Active">Active</option>
+                      {/* <option value="Draft">Draft</option> */}
+                      {/* <option value="Paused">Paused</option> */}
+                      <option value="Closed">Closed</option>
                     </select>
+                  </div>
                 </div>
-            </div>
 
-             <div>
-                <label className="block font-black uppercase mb-1 text-xs dark:text-white">Benefits (Comma separated) *</label>
-                <NeoInput name="benefits" value={Array.isArray(formData.benefits) ? formData.benefits.join(', ') : (formData.benefits || '')} onChange={(e) => handleArrayInput(e, 'benefits')} required className="border-4" />
-            </div>
+                <div>
+                  <label className="block font-black uppercase mb-1 text-xs dark:text-white">Benefits (Comma separated) *</label>
+                  <NeoInput name="benefits" value={Array.isArray(formData.benefits) ? formData.benefits.join(', ') : (formData.benefits || '')} onChange={(e) => handleArrayInput(e, 'benefits')} required className="border-4" />
+                </div>
 
-            <div className="flex justify-end gap-2 pt-4 border-t-2 border-gray-100 dark:border-zinc-700">
-                <NeoButton type="button" variant="ghost" onClick={() => setIsModalOpen(false)} disabled={isFormLoading}>CANCEL</NeoButton>
-                {isProfileIncomplete ? (
+                <div className="flex justify-end gap-2 pt-4 border-t-2 border-gray-100 dark:border-zinc-700">
+                  <NeoButton type="button" variant="ghost" onClick={() => setIsModalOpen(false)} disabled={isFormLoading}>CANCEL</NeoButton>
+                  {isProfileIncomplete ? (
                     <Link href="/recruiter/profile">
-                        <NeoButton className="bg-neo-orange text-white">COMPLETE PROFILE TO POST</NeoButton>
+                      <NeoButton className="bg-neo-orange text-white">COMPLETE PROFILE TO POST</NeoButton>
                     </Link>
-                ) : (
+                  ) : (
                     <NeoButton type="submit" className="bg-neo-orange text-white border-neo-black" isLoading={isFormLoading} disabled={isFormLoading}>
-                        {isEditing ? 'UPDATE JOB' : 'PUBLISH JOB'}
+                      {isEditing ? 'UPDATE JOB' : 'PUBLISH JOB'}
                     </NeoButton>
-                )}
-            </div>
-         </form>
-         )}
-      </NeoModal>
+                  )}
+                </div>
+              </form>
+            )}
+          </NeoModal>
 
-      {/* CANDIDATE LIST MODAL */}
-      <NeoModal 
-        isOpen={candidateModalOpen} 
-        onClose={() => setCandidateModalOpen(false)} 
-        title={selectedJob ? `APPS FOR: ${selectedJob.title}` : 'CANDIDATES'} 
-        maxWidth="max-w-5xl"
-        contentClassName="no-scrollbar"
-      >
-           <div className="p-2">
-             {error && (
-               <div className="mb-4 bg-red-50 border-2 border-red-500 p-3 text-red-700 font-bold">
-                 {error}
-               </div>
-             )}
-             <div className="mb-6 bg-neo-black text-white p-6 border-2 border-neo-black shadow-[4px_4px_0px_0px_#54A0FF] flex justify-between items-center dark:border-white">
-                 <div>
-                     <p className="font-mono text-xs font-bold uppercase tracking-widest text-neo-blue mb-1">AI ANALYSIS COMPLETE</p>
-                     <p className="font-bold text-lg">Candidates sorted by relevance.</p>
-                 </div>
-                 <div className="text-right">
-                     <span className="text-4xl font-black text-neo-yellow">{selectedJob?.applicantsCount || 0}</span>
-                     <span className="block text-xs uppercase font-bold">Applicants</span>
-                 </div>
-             </div>
-             
-             <div className="space-y-6">
+          {/* CANDIDATE LIST MODAL */}
+          <NeoModal
+            isOpen={candidateModalOpen}
+            onClose={() => setCandidateModalOpen(false)}
+            title={selectedJob ? `APPS FOR: ${selectedJob.title}` : 'CANDIDATES'}
+            maxWidth="max-w-5xl"
+            contentClassName="no-scrollbar"
+          >
+            <div className="p-2">
+              {error && (
+                <div className="mb-4 bg-red-50 border-2 border-red-500 p-3 text-red-700 font-bold">
+                  {error}
+                </div>
+              )}
+              <div className="mb-6 bg-neo-black text-white p-6 border-2 border-neo-black shadow-[4px_4px_0px_0px_#54A0FF] flex justify-between items-center dark:border-white">
+                <div>
+                  <p className="font-mono text-xs font-bold uppercase tracking-widest text-neo-blue mb-1">AI ANALYSIS COMPLETE</p>
+                  <p className="font-bold text-lg">Candidates sorted by relevance.</p>
+                </div>
+                <div className="text-right">
+                  <span className="text-4xl font-black text-neo-yellow">{selectedJob?.applicantsCount || 0}</span>
+                  <span className="block text-xs uppercase font-bold">Applicants</span>
+                </div>
+              </div>
+
+              <div className="space-y-6">
                 {selectedJob?.applications && selectedJob.applications.length > 0 ? (
                   <>
                     <div className="flex gap-2 mb-6 overflow-x-auto pb-2 custom-scrollbar">
-                        {TABS.map(tab => (
-                            <button
-                                key={tab}
-                                onClick={() => { setActiveTab(tab); setCurrentAppPage(1); }}
-                                className={`px-4 py-2 text-xs font-black uppercase tracking-wider border-2 transition-all whitespace-nowrap ${
-                                    activeTab === tab 
-                                    ? 'bg-neo-black text-white border-neo-black dark:border-white' 
-                                    : 'bg-white dark:bg-zinc-900 text-neo-black dark:text-gray-300 border-neo-black dark:border-zinc-700 hover:bg-gray-100 dark:hover:bg-zinc-800'
-                                }`}
-                            >
-                                {tab}
-                            </button>
-                        ))}
+                      {TABS.map(tab => (
+                        <button
+                          key={tab}
+                          onClick={() => { setActiveTab(tab); setCurrentAppPage(1); }}
+                          className={`px-4 py-2 text-xs font-black uppercase tracking-wider border-2 transition-all whitespace-nowrap ${activeTab === tab
+                            ? 'bg-neo-black text-white border-neo-black dark:border-white'
+                            : 'bg-white dark:bg-zinc-900 text-neo-black dark:text-gray-300 border-neo-black dark:border-zinc-700 hover:bg-gray-100 dark:hover:bg-zinc-800'
+                            }`}
+                        >
+                          {tab}
+                        </button>
+                      ))}
                     </div>
 
                     {(() => {
                       // 1. Get safe data first
-                       const allSafeApps = selectedJob.applications.map((app, index) => {
-                           // Helper to safely extract data regardless of slight structure variations
-                           const findApplicationId = (src) => {
-                                if (src._id) return src._id;
-                                if (src.id) return src.id;
-                                if (src.application?._id) return src.application._id;
-                                if (src.application?.id) return src.application.id;
-                                if (src.applicant?._id) return src.applicant._id;
-                                if (src.applicant?.id) return src.applicant.id;
-                                return null;
-                            };
-                            
-                            const applicationId = findApplicationId(app);
-                            
-                            if (app.applicant && typeof app.applicant === 'object') {
-                                return {
-                                    id: app.applicant._id || `app-${index}`,
-                                    applicationId: applicationId,
-                                    name: app.applicant.fullName || "Candidate",
-                                    title: app.applicant.currentJobTitle || "Applicant",
-                                    image: app.applicant.profilePicture,
-                                    score: app.aiMatchScore?.overallScore || 0,
-                                    insights: app.aiMatchScore?.insights || "No AI insights available.",
-                                    status: app.status || "Applied",
-                                    resume: app.applicant.resume || app.resume
-                                };
-                            }
-                            return {
-                                id: app._id || `app-${index}`,
-                                applicationId: applicationId,
-                                name: app.fullName || app.name || "Candidate",
-                                title: app.currentJobTitle || app.title || "Applicant",
-                                image: app.profilePicture,
-                                score: app.score || 0,
-                                insights: app.summary || app.insights || "No AI insights available.",
-                                status: app.status || "Applied",
-                                resume: app.resume || app.applicant?.resume
-                            };
-                       });
+                      const allSafeApps = selectedJob.applications.map((app, index) => {
+                        // Helper to safely extract data regardless of slight structure variations
+                        const findApplicationId = (src) => {
+                          if (src._id) return src._id;
+                          if (src.id) return src.id;
+                          if (src.application?._id) return src.application._id;
+                          if (src.application?.id) return src.application.id;
+                          if (src.applicant?._id) return src.applicant._id;
+                          if (src.applicant?.id) return src.applicant.id;
+                          return null;
+                        };
+
+                        const applicationId = findApplicationId(app);
+
+                        if (app.applicant && typeof app.applicant === 'object') {
+                          return {
+                            id: app.applicant._id || `app-${index}`,
+                            applicationId: applicationId,
+                            name: app.applicant.fullName || "Candidate",
+                            title: app.applicant.currentJobTitle || "Applicant",
+                            image: app.applicant.profilePicture,
+                            score: app.aiMatchScore?.overallScore || 0,
+                            insights: app.aiMatchScore?.insights || "No AI insights available.",
+                            status: app.status || "Applied",
+                            resume: app.applicant.resume || app.resume
+                          };
+                        }
+                        return {
+                          id: app._id || `app-${index}`,
+                          applicationId: applicationId,
+                          name: app.fullName || app.name || "Candidate",
+                          title: app.currentJobTitle || app.title || "Applicant",
+                          image: app.profilePicture,
+                          score: app.score || 0,
+                          insights: app.summary || app.insights || "No AI insights available.",
+                          status: app.status || "Applied",
+                          resume: app.resume || app.applicant?.resume
+                        };
+                      });
 
                       // 2. Filter based on activeTab
-                      const filteredApps = activeTab === 'All' 
-                        ? allSafeApps 
+                      const filteredApps = activeTab === 'All'
+                        ? allSafeApps
                         : allSafeApps.filter(app => app.status === activeTab);
 
                       // 3. Paginate
                       const paginatedApps = filteredApps.slice((currentAppPage - 1) * appPageSize, currentAppPage * appPageSize);
 
                       if (filteredApps.length === 0) {
-                          return (
-                              <div className="text-center py-12 border-4 border-dashed border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900/50">
-                                  <p className="font-mono text-gray-500 font-bold mb-2">NO CANDIDATES FOUND</p>
-                                  <p className="text-xs text-gray-400">There are no candidates with status "{activeTab}".</p>
-                              </div>
-                          );
+                        return (
+                          <div className="text-center py-12 border-4 border-dashed border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900/50">
+                            <p className="font-mono text-gray-500 font-bold mb-2">NO CANDIDATES FOUND</p>
+                            <p className="text-xs text-gray-400">There are no candidates with status "{activeTab}".</p>
+                          </div>
+                        );
                       }
 
                       return (
@@ -665,14 +669,13 @@ export default function RecruiterJobs() {
                                       </div>
                                     </div>
                                     <div className="flex items-center gap-2 mt-2">
-                                      <span className={`inline-block text-[10px] font-black uppercase px-2 py-1 border border-black ${
-                                        data.status === 'Applied' ? 'bg-gray-200 text-neo-black dark:bg-zinc-700 dark:text-white' : 
+                                      <span className={`inline-block text-[10px] font-black uppercase px-2 py-1 border border-black ${data.status === 'Applied' ? 'bg-gray-200 text-neo-black dark:bg-zinc-700 dark:text-white' :
                                         data.status === 'Pending' ? 'bg-neo-yellow text-black' :
-                                        data.status === 'Shortlist' ? 'bg-neo-blue text-white' :
-                                        data.status === 'Accept' ? 'bg-neo-green text-white' : 
-                                        data.status === 'Reject' ? 'bg-red-500 text-white' :
-                                        'bg-gray-100 text-gray-500 dark:bg-zinc-800 dark:text-gray-400'
-                                      }`}>
+                                          data.status === 'Shortlist' ? 'bg-neo-blue text-white' :
+                                            data.status === 'Accept' ? 'bg-neo-green text-white' :
+                                              data.status === 'Reject' ? 'bg-red-500 text-white' :
+                                                'bg-gray-100 text-gray-500 dark:bg-zinc-800 dark:text-gray-400'
+                                        }`}>
                                         {data.status}
                                       </span>
                                       {data.resume && (
@@ -758,14 +761,14 @@ export default function RecruiterJobs() {
                     No applications received yet.
                   </div>
                 )}
-             </div>
-          </div>
-          {/* <div className="mt-8 pt-4 border-t-4 border-neo-black dark:border-white flex justify-end items-center bg-gray-50 dark:bg-zinc-800 -mx-6 -mb-6 px-6 py-4">
+              </div>
+            </div>
+            {/* <div className="mt-8 pt-4 border-t-4 border-neo-black dark:border-white flex justify-end items-center bg-gray-50 dark:bg-zinc-800 -mx-6 -mb-6 px-6 py-4">
               <NeoButton variant="secondary" onClick={() => setCandidateModalOpen(false)} className="text-sm py-3 px-8">CLOSE VIEWER</NeoButton>
           </div> */}
-      </NeoModal>
-    </div>
-    </div>
+          </NeoModal>
+        </div>
+      </div>
     </AuthGuard>
   );
 }

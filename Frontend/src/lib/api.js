@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { cookieStorage, scrubStorage } from './utils';
+import { useToast } from './toastStore';
 
 // ✅ Use environment variable in production, relative path in development
 const getBaseURL = () => {
@@ -43,6 +44,21 @@ api.interceptors.response.use(
     const isAuthRequest = requestUrl.includes('/auth/sign-in') ||
       requestUrl.includes('/auth/sign-up') ||
       requestUrl.includes('/auth/');
+
+    // Handle Rate Limiting (429 Too Many Requests)
+    if (error.response?.status === 429) {
+      const serverMessage = error.response.data?.message || error.response.data?.error || (typeof error.response.data === 'string' ? error.response.data : null);
+      const message = serverMessage || 'Daily limit reached. slow down, legend.';
+      error.isHandled = true;
+      // We use the store outside of a component, so we access it via getState()
+      useToast.getState().addToast(message, 'warning');
+    }
+
+    // Handle Server Errors (500)
+    if (error.response?.status >= 500) {
+      error.isHandled = true;
+      useToast.getState().addToast('Server error. something went wrong on our end.', 'error');
+    }
 
     if (error.response?.status === 401 && !isAuthRequest) {
       // Don't auto-logout for profile requests - might be a backend route mismatch

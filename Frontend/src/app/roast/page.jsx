@@ -21,7 +21,7 @@ export default function RoastPage() {
                 setFile(null);
                 return;
             }
-            
+
             // 2MB limit
             if (selectedFile.size > 2 * 1024 * 1024) {
                 setError('FILE TOO LARGE! Maximum size is 2MB. Please compress your resume.');
@@ -36,7 +36,7 @@ export default function RoastPage() {
 
     const [loadingStage, setLoadingStage] = useState('Analyzing Resume...');
     const [progress, setProgress] = useState(0);
-    
+
     const handleRoast = async () => {
         if (!file) {
             setError('Select a resume first, champ.');
@@ -47,7 +47,7 @@ export default function RoastPage() {
         setProgress(0); // Reset progress immediately
         setError(null);
         setRoastData(null);
-        
+
         // Sequence of humorous loading stages
         const stages = [
             { text: 'Scanning for Lies...', p: 15 },
@@ -70,7 +70,7 @@ export default function RoastPage() {
             const formData = new FormData();
             formData.append('roastResume', file);
             const result = await tryAPI.roastResume(formData);
-            
+
             if (result.success) {
                 clearInterval(stageInterval);
                 setProgress(100);
@@ -82,9 +82,10 @@ export default function RoastPage() {
                 setError(result.message || 'The AI is too stunned by your resume to roast it. Try again.');
             }
         } catch (err) {
-            console.log(err);
-            setError(err.response?.data?.message);
-            // setError(err.response?.data?.message || 'Server had a breakdown reading your resume. Try again?');
+            if (!err.isHandled) {
+                console.error('Roast failed:', err);
+                setError(err.response?.data?.message || 'Server had a breakdown reading your resume. Try again?');
+            }
         } finally {
             clearInterval(stageInterval);
             setLoading(false);
@@ -114,11 +115,11 @@ export default function RoastPage() {
                         </NeoBadge>
                     </div>
                     <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tighter text-neo-black dark:text-white mb-2 drop-shadow-[2px_2px_0px_#FFD700]">
-                        Emotional <span className="text-neo-red">Damage</span> <br/> 
+                        Emotional <span className="text-neo-red">Damage</span> <br />
                         <span className="italic text-2xl md:text-4xl">as a Service.</span>
                     </h1>
                     <p className="text-sm md:text-base font-mono font-bold bg-white dark:bg-zinc-800 border-2 border-neo-black dark:border-white px-4 py-2 inline-block shadow-neo-sm dark:shadow-[4px_4px_0px_0px_#ffffff] transform rotate-1">
-                        Upload your resume and let our AI tell you <br className="hidden md:block"/> why you're still unemployed.
+                        Upload your resume and let our AI tell you <br className="hidden md:block" /> why you're still unemployed.
                     </p>
                 </div>
 
@@ -131,14 +132,14 @@ export default function RoastPage() {
 
                         {!loading ? (
                             <div className="flex flex-col items-center justify-center text-center space-y-6">
-                                <div 
+                                <div
                                     onClick={() => fileInputRef.current?.click()}
                                     className={`w-full max-w-md p-5 md:p-6 border-2 border-dashed cursor-pointer transition-all flex flex-col items-center group
                                         ${file ? 'border-neo-green bg-neo-green/5' : 'border-neo-black dark:border-white hover:bg-gray-50 dark:hover:bg-zinc-800'}`}
                                 >
-                                    <input 
-                                        type="file" 
-                                        className="hidden" 
+                                    <input
+                                        type="file"
+                                        className="hidden"
                                         ref={fileInputRef}
                                         onChange={handleFileChange}
                                         accept=".pdf"
@@ -167,9 +168,9 @@ export default function RoastPage() {
                                         <AlertCircle className="shrink-0 w-4 h-4" />
                                         <span className="font-black uppercase">{error}</span>
                                     </div>
-                                ) }
+                                )}
 
-                                <NeoButton 
+                                <NeoButton
                                     variant="danger"
                                     className="text-lg md:text-xl py-3 md:py-4 px-8 w-full max-w-md border-2 md:border-3 shadow-neo-sm dark:shadow-[4px_4px_0px_0px_#ffffff]"
                                     onClick={handleRoast}
@@ -192,12 +193,12 @@ export default function RoastPage() {
                                         (The AI is laughing too hard)
                                     </p>
                                 </div>
-                                
+
                                 <div className="w-full max-w-xs bg-gray-100 dark:bg-zinc-800 border-2 border-neo-black h-6 relative overflow-hidden shadow-neo-sm">
-                                     <div className="absolute inset-y-0 left-0 bg-neo-red transition-all duration-500 ease-out" style={{ width: `${progress}%` }}></div>
-                                     <div className="absolute inset-0 flex items-center justify-center mix-blend-difference">
-                                         <span className="text-white font-black text-xs">{progress}%</span>
-                                     </div>
+                                    <div className="absolute inset-y-0 left-0 bg-neo-red transition-all duration-500 ease-out" style={{ width: `${progress}%` }}></div>
+                                    <div className="absolute inset-0 flex items-center justify-center mix-blend-difference">
+                                        <span className="text-white font-black text-xs">{progress}%</span>
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -258,24 +259,24 @@ export default function RoastPage() {
                                     <div className="absolute -top-4 -left-4 bg-neo-yellow border-2 border-neo-black p-2 shadow-neo-sm">
                                         <Sparkles className="w-5 h-5 text-black" />
                                     </div>
-                                    
+
                                     <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none">
-                                        <ReactMarkdown 
+                                        <ReactMarkdown
                                             remarkPlugins={[remarkGfm]}
                                             components={{
-                                                h1: ({node, ...props}) => <h1 className="text-xl md:text-2xl font-black uppercase mb-6 border-b-4 border-neo-black dark:border-white pb-2 text-neo-blue" {...props} />,
-                                                h2: ({node, ...props}) => <h2 className="text-lg md:text-xl font-black uppercase mb-4 mt-8 text-neo-red" {...props} />,
-                                                h3: ({node, ...props}) => <h3 className="text-md md:text-lg font-black uppercase mb-3 mt-6 text-neo-black dark:text-white" {...props} />,
-                                                p: ({node, ...props}) => <p className="mb-6 font-mono font-bold leading-relaxed text-neo-black dark:text-white border-l-4 border-neo-red/20 pl-4" {...props} />,
-                                                ul: ({node, ...props}) => <ul className="list-none space-y-3 mb-6" {...props} />,
-                                                li: ({node, ...props}) => (
+                                                h1: ({ node, ...props }) => <h1 className="text-xl md:text-2xl font-black uppercase mb-6 border-b-4 border-neo-black dark:border-white pb-2 text-neo-blue" {...props} />,
+                                                h2: ({ node, ...props }) => <h2 className="text-lg md:text-xl font-black uppercase mb-4 mt-8 text-neo-red" {...props} />,
+                                                h3: ({ node, ...props }) => <h3 className="text-md md:text-lg font-black uppercase mb-3 mt-6 text-neo-black dark:text-white" {...props} />,
+                                                p: ({ node, ...props }) => <p className="mb-6 font-mono font-bold leading-relaxed text-neo-black dark:text-white border-l-4 border-neo-red/20 pl-4" {...props} />,
+                                                ul: ({ node, ...props }) => <ul className="list-none space-y-3 mb-6" {...props} />,
+                                                li: ({ node, ...props }) => (
                                                     <li className="flex items-start gap-3 font-mono font-bold text-neo-black dark:text-white bg-neo-yellow/5 p-3 border-2 border-dashed border-neo-black/10">
                                                         <span className="text-neo-red mt-1 shrink-0">💀</span>
                                                         <span>{props.children}</span>
                                                     </li>
                                                 ),
-                                                strong: ({node, ...props}) => <strong className="font-black px-1 bg-neo-yellow text-neo-black" {...props} />,
-                                                em: ({node, ...props}) => <em className="italic font-bold text-neo-blue" {...props} />,
+                                                strong: ({ node, ...props }) => <strong className="font-black px-1 bg-neo-yellow text-neo-black" {...props} />,
+                                                em: ({ node, ...props }) => <em className="italic font-bold text-neo-blue" {...props} />,
                                             }}
                                         >
                                             {roastData.roast.replace(/\n(?!\n)/g, '\n\n')}
@@ -290,9 +291,9 @@ export default function RoastPage() {
                                 </p>
                             </div>
                         </NeoCard>
-                        
+
                         <div className="flex justify-center">
-                            <NeoButton 
+                            <NeoButton
                                 variant="danger"
                                 className="text-lg md:text-xl py-4 md:py-5 px-10 border-2 md:border-4 shadow-neo-md dark:shadow-[6px_6px_0px_0px_#ffffff] hover:scale-105 active:scale-95 transition-transform"
                                 onClick={() => window.open(`https://twitter.com/intent/tweet?text=I just got my resume roasted by NeoHire AI and I'm crying. Send help!`, '_blank')}

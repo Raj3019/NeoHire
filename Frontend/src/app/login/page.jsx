@@ -15,7 +15,7 @@ function LoginForm() {
   const mode = searchParams.get('mode');
   const roleParam = searchParams.get('role');
   const isRecruiter = mode === 'recruiter' || roleParam === 'recruiter';
-  
+
   const { login, isAuthenticated, user, fetchProfile } = useAuthStore();
   // Role defaults to URL param or candidate, but we won't toggle it here anymore to match reference
   const role = isRecruiter ? 'Recruiter' : 'Employee';
@@ -45,7 +45,7 @@ function LoginForm() {
           if (storedRole) {
             const roleLower = storedRole.toLowerCase();
             let redirectTo = '/candidate/dashboard';
-            
+
             if (roleLower === 'admin') redirectTo = '/admin/dashboard';
             else if (roleLower === 'recruiter') redirectTo = '/recruiter/dashboard';
 
@@ -72,7 +72,7 @@ function LoginForm() {
     if (hasAuth) {
       const userRole = user?.role?.toLowerCase();
       let redirectTo = '/candidate/dashboard';
-      
+
       if (userRole === 'admin') redirectTo = '/admin/dashboard';
       else if (userRole === 'recruiter') redirectTo = '/recruiter/dashboard';
 
@@ -83,14 +83,14 @@ function LoginForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     // Clear any existing errors
     setError('');
     setIsLoading(true);
 
     try {
       const result = await login(formData.email, formData.password, role);
-      
+
       if (result.success) {
         // Redirect based on actual role from result
         const actualRole = result.user?.role?.toLowerCase();
@@ -98,8 +98,10 @@ function LoginForm() {
         else if (actualRole === 'recruiter') router.push('/recruiter/dashboard');
         else router.push('/candidate/dashboard');
       } else {
-        // Show error message and stop loading
-        setError(result.error || 'Login failed. Please check your credentials.');
+        // Show error message and stop loading ONLY if not already toasted
+        if (!result.isHandled) {
+          setError(result.error || 'Login failed. Please check your credentials.');
+        }
         setIsLoading(false);
       }
     } catch (err) {
@@ -112,7 +114,7 @@ function LoginForm() {
 
   // Block rendering while we are initializing auth and redirecting
   if (!mounted) return <div className="min-h-screen bg-neo-bg"></div>;
-  
+
   // If we definitely have auth, don't show the form
   if (isAuthenticated && user) {
     return (
@@ -135,7 +137,7 @@ function LoginForm() {
     <div className="min-h-[calc(100vh-80px)] flex items-center justify-center bg-neo-bg dark:bg-zinc-950 p-4 transition-colors">
       <NeoCard className="w-full max-w-md relative pt-10">
         <div className={`absolute top-0 left-0 w-full h-2 ${isRecruiter ? 'bg-neo-pink' : 'bg-neo-yellow'}`}></div>
-        
+
         <h2 className="text-3xl font-black text-center mb-6 uppercase mt-2 dark:text-white">
           Welcome Back
           <span className={`block text-sm font-mono mt-1 ${isRecruiter ? 'text-neo-pink' : 'text-neo-blue'}`}>
@@ -145,7 +147,7 @@ function LoginForm() {
 
         {error && (
           <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border-2 border-red-500 dark:border-red-400 shadow-[2px_2px_0px_0px_rgba(239,68,68,0.5)] relative">
-            <button 
+            <button
               onClick={() => setError('')}
               className="absolute top-2 right-2 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-200 font-bold text-xl leading-none"
               aria-label="Dismiss error"
@@ -165,8 +167,8 @@ function LoginForm() {
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="space-y-1">
-             <label className="block font-bold text-sm dark:text-white">Email</label>
-             <NeoInput
+            <label className="block font-bold text-sm dark:text-white">Email</label>
+            <NeoInput
               type="email"
               placeholder="you@example.com"
               value={formData.email}
@@ -176,9 +178,9 @@ function LoginForm() {
             />
           </div>
           <div className="space-y-1">
-             <label className="block font-bold text-sm dark:text-white">Password</label>
-             <div className="relative">
-               <NeoInput
+            <label className="block font-bold text-sm dark:text-white">Password</label>
+            <div className="relative">
+              <NeoInput
                 type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
                 value={formData.password}
@@ -195,13 +197,13 @@ function LoginForm() {
               >
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
-             </div>
+            </div>
           </div>
 
-          <NeoButton 
-            type="submit" 
-            size="lg" 
-            className={`w-full mt-4 ${isRecruiter ? 'bg-neo-pink text-white hover:bg-pink-400 dark:shadow-[4px_4px_0px_0px_#ffffff]' : ''}`} 
+          <NeoButton
+            type="submit"
+            size="lg"
+            className={`w-full mt-4 ${isRecruiter ? 'bg-neo-pink text-white hover:bg-pink-400 dark:shadow-[4px_4px_0px_0px_#ffffff]' : ''}`}
             isLoading={isLoading}
             disabled={isLoading}
           >
