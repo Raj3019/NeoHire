@@ -5,7 +5,7 @@ import { useAuthStore } from '@/lib/store';
 import { getMissingProfileFields, formatDate } from '@/lib/utils';
 import { employeeAPI } from '@/lib/api';
 import { NeoCard, NeoButton, NeoInput, NeoBadge, NeoDatePicker, NeoCheckbox, NeoRadio } from '@/components/ui/neo';
-import { User, Briefcase, MapPin, GraduationCap, Globe, Edit2, Save, X, Plus, Trash2, Camera } from 'lucide-react';
+import { User, Briefcase, MapPin, GraduationCap, Globe, Edit2, Save, X, Plus, Trash2, Camera, Crown } from 'lucide-react';
 
 import ProfileCompletionBanner from '@/components/shared/ProfileCompletionBanner';
 
@@ -658,7 +658,16 @@ export default function ProfilePage() {
                 </div>
                 <h2 className="text-2xl font-black uppercase dark:text-white">{formData.fullName}</h2>
                 <p className="font-mono text-gray-500 mb-2">{formData.headline}</p>
-                <div className="flex justify-center items-center gap-2 mb-6 text-sm font-bold opacity-60"><MapPin className="w-4 h-4" /> {formData.currentCity}, {formData.country}</div>
+                <div className="flex justify-center items-center gap-2 mb-4 text-sm font-bold opacity-60"><MapPin className="w-4 h-4" /> {formData.currentCity}, {formData.country}</div>
+
+                {user?.currentPlan && (
+                  <div className="flex justify-center mb-6">
+                    <div className="bg-neo-blue/10 text-neo-blue dark:text-blue-400 text-[10px] px-2.5 py-0.5 border border-neo-blue/20 rounded-full flex items-center gap-1.5 uppercase font-black shadow-sm">
+                      <Crown className="w-3.5 h-3.5" />
+                      {user.currentPlan.name} Plan
+                    </div>
+                  </div>
+                )}
                 {/* <NeoBadge variant="blue">PRO MEMBER</NeoBadge> */}
 
                 {/* Restored Skills Section */}

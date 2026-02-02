@@ -8,6 +8,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 
 import ProfileCompletionBanner from '@/components/shared/ProfileCompletionBanner';
 import { employeeAPI, jobsAPI } from '@/lib/api';
 import AutoApplySettings from '@/components/candidate/AutoApplySettings';
+import TalentRadarOptIn from '@/components/candidate/TalentRadarOptIn';
 
 export default function CandidateDashboard() {
   const { user, fetchProfile } = useAuthStore();
@@ -118,9 +119,9 @@ export default function CandidateDashboard() {
           </NeoCard>
         </div>
 
-        {/* Auto-Apply System - New! */}
-        <div className="mb-8">
+        <div className="mb-8 space-y-8">
           <AutoApplySettings />
+          <TalentRadarOptIn />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

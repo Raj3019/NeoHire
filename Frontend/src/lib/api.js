@@ -90,6 +90,7 @@ export const employeeAPI = {
       email,
       password,
       name: fullName,
+      fullName: fullName,
       role: 'Employee'
     });
     return response.data;
@@ -170,6 +171,7 @@ export const recruiterAPI = {
       email,
       password,
       name: fullName,
+      fullName: fullName,
       role: 'Recruiter'
     });
     return response.data;
@@ -295,6 +297,41 @@ export const autoApplyAPI = {
 
   getHistory: async () => {
     const response = await api.get('/auto-apply/history');
+    return response.data;
+  }
+};
+
+// Talent Radar API endpoints
+export const talentRadarAPI = {
+  // Recruiter endpoints
+  createAlert: async (data) => {
+    const response = await api.post('/talent-radar/alerts', data);
+    return response.data;
+  },
+  getAlerts: async () => {
+    const response = await api.get('/talent-radar/alerts');
+    return response.data;
+  },
+  updateAlert: async (alertId, data) => {
+    const response = await api.put(`/talent-radar/alerts/${alertId}`, data);
+    return response.data;
+  },
+  deleteAlert: async (alertId) => {
+    const response = await api.delete(`/talent-radar/alerts/${alertId}`);
+    return response.data;
+  },
+  toggleAlert: async (alertId) => {
+    const response = await api.patch(`/talent-radar/alerts/${alertId}/toggle`);
+    return response.data;
+  },
+  getMatches: async (alertId) => {
+    const response = await api.get(`/talent-radar/alerts/${alertId}/matches`);
+    return response.data;
+  },
+
+  // Employee endpoint
+  toggleOptIn: async (optIn) => {
+    const response = await api.put('/talent-radar/opt-in', { optIn });
     return response.data;
   }
 };

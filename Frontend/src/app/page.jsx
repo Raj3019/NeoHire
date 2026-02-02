@@ -326,7 +326,7 @@ const Content = () => {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-end">
                         {/* Tier 1 */}
                         <div className="bg-white dark:bg-zinc-800 border-4 border-neo-black dark:border-white p-8 shadow-neo dark:shadow-[4px_4px_0px_0px_#ffffff] h-auto flex flex-col relative group hover:-translate-y-2 transition-transform">
-                            <h3 className="text-4xl font-black uppercase mb-2 dark:text-white">BROKE</h3>
+                            <h3 className="text-4xl font-black uppercase mb-2 dark:text-white">HUSTLE</h3>
                             <div className="flex items-baseline gap-3 mb-6">
                                 <p className="text-7xl font-black dark:text-white tracking-tighter">$0</p>
                                 <span className="text-4xl font-black text-neo-black/40 dark:text-white/40 line-through decoration-4 decoration-neo-red transform -rotate-3">$10</span>

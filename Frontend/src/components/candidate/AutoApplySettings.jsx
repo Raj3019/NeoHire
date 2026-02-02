@@ -1,11 +1,14 @@
 'use client';
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { autoApplyAPI } from '@/lib/api';
+import { useAuthStore } from '@/lib/store';
 import { NeoCard, NeoButton, NeoBadge } from '@/components/ui/neo';
 import { Zap, CheckCircle2, AlertCircle, Clock, MapPin, Building2, ChevronRight, Info, AlertTriangle, X, Crown, Sparkles } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 
 export default function AutoApplySettings() {
+  const { user } = useAuthStore();
   const [status, setStatus] = useState(null);
   const [history, setHistory] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -39,6 +42,11 @@ export default function AutoApplySettings() {
   };
 
   const handleToggle = async () => {
+    if (!hasAccess) {
+      showFeedback('error', 'Please upgrade your plan to enable the Auto-Apply assistant');
+      return;
+    }
+
     if (!requirementsMet) {
       showFeedback('error', 'Please complete all profile requirements first');
       return;
@@ -76,6 +84,8 @@ export default function AutoApplySettings() {
     status?.canEnable?.hasEducation &&
     status?.canEnable?.hasJobPreferences &&
     status?.canEnable?.hasProfilePicture;
+
+  const hasAccess = user?.currentPlan?.features?.autoApplyPerDay > 0;
 
   return (
     <div className="space-y-6 relative">
@@ -124,11 +134,11 @@ export default function AutoApplySettings() {
           <div className="flex flex-col items-center md:items-end gap-3">
             <button
               onClick={handleToggle}
-              disabled={isToggling || !requirementsMet}
+              disabled={isToggling || !requirementsMet || !hasAccess}
               className={`
                 relative w-16 h-8 rounded-full border-2 border-black transition-all duration-300 shadow-neo-sm
                 ${status?.enabled ? 'bg-neo-green' : 'bg-gray-200 dark:bg-zinc-800'}
-                ${!requirementsMet ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-105 active:scale-95'}
+                ${!requirementsMet || !hasAccess || isToggling ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-105 active:scale-95'}
               `}
             >
               <div className={`
@@ -142,8 +152,21 @@ export default function AutoApplySettings() {
           </div>
         </div>
 
+        {/* Access Notification */}
+        {!hasAccess && (
+          <div className="mt-6 p-4 bg-amber-500/10 border-2 border-amber-500/30 rounded-lg flex gap-3 items-start">
+            <Crown className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-bold text-amber-600 uppercase">Upgrade Required</p>
+              <p className="text-xs text-gray-500 mt-1 font-medium italic">Auto-Apply is a premium feature that works for you while you sleep. Upgrade to unlock autonomous job applications.</p>
+              <Link href="/candidate/profile">
+                <NeoButton variant="secondary" size="sm" className="mt-3 text-[10px] py-1 border-amber-500 text-amber-700">View Plans &rarr;</NeoButton>
+              </Link>
+            </div>
+          </div>
+        )}
         {/* Requirements Box */}
-        {!requirementsMet && (
+        {hasAccess && !requirementsMet && (
           <div className="mt-6 p-4 bg-neo-pink/10 border-2 border-neo-pink/30 rounded-lg flex gap-3 items-start">
             <AlertCircle className="w-5 h-5 text-neo-pink shrink-0 mt-0.5" />
             <div>
@@ -249,7 +272,7 @@ export default function AutoApplySettings() {
             ))
           )}
         </div>
-      </NeoCard>
-    </div>
+      </NeoCard >
+    </div >
   );
 }

@@ -5,7 +5,7 @@ import { useAuthStore } from '@/lib/store';
 import { recruiterAPI } from '@/lib/api';
 import { getMissingProfileFields, formatDate } from '@/lib/utils';
 import { NeoCard, NeoButton, NeoInput, NeoBadge, NeoDatePicker, NeoCheckbox, NeoRadio } from '@/components/ui/neo';
-import { User, Briefcase, MapPin, GraduationCap, Globe, Edit2, Save, X, Trophy, Plus, Trash2, Camera } from 'lucide-react';
+import { User, Briefcase, MapPin, GraduationCap, Globe, Edit2, Save, X, Trophy, Plus, Trash2, Camera, Crown } from 'lucide-react';
 
 import ProfileCompletionBanner from '@/components/shared/ProfileCompletionBanner';
 
@@ -543,7 +543,16 @@ export default function RecruiterProfilePage() {
                   <MapPin className="w-4 h-4" /> {formData.currentCity}, {formData.country}
                 </div>
 
-                <NeoBadge variant="pink"><span className="text-xs uppercase font-bold">RECRUITER</span></NeoBadge>
+                <div className="flex flex-col items-center gap-2">
+                  <NeoBadge variant="pink"><span className="text-xs uppercase font-bold">RECRUITER</span></NeoBadge>
+
+                  {user?.currentPlan && (
+                    <div className="bg-neo-blue/10 text-neo-blue dark:text-blue-400 text-[10px] px-2.5 py-0.5 border border-neo-blue/20 rounded-full flex items-center gap-1.5 uppercase font-black shadow-sm">
+                      <Crown className="w-3.5 h-3.5" />
+                      {user.currentPlan.name} Plan
+                    </div>
+                  )}
+                </div>
 
                 <div className="mt-8 text-left">
                   <h4 className="font-bold text-xs uppercase text-gray-400 dark:text-gray-500 mb-3 tracking-widest">Key Skills</h4>

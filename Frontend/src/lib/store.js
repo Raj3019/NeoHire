@@ -26,8 +26,19 @@ export const useAuthStore = create(
             profileData = await api.getProfile();
             // console.log('Profile response:', profileData);
           } catch (profileError) {
-            //  console.error('Profile fetch failed:', profileError);
-            // Continue with basic user data if profile fetch fails
+            // If primary profile fetch failed, check if they are the OTHER role
+            // This happens because unified auth allows them in, but endpoint access is restricted
+            try {
+              if (role && (role === 'Recruiter' || role.toLowerCase() === 'recruiter')) {
+                const empData = await employeeAPI.getProfile();
+                profileData = empData;
+              } else {
+                const recData = await recruiterAPI.getProfile();
+                profileData = recData;
+              }
+            } catch (otherError) {
+              // Ignore
+            }
           }
 
           // Build user object
@@ -40,6 +51,38 @@ export const useAuthStore = create(
           if (normalized === 'admin') finalRole = 'Admin';
           else if (normalized === 'recruiter') finalRole = 'Recruiter';
           else finalRole = 'Employee';
+
+          // Enforce role validation: Prevent cross-role login
+          if (role) {
+            const requestedRole = role.toLowerCase();
+            const actualRole = finalRole.toLowerCase();
+
+            // Allow Admin to access any portal, but otherwise enforce strict role matching
+            if (actualRole !== 'admin') {
+              let mismatchError = null;
+
+              // If trying to login as Recruiter but not a Recruiter (e.g. Employee)
+              if (requestedRole === 'recruiter' && actualRole !== 'recruiter') {
+                mismatchError = "Invalid credentials.";
+              }
+              // If trying to login as Employee/Candidate but is actually a Recruiter
+              else if (requestedRole === 'employee' && actualRole !== 'employee') {
+                mismatchError = "Invalid credentials.";
+              }
+
+              if (mismatchError) {
+                // Clear the session immediately so we don't stay authenticated
+                try {
+                  await get().logout();
+                } catch (e) { }
+
+                const err = new Error("Role mismatch");
+                // Use the error structure expected by the catch block
+                err.response = { data: { message: mismatchError } };
+                throw err;
+              }
+            }
+          }
 
           const { success: _s, message: _m, role: _, ...cleanProfileInfo } = profileInfo;
 
