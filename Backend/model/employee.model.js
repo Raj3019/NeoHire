@@ -217,12 +217,34 @@ const employeeSchema = new mongoose.Schema({
 		type: Boolean,
 		default: false
 	},
+	talentRadarOptIn:{
+		type: Boolean,
+		default: false
+	},
 	appliedJobs: [
 		{
 			type: mongoose.Schema.Types.ObjectId,
 			ref: "Application",
 		},
 	],
+	currentSubscription:{
+		type: mongoose.Schema.Types.ObjectId,
+		ref: "Subscription",
+		default: null
+	},
+	currentPlan:{
+		type: mongoose.Schema.Types.ObjectId,
+		ref: "Plan",
+		default: null
+	},
+	planExpiresAt:{
+		type: Date,
+		default: null
+	},
+	isFreeTier:{
+		type: Boolean,
+		default: true
+	}
 }, { timestamps: true })
 
 const Employee = mongoose.model("Employee", employeeSchema)

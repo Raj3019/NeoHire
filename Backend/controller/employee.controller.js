@@ -135,7 +135,10 @@ const profileEmployee = async (req, res) => {
   try {
     const user = req.user
 
-    const employee = await Employee.findOne({ betterAuthUserId: req.user.id }).select('-password')
+    const employee = await Employee.findOne({ betterAuthUserId: req.user.id })
+      .select('-password')
+      .populate('currentPlan');
+
     if (!employee) {
       return res.status(401).json({ message: "Employee with this id not found" })
     }

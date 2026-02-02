@@ -13,12 +13,16 @@ const jobRouter = require("./routers/job.router")
 const applicationRouter = require("./routers/application.router")
 const notificationRouter = require('./routers/notification.router')
 const roastResumeRouter = require('./routers/resumeRoast.router')
-const {auth} = require("./lib/auth.lib")
-const {toNodeHandler} = require("better-auth/node")
+const { auth } = require("./lib/auth.lib")
+const { toNodeHandler } = require("better-auth/node")
 const adminRouter = require('./routers/admin.router')
 const autoApplyRouter = require('./routers/autoApply.router')
 const { initAutoApplyCron } = require("./services/autoApplyCron.services");
-const {generalLimiter} = require("./middleware/rateLimit.middleware")
+const { initTalentRadarCron } = require("./services/talentRadarCron.services");
+const { generalLimiter } = require("./middleware/rateLimit.middleware")
+const planRouter = require('./routers/plan.router')
+const subscriptionRouter = require('./routers/subscription.router')
+const talentRadarRouter = require('./routers/talentRadar.router')
 const frontendURL = process.env.FRONTEND_URL
 
 const server = http.createServer(app)
@@ -77,6 +81,7 @@ io.on('connection', (socket) => {
 app.set('io', io)
 app.set('userSockets', userSockets)
 initAutoApplyCron(io, userSockets)
+initTalentRadarCron(io, userSockets)
 
 app.use(cors({
   origin: allowedOrigins,
@@ -102,6 +107,9 @@ app.use('/api/notifications', notificationRouter)
 app.use('/api/try', roastResumeRouter)
 app.use('/api/admin', adminRouter)
 app.use('/api/auto-apply', autoApplyRouter)
+app.use('/api/plans', planRouter)
+app.use('/api/subscriptions', subscriptionRouter)
+app.use('/api/talent-radar', talentRadarRouter)
 
 app.get('/', (req, res) => {
   res.send("Hello World")

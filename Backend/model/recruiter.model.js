@@ -211,6 +211,24 @@ const recruiterSchema = new mongoose.Schema(
         ref: "Job",
       },
     ],
+    currentSubscription:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Subscription",
+        default: null
+      },
+      currentPlan:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Plan",
+        default: null
+      },
+      planExpiresAt:{
+        type: Date,
+        default: null
+      },
+      isFreeTier:{
+        type: Boolean,
+        default: true
+      }
   },
   { timestamps: true },
 );

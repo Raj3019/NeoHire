@@ -73,6 +73,7 @@ const profileRecruiter = async (req, res) => {
 
     const recruiter = await Recruiter.findOne({ betterAuthUserId: recruiterId.id })
       .select("-password")
+      .populate("currentPlan")
       .populate({
         path: "jobs",
         select:
