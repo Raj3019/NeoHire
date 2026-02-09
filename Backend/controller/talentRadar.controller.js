@@ -8,7 +8,7 @@ const createAlert = async (req, res) => {
   try {
     const recruiterId = req.user.id
 
-    const recruiter = await Recruiter.findOne({ betterAuthUserId: recruiterId }).populate('currentPlan')
+    const recruiter = await Recruiter.findOne({ betterAuthUserId: recruiterId })
 
     if (!recruiter) {
       return res.status(404).json({ message: 'Recruiter not found' });
@@ -50,6 +50,10 @@ const createAlert = async (req, res) => {
     // create alert
     const { name, requiredSkills, minExperience, minFitScore, location, workMode } = req.body;
 
+    // Sanitize workMode - only allow valid enum values
+    const validWorkModes = ['Remote', 'On-site', 'Hybrid'];
+    const sanitizedWorkMode = validWorkModes.includes(workMode) ? workMode : null;
+
     const newAlert = new TalentAlert({
       recruiter: recruiter._id,
       name,
@@ -57,7 +61,7 @@ const createAlert = async (req, res) => {
       minExperience: minExperience || 0,
       minFitScore: minFitScore || 80,
       location: location || null,
-      workMode: workMode || null
+      workMode: sanitizedWorkMode
     })
 
     await newAlert.save();
@@ -91,6 +95,8 @@ const getMyAlerts = async (req, res) => {
 
     const alertsWithStats = alerts.map(alert => ({
       ...alert,
+      minExperience: alert.minExperience ?? 0,
+      minFitScore: alert.minFitScore ?? 80,
       matchCount: alert.matchedEmployee?.length || 0
     }))
 
@@ -127,9 +133,17 @@ const updateAlert = async (req, res) => {
 
     const allowedUpdates = ['name', 'requiredSkills', 'minExperience', 'minFitScore', 'location', 'workMode'];
 
+    // Valid workMode values
+    const validWorkModes = ['Remote', 'On-site', 'Hybrid'];
+
     allowedUpdates.forEach(field => {
       if (updates[field] !== undefined) {
-        alert[field] = updates[field]
+        // Sanitize workMode - only allow valid enum values
+        if (field === 'workMode') {
+          alert[field] = validWorkModes.includes(updates[field]) ? updates[field] : null;
+        } else {
+          alert[field] = updates[field];
+        }
       }
     })
 
@@ -292,19 +306,30 @@ const runTalentRadarScan = async (io, userSockets) => {
         const alreadyMatched = alert.matchedEmployee.some(
           match => match.employee.toString() === employee._id.toString()
         )
-        if (alreadyMatched) continue
+        if (alreadyMatched) {
+          console.log(`  - ${employee.fullName}: Already matched, skipping`);
+          continue;
+        }
 
         const employeeExp = employee.experienceYears || 0;
-        if (employeeExp < (alert.minExperience || 0)) continue;
+        if (employeeExp < (alert.minExperience || 0)) {
+          console.log(`  - ${employee.fullName}: Experience ${employeeExp} < required ${alert.minExperience || 0}`);
+          continue;
+        }
 
-        if (alert.location && employee.currentCity) {
+        // Location filter - only apply if alert has a non-empty location
+        if (alert.location && alert.location.trim() !== '' && employee.currentCity) {
           if (!employee.currentCity.toLowerCase().includes(alert.location.toLowerCase())) {
+            console.log(`  - ${employee.fullName}: Location mismatch - "${employee.currentCity}" doesn't match "${alert.location}"`);
             continue;
           }
         }
 
-        if (alert.workMode && employee.jobPreferences.workMode) {
-          if (!employee.jobPreferences.workMode.includes(alert.workMode)) {
+        // Work mode filter - only apply if alert has a work mode AND employee has preferences
+        const employeeWorkModes = employee.jobPreferences?.workMode || [];
+        if (alert.workMode && alert.workMode.trim() !== '') {
+          if (employeeWorkModes.length > 0 && !employeeWorkModes.includes(alert.workMode)) {
+            console.log(`  - ${employee.fullName}: Work mode mismatch - has [${employeeWorkModes.join(', ')}], needs "${alert.workMode}"`);
             continue;
           }
         }
@@ -312,6 +337,8 @@ const runTalentRadarScan = async (io, userSockets) => {
         const skillMatch = calculateSkillMatch(employee.skills, alert.requiredSkills);
         const expMatch = calculateExperienceMatch(employeeExp, alert.minExperience || 0, (alert.minExperience || 0) + 10);
         const overallScore = calculateOverallMatch(skillMatch.percentage, expMatch);
+
+        console.log(`  - ${employee.fullName}: Skill ${skillMatch.percentage}%, Exp ${expMatch}%, Overall ${overallScore}% (threshold: ${alert.minFitScore}%)`);
 
         if (overallScore >= alert.minFitScore) {
 
@@ -367,7 +394,7 @@ const toggleTalentRadarOptIn = async (req, res) => {
     const employeeId = req.user.id;
     const { optIn } = req.body;
 
-    const employee = await Employee.findOne({ betterAuthUserId: employeeId }).populate('currentPlan');
+    const employee = await Employee.findOne({ betterAuthUserId: employeeId });
 
     if (!employee) {
       return res.status(404).json({ message: 'Candidate not found' });

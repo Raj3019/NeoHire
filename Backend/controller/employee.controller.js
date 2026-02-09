@@ -140,7 +140,7 @@ const profileEmployee = async (req, res) => {
     // .populate('currentPlan');
 
     if (!employee) {
-      return res.status(401).json({ message: "Employee with this id not found" })
+      return res.status(404).json({ message: "Employee profile not found" })
     }
 
     // FIX: Use employee._id (MongoDB ObjectId) instead of user.id (Better Auth string)
@@ -159,7 +159,8 @@ const profileEmployee = async (req, res) => {
       recentApplicationJob
     })
   } catch (err) {
-    return res.status(401).json({ message: "Employee profile not found" })
+    console.error('Profile fetch error:', err.message);
+    return res.status(500).json({ message: "Unable to fetch employee profile" })
   }
 }
 

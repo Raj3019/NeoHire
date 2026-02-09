@@ -7,7 +7,7 @@ const { createNotification, sendRealTimeNotification } = require('../utils/notif
 const THRESHOLD = 80;
 
 const runAutoApplyForAllCandidates = async (io, userSockets) => {
-  console.log("🤖 Auto-Apply CRON job started at:", new Date().toISOString());
+  // console.log("🤖 Auto-Apply CRON job started at:", new Date().toISOString());
 
   try {
     const eligibleEmployee = await Employee.find({
@@ -23,7 +23,7 @@ const runAutoApplyForAllCandidates = async (io, userSockets) => {
       profilePicture: { $exists: true, $ne: "" }
     })
 
-    console.log(`📋 Found ${eligibleEmployee.length} eligible candidates`);
+    // console.log(`📋 Found ${eligibleEmployee.length} eligible candidates`);
 
     const activeJobs = await Job.find({ status: "Active" })
     const results = {
@@ -54,7 +54,7 @@ const runAutoApplyForAllCandidates = async (io, userSockets) => {
         )
 
         if (alreadyApplied) {
-          console.log(`  ⏭️ Skipping ${job.title}: Already applied`);
+          // console.log(`  ⏭️ Skipping ${job.title}: Already applied`);
           continue
         }
 
@@ -62,10 +62,10 @@ const runAutoApplyForAllCandidates = async (io, userSockets) => {
         const jobMinExperience = job.experienceRequired?.min || 0;
         const candidateExperience = employee.experienceYears || 0;
 
-        console.log(`  📋 Checking ${job.title}: Candidate exp=${candidateExperience}, Job min=${jobMinExperience}`);
+        // console.log(`  📋 Checking ${job.title}: Candidate exp=${candidateExperience}, Job min=${jobMinExperience}`);
 
         if (candidateExperience < jobMinExperience) {
-          console.log(`  ⏭️ Skipping ${job.title}: Not enough experience (${candidateExperience} < ${jobMinExperience})`);
+          // console.log(`  ⏭️ Skipping ${job.title}: Not enough experience (${candidateExperience} < ${jobMinExperience})`);
           continue;
         }
 
@@ -75,9 +75,9 @@ const runAutoApplyForAllCandidates = async (io, userSockets) => {
           job.skillsRequired
         )
 
-        console.log(`  🎯 ${job.title}: Skills match = ${skillMatch.percentage}% (threshold: ${THRESHOLD}%)`);
-        console.log(`     Matched: ${skillMatch.matchedSkills.join(', ')}`);
-        console.log(`     Missing: ${skillMatch.missingSkills.join(', ')}`);
+        // console.log(`  🎯 ${job.title}: Skills match = ${skillMatch.percentage}% (threshold: ${THRESHOLD}%)`);
+        // console.log(`     Matched: ${skillMatch.matchedSkills.join(', ')}`);
+        // console.log(`     Missing: ${skillMatch.missingSkills.join(', ')}`);
 
         // Only auto-apply if skills match meets threshold
         // Experience is already validated above as a hard requirement
@@ -120,9 +120,9 @@ const runAutoApplyForAllCandidates = async (io, userSockets) => {
             }
           );
 
-          // Notify the user
+          // Notify the recruiter
 
-          const notification = await createNotification({
+          const recruiterNotification = await createNotification({
             recipient: job.postedBy,
             recipientModel: "Recruiter",
             type: "APPLICATION_RECEIVED",
@@ -132,10 +132,25 @@ const runAutoApplyForAllCandidates = async (io, userSockets) => {
             relatedApplication: application._id
           })
 
-          // REAL-TIME: Send notification via Socket.io
-
+          // REAL-TIME: Send notification to recruiter via Socket.io
           if (io && userSockets) {
-            sendRealTimeNotification(io, userSockets, job.postedBy, notification)
+            sendRealTimeNotification(io, userSockets, job.postedBy, recruiterNotification)
+          }
+
+          // Notify the candidate about the auto-apply
+          const candidateNotification = await createNotification({
+            recipient: employee._id,
+            recipientModel: "Employee",
+            type: "AUTO_APPLY_SUCCESS",
+            title: "Auto-Applied Successfully! 🤖",
+            message: `Smart Auto-Apply submitted your application to "${job.title}" at ${job.companyName || 'Company'} (${skillMatch.percentage}% match)`,
+            relatedJob: job._id,
+            relatedApplication: application._id
+          })
+
+          // REAL-TIME: Send notification to candidate via Socket.io
+          if (io && userSockets) {
+            sendRealTimeNotification(io, userSockets, employee._id, candidateNotification)
           }
 
           employeeResults.applied.push({
@@ -153,11 +168,11 @@ const runAutoApplyForAllCandidates = async (io, userSockets) => {
         results.details.push(employeeResults);
       }
     }
-    console.log(`✅ Auto-Apply completed. Created ${results.totalApplicationsCreated} applications`);
+    // console.log(`✅ Auto-Apply completed. Created ${results.totalApplicationsCreated} applications`);
     return results;
 
   } catch (error) {
-    console.error("❌ Auto-Apply CRON error:", error);
+    // console.error("❌ Auto-Apply CRON error:", error);
     throw error;
   }
 }

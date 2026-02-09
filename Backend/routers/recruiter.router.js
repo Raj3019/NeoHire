@@ -1,6 +1,6 @@
 const express = require("express")
-const { profileRecruiter, editRecruiter, getApplicationsByJob, updateApplicationStatus, getJobApplicationStats, getAllJobsByRecruiter, uploadResume, uploadProfilePicture, getAllCandidates} = require("../controller/recruiter.controller")
-const {authenticateSession} = require("../middleware/auth.middleware")
+const { profileRecruiter, editRecruiter, getApplicationsByJob, updateApplicationStatus, getJobApplicationStats, getAllJobsByRecruiter, uploadResume, uploadProfilePicture, getAllCandidates } = require("../controller/recruiter.controller")
+const { authenticateSession } = require("../middleware/auth.middleware")
 const recruiterRouter = express.Router()
 const upload = require("../middleware/multer.middleware");
 const { uploadLimiter } = require("../middleware/rateLimit.middleware");
@@ -9,12 +9,12 @@ const { uploadLimiter } = require("../middleware/rateLimit.middleware");
 recruiterRouter.get("/profile", authenticateSession, profileRecruiter)
 
 //Edit Profile
-recruiterRouter.put("/profile/:id",authenticateSession, editRecruiter)
+recruiterRouter.put("/profile/:id", authenticateSession, editRecruiter)
 
 // Get All Candidate
 recruiterRouter.get("/talents", authenticateSession, getAllCandidates)
 
-recruiterRouter.post("/profile/resume", authenticateSession,uploadLimiter, upload.single('resume'), uploadResume)
+recruiterRouter.post("/profile/resume", authenticateSession, uploadLimiter, upload.single('resume'), uploadResume)
 
 recruiterRouter.post("/profile/picture", authenticateSession, uploadLimiter, upload.single('profilePicture'), uploadProfilePicture)
 

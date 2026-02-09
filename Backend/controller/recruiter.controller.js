@@ -86,7 +86,7 @@ const profileRecruiter = async (req, res) => {
       });
 
     if (!recruiter) {
-      return res.status(401).json({ message: "Invalid Profile" });
+      return res.status(404).json({ message: "Recruiter profile not found" });
     }
 
     const jobsWithDetails = await Promise.all(
@@ -122,9 +122,9 @@ const profileRecruiter = async (req, res) => {
       message: "Profile sucessfully fetched",
     });
   } catch (err) {
-    // console.log(err)
+    console.error('Profile fetch error:', err.message);
     return res
-      .status(401)
+      .status(500)
       .json({ message: "Unable to fetch profile", error: err.message });
   }
 };

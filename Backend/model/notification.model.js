@@ -3,7 +3,7 @@ const mongoose = require('mongoose')
 const notificationSchema = new mongoose.Schema({
 
   //Who recived this notification
-  recipient:{
+  recipient: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
     refPath: 'recipientModel',
@@ -16,14 +16,14 @@ const notificationSchema = new mongoose.Schema({
   },
 
   // What Type of notification
-  type:{
+  type: {
     type: String,
     required: true,
-    enum: ['APPLICATION_RECEIVED', 'STATUS_CHANGED', 'JOB_POSTED', 'TALENT_MATCH']
+    enum: ['APPLICATION_RECEIVED', 'STATUS_CHANGED', 'JOB_POSTED', 'TALENT_MATCH', 'AUTO_APPLY_SUCCESS']
   },
 
   // Notification Content
-  title:{
+  title: {
     type: String,
     required: true
   },
@@ -38,7 +38,7 @@ const notificationSchema = new mongoose.Schema({
     ref: 'Job'
   },
 
-  relatedApplication:{
+  relatedApplication: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Application'
   },
@@ -48,7 +48,7 @@ const notificationSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   }
-},{timestamps: true})
+}, { timestamps: true })
 
 
 const notificationModel = mongoose.model("Notification", notificationSchema)
