@@ -1,11 +1,11 @@
 const Employee = require("../model/employee.model")
 
-const checkEmployeeProfileComplete = async(req, res, next) =>{
+const checkEmployeeProfileComplete = async (req, res, next) => {
   try {
-    const employee = await Employee.findById(req.user.id);
+    const employee = await Employee.findOne({ betterAuthUserId: req.user.id });
 
-    if(!employee){
-      return res.status(404).json({message: "Employee not found"})
+    if (!employee) {
+      return res.status(404).json({ message: "Employee not found" })
     }
 
     const requiredFields = [
@@ -24,53 +24,53 @@ const checkEmployeeProfileComplete = async(req, res, next) =>{
 
     const missingFields = []
 
-    for(const field of requiredFields){
+    for (const field of requiredFields) {
       const value = employee[field]
 
-      if(!value){
+      if (!value) {
         missingFields.push(field);
         continue
       }
 
-      if(typeof value === 'string' && value.trim() === ''){
+      if (typeof value === 'string' && value.trim() === '') {
         missingFields.push(field);
         continue
       }
 
-      if(Array.isArray(value) && value.length === 0){
+      if (Array.isArray(value) && value.length === 0) {
         missingFields.push(field);
       }
     }
 
-    if(!employee.education?.tenth?.schoolName){
+    if (!employee.education?.tenth?.schoolName) {
       missingFields.push('education.tenth');
     }
 
-    if(!employee.education?.graduation?.degree){
+    if (!employee.education?.graduation?.degree) {
       missingFields.push('education.graduation');
     }
 
-    if(!employee.jobPreferences?.jobType || employee.jobPreferences.jobType.length === 0){
+    if (!employee.jobPreferences?.jobType || employee.jobPreferences.jobType.length === 0) {
       missingFields.push('jobPreferences.jobType');
     }
 
-    if(!employee.jobPreferences?.workMode || employee.jobPreferences.workMode.length === 0){
+    if (!employee.jobPreferences?.workMode || employee.jobPreferences.workMode.length === 0) {
       missingFields.push('jobPreferences.workMode');
     }
 
-    if(missingFields.length > 0){
-        return res.status(403).json({
-          success: false,
-          message: "Please complete your profile before applying for jobs",
-          missingFields: missingFields,
-          profileComplete: false 
-        })
-      }
+    if (missingFields.length > 0) {
+      return res.status(403).json({
+        success: false,
+        message: "Please complete your profile before applying for jobs",
+        missingFields: missingFields,
+        profileComplete: false
+      })
+    }
 
-      next()
+    next()
   } catch (error) {
     // console.log(error)
-    return res.status(500).json({message: "Error checking profile", error: err.message})
+    return res.status(500).json({ message: "Error checking profile", error: err.message })
   }
 }
 

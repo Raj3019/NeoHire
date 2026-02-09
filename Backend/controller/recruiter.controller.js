@@ -73,7 +73,7 @@ const profileRecruiter = async (req, res) => {
 
     const recruiter = await Recruiter.findOne({ betterAuthUserId: recruiterId.id })
       .select("-password")
-      .populate("currentPlan")
+      // .populate("currentPlan")
       .populate({
         path: "jobs",
         select:
@@ -230,10 +230,13 @@ const editRecruiter = async (req, res) => {
 // GET all jobs posted by recruiter with application stats [COMPLEX]
 const getAllJobsByRecruiter = async (req, res) => {
   try {
-    const recruiterId = req.user.id;
+    const recruiter = await Recruiter.findOne({ betterAuthUserId: req.user.id });
+    if (!recruiter) {
+      return res.status(404).json({ message: "Recruiter not found" });
+    }
 
     // Find all jobs posted by this recruiter
-    const jobs = await Job.find({ postedBy: recruiterId })
+    const jobs = await Job.find({ postedBy: recruiter._id })
       .select(
         "title companyName location jobType salary status createdAt skillsRequired applicationDeadline",
       )
@@ -309,8 +312,12 @@ const getAllJobsByRecruiter = async (req, res) => {
 const getApplicationsByJob = async (req, res) => {
   try {
     const { jobId } = req.params;
-    const recruiterId = req.user.id;
     const { status } = req.query; // Optional filter: ?status=Pending
+
+    const recruiter = await Recruiter.findOne({ betterAuthUserId: req.user.id });
+    if (!recruiter) {
+      return res.status(404).json({ message: "Recruiter not found" });
+    }
 
     // Security: Verify this job belongs to the recruiter
     const job = await Job.findById(jobId);
@@ -318,7 +325,7 @@ const getApplicationsByJob = async (req, res) => {
       return res.status(404).json({ message: "Job not found" });
     }
 
-    if (job.postedBy.toString() !== recruiterId) {
+    if (job.postedBy.toString() !== recruiter._id.toString()) {
       return res
         .status(403)
         .json({ message: "Unauthorized: This is not your job" });
@@ -358,7 +365,11 @@ const updateApplicationStatus = async (req, res) => {
   try {
     const { applicationId } = req.params;
     const { status } = req.body;
-    const recruiterId = req.user.id;
+
+    const recruiter = await Recruiter.findOne({ betterAuthUserId: req.user.id });
+    if (!recruiter) {
+      return res.status(404).json({ message: "Recruiter not found" });
+    }
 
     //validate status input
     const validateStatuses = [
@@ -385,7 +396,7 @@ const updateApplicationStatus = async (req, res) => {
     }
 
     // Security check: Verify this job belongs to the recruiter
-    if (job.postedBy.toString() !== recruiterId) {
+    if (job.postedBy.toString() !== recruiter._id.toString()) {
       return res.status(403).json({ message: "Unauthorized access" });
     }
 
@@ -436,10 +447,14 @@ const updateApplicationStatus = async (req, res) => {
 const getJobApplicationStats = async (req, res) => {
   try {
     const { jobId } = req.params;
-    const recruiterId = req.user.id;
+
+    const recruiter = await Recruiter.findOne({ betterAuthUserId: req.user.id });
+    if (!recruiter) {
+      return res.status(404).json({ message: "Recruiter not found" });
+    }
 
     //verify job belong to recruiter
-    const job = await Job.findOne({ _id: jobId, postedBy: recruiterId });
+    const job = await Job.findOne({ _id: jobId, postedBy: recruiter._id });
     if (!job) {
       return res.status(400).json({ message: "Job not found" });
     }
@@ -479,30 +494,42 @@ const getAllCandidates = async (req, res) => {
   try {
     const recruiterId = req.user.id;
 
-    const recruiter = await Recruiter.findOne({ betterAuthUserId: recruiterId }).populate({
-      path: "jobs",
-      populate: {
-        path: "appliedBy.applicant",
-      },
-    });
+    const recruiter = await Recruiter.findOne({ betterAuthUserId: recruiterId });
 
     if (!recruiter) {
       return res.status(404).json({ message: "Recruiter not found" });
     }
 
-    const getCandidates = recruiter.jobs.map((job) => ({
-      applicants: job.appliedBy.map((a) => ({
-        profilePicture: a.applicant?.profilePicture,
-        fullName: a.applicant?.fullName,
-        email: a.applicant?.email,
-        skills: a.applicant?.skills,
-        currentJobTitle: a.applicant?.currentJobTitle,
-      })),
+    // Get all jobs for this recruiter
+    const jobs = await Job.find({ postedBy: recruiter._id });
+    const jobIds = jobs.map(job => job._id);
+
+    // Get all applications for these jobs with populated employee data
+    const applications = await Application.find({ job: { $in: jobIds } })
+      .populate('JobSeeker', 'profilePicture fullName email skills currentJobTitle')
+      .populate('job', 'title');
+
+    // Group by job and format the response
+    const getCandidates = jobs.map((job) => ({
+      jobTitle: job.title,
+      applicants: applications
+        .filter(app => app.job._id.toString() === job._id.toString())
+        .map((app) => ({
+          applicationId: app._id,
+          profilePicture: app.JobSeeker?.profilePicture,
+          fullName: app.JobSeeker?.fullName,
+          email: app.JobSeeker?.email,
+          skills: app.JobSeeker?.skills,
+          currentJobTitle: app.JobSeeker?.currentJobTitle,
+          aiMatchScore: app.aiMatchScore?.overallScore || 0,
+          status: app.status,
+          appliedAt: app.appliedAt
+        })),
     }));
 
     return res.status(200).json({ data: getCandidates });
   } catch (error) {
-    // console.log(error)
+    console.log(error)
     return res.status(500).json({ message: "Unable to fetch talents" });
   }
 };

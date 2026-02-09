@@ -5,31 +5,31 @@ const { PDFParse } = require('pdf-parse');
 const fs = require('fs').promises;
 const Groq = require('groq-sdk')
 const GroqApiKey = process.env.GROQAPIKEY
-const {uploadResumeToCloudnary } = require("../utils/cloudnary.utlis.js");
+const { uploadResumeToCloudnary } = require("../utils/cloudnary.utlis.js");
 const Employee = require("../model/employee.model.js");
 const axios = require('axios')
 const { createNotification, sendRealTimeNotification } = require('../utils/notification.utlis.js');
 
 
-async function extractTextFromPDF(source, isURL = false){
+async function extractTextFromPDF(source, isURL = false) {
   let pdfBuffer;
 
-  if(isURL){
+  if (isURL) {
     //Download PDF from URL
-    const response = await axios.get(source, {responseType: 'arraybuffer'})
+    const response = await axios.get(source, { responseType: 'arraybuffer' })
     pdfBuffer = Buffer.from(response.data)
-  }else{
+  } else {
     //Read from local file path
     pdfBuffer = await fs.readFile(source)
   }
 
-  const parser = new PDFParse({data: pdfBuffer})
+  const parser = new PDFParse({ data: pdfBuffer })
   const result = await parser.getText()
   return result.text
 }
 
 
-async function calculateAIScore(resumeText, jobData){
+async function calculateAIScore(resumeText, jobData) {
   const systemPrompt = `
   You are an AI hiring assistant specialized in resume analysis.
     Compare the job description and the candidate's resume.
@@ -45,7 +45,7 @@ async function calculateAIScore(resumeText, jobData){
       "insights": "Brief explanation of the scores and recommendations"
     }`.trim();
 
-    const userPrompt = `
+  const userPrompt = `
     JOB DETAILS:
     Description: ${jobData.description}
     Skills Required: ${jobData.skillsRequired.join(', ')}
@@ -60,9 +60,9 @@ async function calculateAIScore(resumeText, jobData){
     
     Analyze the match and provide scores for each category.
   `.trim();
-  
+
   const client = new Groq({ apiKey: GroqApiKey });
-  
+
   const chatCompletion = await client.chat.completions.create({
     model: 'llama-3.3-70b-versatile',
     messages: [
@@ -72,9 +72,9 @@ async function calculateAIScore(resumeText, jobData){
     temperature: 0.3,
     response_format: { type: "json_object" }
   });
-  
+
   const aiReply = chatCompletion.choices[0]?.message?.content;
-  
+
   try {
     return JSON.parse(aiReply);
   } catch (parseErr) {
@@ -94,10 +94,10 @@ async function calculateAIScore(resumeText, jobData){
 // Applie for Job By  Employee
 // const applyJob = async (req, res) => {
 //   try{
-    
+
 //     const jobId = req.params.id
 //     const employeeId = req.user.id
-    
+
 //     const jobById = await Job.findById(jobId)
 //     if (!jobById) {
 //           return res.status(404).json({ message: "Job not found" })
@@ -118,18 +118,18 @@ async function calculateAIScore(resumeText, jobData){
 //     if (!req.file) {
 //       return res.status(400).json({ message: "Resume file is required" });
 //     }
-    
+
 //     // ========== AI SCORING LOGIC (INTEGRATED) ==========
 //     const resumeBuffer = await fs.readFile(req.file.path);
 //     const parser = new PDFParse({ data: resumeBuffer });
 //     const resume = await parser.getText();
 //     const resumeText = resume.text;
-    
+
 //     const systemPrompt = `
 //       You are an AI hiring assistant specialized in resume analysis.
 //       Compare the job description and the candidate's resume.
 //       Provide a detailed scoring breakdown.
-      
+
 //       Respond ONLY in valid JSON format with this exact structure:
 //       {
 //         "overallScore": number (0-100),
@@ -140,7 +140,7 @@ async function calculateAIScore(resumeText, jobData){
 //         "insights": "Brief explanation of the scores and recommendations"
 //       }
 //     `.trim();
-    
+
 //     const userPrompt = `
 //       JOB DETAILS:
 //       Description: ${jobById.description}
@@ -148,17 +148,17 @@ async function calculateAIScore(resumeText, jobData){
 //       Experience Level: ${jobById.experienceRequired || 'Not specified'}
 //       Education Required: ${jobById.educationRequired || 'Not specified'}
 //       Location: ${jobById.location}
-      
+
 //       ------------------------
-      
+
 //       CANDIDATE RESUME:
 //       ${resumeText}
-      
+
 //       Analyze the match and provide scores for each category.
 //     `.trim();
-    
+
 //     const client = new Groq({ apiKey: GroqApiKey });
-    
+
 //     const chatCompletion = await client.chat.completions.create({
 //       model: 'llama-3.3-70b-versatile',
 //       messages: [
@@ -168,10 +168,10 @@ async function calculateAIScore(resumeText, jobData){
 //       temperature: 0.3,
 //       response_format: { type: "json_object" }
 //     });
-    
+
 //     const aiReply = chatCompletion.choices[0]?.message?.content;
 //     let aiScoreData;
-    
+
 //     try {
 //       aiScoreData = JSON.parse(aiReply);
 //     } catch (parseErr) {
@@ -186,7 +186,7 @@ async function calculateAIScore(resumeText, jobData){
 //       };
 //     }
 //     // ========== END AI SCORING ==========
-    
+
 //     const cloudinaryResult = await uploadResumeToCloudnary(req.file.path);
 
 //     const applyForJob = new Application({
@@ -205,34 +205,34 @@ async function calculateAIScore(resumeText, jobData){
 //         calculatedAt: new Date()
 //       }
 //     })
-    
+
 //     await applyForJob.save()
-    
+
 //     const updateEmployee = await Employee.findById(employeeId)
 //     updateEmployee.appliedJobs.push(applyForJob._id)
 //     await updateEmployee.save()
 
 //     const updateJob = await Job.findById(jobId)
-    
+
 //     updateJob.appliedBy.push({
 //       applicant: employeeId,
 //       appliedAt: new Date(),
 //     })
 //     await updateJob.save()
-    
+
 //     // Clean up temp file
 //     if (req.file.path) {
 //       await fs.unlink(req.file.path).catch(err => 
 //         console.error('Failed to delete temp file:', err)
 //       );
 //     }
-    
+
 //     return res.status(200).json({
 //       data: applyForJob, 
 //       message: "Applied for Job successfully",
 //       aiScore: aiScoreData
 //     })
-    
+
 //   }catch(err){
 //     console.log(err)
 //     return res.status(500).json({message: "Failed to apply for job", error: err.message})
@@ -245,65 +245,71 @@ const applyJob = async (req, res) => {
     const jobId = req.params.id;
     const employeeId = req.user.id;
     const { useExistingResume } = req.body; // New flag
-    
+
     const jobById = await Job.findById(jobId);
     if (!jobById) {
       return res.status(404).json({ message: "Job not found" });
     }
-    
+
     const recuterId = jobById.postedBy;
-    
+
     // Check if already applied
     const existingApplication = await Application.findOne({
       job: jobId,
       JobSeeker: employeeId
     });
-    
+
     if (existingApplication) {
-      return res.status(400).json({ 
-        message: "You have already applied to this job" 
+      return res.status(400).json({
+        message: "You have already applied to this job"
       });
     }
-    
+
     let resumeURL;
     let resumeText;
     let tempFilePath = null;
-    
+
     // Option 1: Use existing resume from profile
     if (useExistingResume === 'true') {
-      const employee = await Employee.findOne({betterAuthUserId: employeeId});
-      
+      const employee = await Employee.findOne({ betterAuthUserId: employeeId });
+
       if (!employee.resumeFileURL) {
-        return res.status(400).json({ 
-          message: "No resume found in your profile. Please upload a resume first." 
+        return res.status(400).json({
+          message: "No resume found in your profile. Please upload a resume first."
         });
       }
-      
+
       resumeURL = employee.resumeFileURL;
       resumeText = await extractTextFromPDF(resumeURL, true); // true = URL
-      
-    } 
+
+    }
     // Option 2: Upload new resume
     else {
       if (!req.file) {
         return res.status(400).json({ message: "Resume file is required" });
       }
-      
+
       tempFilePath = req.file.path;
       resumeText = await extractTextFromPDF(tempFilePath, false); // false = file path
-      
+
       // Upload to Cloudinary
       const cloudinaryResult = await uploadResumeToCloudnary(tempFilePath);
       resumeURL = cloudinaryResult.url;
     }
-    
+
     // Calculate AI Score (same for both options)
     const aiScoreData = await calculateAIScore(resumeText, jobById);
-    
-    // Create application
+
+    // Get the Employee's MongoDB _id for proper population
+    const employeeDoc = await Employee.findOne({ betterAuthUserId: employeeId });
+    if (!employeeDoc) {
+      return res.status(404).json({ message: "Employee not found" });
+    }
+
+    // Create application with Employee's MongoDB _id (not betterAuthUserId)
     const applyForJob = new Application({
       job: jobById._id,
-      JobSeeker: employeeId,
+      JobSeeker: employeeDoc._id,  // Use MongoDB _id for proper population
       postedBy: recuterId,
       resume: resumeURL,
       aiMatchScore: {
@@ -317,18 +323,18 @@ const applyJob = async (req, res) => {
         calculatedAt: new Date()
       }
     });
-    
+
     await applyForJob.save();
-    
+
     // Update employee
     // const updateEmployee = await Employee.findById(employeeId);
     // updateEmployee.appliedJobs.push(applyForJob._id);
     // await updateEmployee.save();
 
-    const updatedEmployee = await Employee.findByIdAndUpdate(
-      employeeId,
-      {$push: {appliedJobs: applyForJob._id}},
-      {new: true}
+    const updatedEmployee = await Employee.findOneAndUpdate(
+      { betterAuthUserId: employeeId },
+      { $push: { appliedJobs: applyForJob._id } },
+      { new: true }
     )
 
     if (!updatedEmployee) {
@@ -336,8 +342,8 @@ const applyJob = async (req, res) => {
       throw new Error('Failed to update employee appliedJobs');
     }
     // console.log('✅ Employee updated, appliedJobs:', updatedEmployee.appliedJobs);
-    
-    
+
+
     // Update job
     // const updateJob = await Job.findById(jobId);
     // updateJob.appliedBy.push({
@@ -346,19 +352,21 @@ const applyJob = async (req, res) => {
     // });
     // await updateJob.save();
 
+    // Use employeeDoc._id (already fetched above) for job.appliedBy
+
     const updatedJob = await Job.findByIdAndUpdate(
       jobId,
       {
         $push: {
-          appliedBy:{
-            applicant: employeeId,
+          appliedBy: {
+            applicant: employeeDoc._id,  // Use MongoDB _id, not betterAuthUserId
             appliedAt: new Date()
           }
         }
       },
-      {new: true}
+      { new: true }
     )
-    
+
     if (!updatedJob) {
       // console.error(' Failed to update job');
       throw new Error('Failed to update job appliedBy');
@@ -366,19 +374,18 @@ const applyJob = async (req, res) => {
 
     // Clean up temp file if uploaded
     if (tempFilePath) {
-      await fs.unlink(tempFilePath).catch(err => 
+      await fs.unlink(tempFilePath).catch(err =>
         console.error('Failed to delete temp file:', err)
       );
     }
-    
-    // Notify recruiter about the new application
-    const employee = await Employee.findOne({betterAuthUserId: employeeId})
+
+    // Notify recruiter about the new application (use employeeDoc from above)
     const notification = await createNotification({
       recipient: recuterId,
       recipientModel: 'Recruiter',
       type: 'APPLICATION_RECEIVED',
       title: 'New Job Application',
-      message: `${employee.fullName} has applied for the job: ${jobById.title}`,
+      message: `${employeeDoc.fullName} has applied for the job: ${jobById.title}`,
       relatedJob: jobId,
       relatedApplication: applyForJob._id
     });
@@ -387,17 +394,17 @@ const applyJob = async (req, res) => {
     const io = req.app.get('io');
     const userSockets = req.app.get('userSockets');
     sendRealTimeNotification(io, userSockets, recuterId, notification);
-    
+
     return res.status(200).json({
-      data: applyForJob, 
+      data: applyForJob,
       message: "Applied for Job successfully",
       aiScore: aiScoreData
     });
-    
-  } catch(err) {
+
+  } catch (err) {
     // console.log(err);
     return res.status(500).json({
-      message: "Failed to apply for job", 
+      message: "Failed to apply for job",
       error: err.message
     });
   }
@@ -405,13 +412,13 @@ const applyJob = async (req, res) => {
 
 
 // Score by AI
-  
+
 // const checkScore = async(req, res) => {
 //   try{
 //     // Take resume
 //     const employee = req.user;
 //     console.log(employee)
-    
+
 //     //when employee is on job page the job description and resume both should go 
 //     // to ai
 //     const employeeResume = req.file;
@@ -426,11 +433,11 @@ const applyJob = async (req, res) => {
 //     const resumeBuffer = await fs.readFile(employeeResume.path);
 //     console.log(resumeBuffer)
 //     const parser = new PDFParse({ data: resumeBuffer });
-    
+
 //     // convert to plain text
 //     const resume = await parser.getText();
 //     const resumeText = resume.text
-    
+
 //     const job = await Job.findById(jobId)
 //     if(!job){
 //       return res.status(404).json({message: "Job not found"})
@@ -440,12 +447,12 @@ const applyJob = async (req, res) => {
 //     const educationRequired = job.educationRequired
 //     const experienceRequired = job.experienceRequired
 //     const location = job.location
-    
+
 //     const systemPrompt = `
 //           You are an AI hiring assistant specialized in resume analysis.
 //       Compare the job description and the candidate's resume.
 //       Provide a detailed scoring breakdown.
-      
+
 //       Respond ONLY in valid JSON format with this exact structure:
 //       {
 //         "overallScore": number (0-100),
@@ -456,7 +463,7 @@ const applyJob = async (req, res) => {
 //         "insights": "Brief explanation of the scores and recommendations"
 //       }
 //     `.trim();
-    
+
 //       const userPrompt = `
 //       JOB DETAILS:
 //       Description: ${jobDescription}
@@ -464,19 +471,19 @@ const applyJob = async (req, res) => {
 //       Experience Level: ${experienceRequired || 'Not specified'}
 //       Education Required: ${educationRequired || 'Not specified'}
 //       Location: ${location}
-      
+
 //       ------------------------
-      
+
 //       CANDIDATE RESUME:
 //       ${resumeText}
-      
+
 //       Analyze the match and provide scores for each category.
 //     `.trim();
-    
+
 //     const client = new Groq({
 //       apiKey: GroqApiKey
 //     })
-    
+
 //     const chatCompletion = await client.chat.completions.create({
 //       model: 'llama-3.3-70b-versatile',
 //       messages: [
@@ -488,9 +495,9 @@ const applyJob = async (req, res) => {
 //     })
 //     const aiReply = chatCompletion.choices[0]?.message?.content;
 //         console.log('Groq reply:', aiReply);
-    
+
 //     // return res.status(200).json({message: aiReply})
-    
+
 //     // give me to groq ai
 //     // score by some cretia
 
@@ -505,14 +512,14 @@ const applyJob = async (req, res) => {
 //         rawResponse: aiReply 
 //       });
 //     }
-    
+
 //     // Clean up uploaded file
 //     if (employeeResume.path) {
 //       await fs.unlink(employeeResume.path).catch(err => 
 //         console.error('Failed to delete temp file:', err)
 //       );
 //     }
-    
+
 //     return res.status(200).json({
 //       success: true,
 //       message: "Resume scored successfully",
@@ -526,65 +533,65 @@ const applyJob = async (req, res) => {
 // }
 
 // Keep your existing checkScore function as is
-const checkScore = async(req, res) => {
+const checkScore = async (req, res) => {
   try {
     const employeeId = req.user.id;
     const jobId = req.params.id;
     const { useExistingResume } = req.body;
-    
+
     let resumeText;
     let tempFilePath = null;
-    
+
     // Option 1: Use existing resume
     if (useExistingResume === 'true') {
-      const employee = await Employee.findOne({betterAuthUserId: employeeId});
-      
+      const employee = await Employee.findOne({ betterAuthUserId: employeeId });
+
       if (!employee.resumeFileURL) {
-        return res.status(400).json({ 
-          message: "No resume found in your profile." 
+        return res.status(400).json({
+          message: "No resume found in your profile."
         });
       }
-      
+
       resumeText = await extractTextFromPDF(employee.resumeFileURL, true);
-      
-    } 
+
+    }
     // Option 2: Upload new resume
     else {
       if (!req.file) {
-        return res.status(400).json({ 
-          message: "No resume file uploaded." 
+        return res.status(400).json({
+          message: "No resume file uploaded."
         });
       }
-      
+
       tempFilePath = req.file.path;
       resumeText = await extractTextFromPDF(tempFilePath, false);
     }
-    
+
     const job = await Job.findById(jobId);
     if (!job) {
       return res.status(404).json({ message: "Job not found" });
     }
-    
+
     // Calculate score
     const scoreData = await calculateAIScore(resumeText, job);
-    
+
     // Clean up temp file
     if (tempFilePath) {
-      await fs.unlink(tempFilePath).catch(err => 
+      await fs.unlink(tempFilePath).catch(err =>
         console.error('Failed to delete temp file:', err)
       );
     }
-    
+
     return res.status(200).json({
       success: true,
       message: "Resume scored successfully",
       data: scoreData
     });
-    
-  } catch(err) {
+
+  } catch (err) {
     // console.log(err);
     return res.status(500).json({
-      message: "Unable to Score Your resume", 
+      message: "Unable to Score Your resume",
       error: err.message
     });
   }
@@ -592,4 +599,4 @@ const checkScore = async(req, res) => {
 
 
 
-module.exports = {applyJob, checkScore}
+module.exports = { applyJob, checkScore }

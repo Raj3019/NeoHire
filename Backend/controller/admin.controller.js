@@ -2,6 +2,19 @@ const Employee = require("../model/employee.model")
 const Recruiter = require("../model/recruiter.model")
 const Job = require("../model/job.model")
 const Application = require("../model/application.model")
+const { MongoClient } = require("mongodb")
+
+// Connect to MongoDB to access Better Auth user collection
+const client = new MongoClient(process.env.MONGODB_URL)
+let authUserCollection = null
+
+const getAuthUserCollection = async () => {
+  if (!authUserCollection) {
+    await client.connect()
+    authUserCollection = client.db().collection('user')
+  }
+  return authUserCollection
+}
 
 const getDashboardStats = async (req, res) => {
   try {
@@ -107,23 +120,76 @@ const getAllUsers = async (req, res) => {
       ]
     }
 
-    const fetchUser = async (Model, userType, skipCount, limitCount) => {
-      // Different fields for different user types
-      const selectFields = userType === 'candidate'
-        ? 'fullName email profilePicture status country createdAt'
-        : 'fullName email profilePicture status country createdAt currentEmployer'
+    // Get the auth user collection to look up roles
+    const userCollection = await getAuthUserCollection()
 
-      // Query the database
-      const users = await Model.find(filter)
+    // Helper to get user role from auth collection
+    const getUserRole = async (betterAuthUserId, email) => {
+      // Try finding by 'id' field first (Better Auth standard)
+      let authUser = await userCollection.findOne({ id: betterAuthUserId })
+
+      // If not found, try by email as fallback
+      if (!authUser && email) {
+        authUser = await userCollection.findOne({ email: email.toLowerCase() })
+      }
+
+      console.log(`[getUserRole] betterAuthUserId: ${betterAuthUserId}, email: ${email}, found: ${!!authUser}, role: ${authUser?.role}`)
+      return authUser?.role || null
+    }
+
+    // Helper to enrich users with their actual role from auth collection
+    const enrichUsersWithAuthRole = async (users, defaultUserType) => {
+      const enrichedUsers = await Promise.all(users.map(async (user) => {
+        const userObj = user.toObject ? user.toObject() : user
+        const authRole = await getUserRole(userObj.betterAuthUserId, userObj.email)
+
+        // Determine userType based on auth role
+        let userType = defaultUserType
+        if (authRole === 'Admin') {
+          userType = 'admin'
+        } else if (authRole === 'Recruiter') {
+          userType = 'recruiter'
+        } else if (authRole === 'Employee') {
+          userType = 'candidate'
+        }
+
+        return {
+          ...userObj,
+          userType
+        }
+      }))
+      return enrichedUsers
+    }
+
+    const fetchCandidates = async (skipCount, limitCount) => {
+      const selectFields = 'fullName email profilePicture status country createdAt betterAuthUserId'
+      const users = await Employee.find(filter)
+        .select(selectFields)
+        .skip(skipCount)
+        .limit(limitCount)
+        .sort({ createdAt: -1 })
+      return enrichUsersWithAuthRole(users, 'candidate')
+    }
+
+    const fetchRecruiters = async (skipCount, limitCount, excludeAdmins = false, onlyAdmins = false) => {
+      const selectFields = 'fullName email profilePicture status country createdAt currentEmployer betterAuthUserId'
+      const users = await Recruiter.find(filter)
         .select(selectFields)
         .skip(skipCount)
         .limit(limitCount)
         .sort({ createdAt: -1 })
 
-      return users.map(user => ({
-        ...user.toObject(),  // Convert MongoDB document to plain object
-        userType              // Add 'candidate' or 'recruiter' label
-      }))
+      // Enrich with auth roles
+      const enrichedUsers = await enrichUsersWithAuthRole(users, 'recruiter')
+
+      // Filter based on flags
+      if (excludeAdmins) {
+        return enrichedUsers.filter(u => u.userType !== 'admin')
+      }
+      if (onlyAdmins) {
+        return enrichedUsers.filter(u => u.userType === 'admin')
+      }
+      return enrichedUsers
     }
 
     //Initialize variables to store results
@@ -134,20 +200,36 @@ const getAllUsers = async (req, res) => {
 
     // Case 1: Only want candidates
     if (type === 'candidate') {
-      allUsers = await fetchUser(Employee, 'candidate', skip, parseInt(limit));
-      totalCount = await Employee.countDocuments(filter)  // Count total candidates
+      allUsers = await fetchCandidates(skip, parseInt(limit));
+      totalCount = await Employee.countDocuments(filter)
     }
 
-    // Case 2: Only want recruiters
-    if (type === 'recruiter') {
-      allUsers = await fetchUser(Recruiter, 'recruiter', skip, parseInt(limit))
-      totalCount = await Recruiter.countDocuments(filter)
+    // Case 2: Only want recruiters (exclude admins)
+    else if (type === 'recruiter') {
+      // Fetch more than needed since we'll filter out admins
+      const recruiters = await fetchRecruiters(0, parseInt(limit) * 2, true, false)
+      allUsers = recruiters.slice(skip, skip + parseInt(limit))
+      // For total count, we need to count actual non-admin recruiters
+      const allRecruiters = await Recruiter.find(filter).select('betterAuthUserId')
+      const enrichedAll = await enrichUsersWithAuthRole(allRecruiters, 'recruiter')
+      totalCount = enrichedAll.filter(u => u.userType !== 'admin').length
     }
 
-    // Case 3: Want both (no type specified)
-    if (!type) {
-      const candidates = await fetchUser(Employee, 'candidate', 0, parseInt(limit))
-      const recruiters = await fetchUser(Recruiter, 'recruiter', 0, parseInt(limit))
+    // Case 3: Only want admins
+    else if (type === 'admin') {
+      // Fetch recruiters and filter to admins only
+      const admins = await fetchRecruiters(0, parseInt(limit) * 2, false, true)
+      allUsers = admins.slice(skip, skip + parseInt(limit))
+      // For total count, count only admins
+      const allRecruiters = await Recruiter.find(filter).select('betterAuthUserId')
+      const enrichedAll = await enrichUsersWithAuthRole(allRecruiters, 'recruiter')
+      totalCount = enrichedAll.filter(u => u.userType === 'admin').length
+    }
+
+    // Case 4: Want all (no type specified)
+    else {
+      const candidates = await fetchCandidates(0, parseInt(limit))
+      const recruiters = await fetchRecruiters(0, parseInt(limit))
 
       // combine both into array
       allUsers = [...candidates, ...recruiters]

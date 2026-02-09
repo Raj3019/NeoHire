@@ -7,7 +7,7 @@ const initAutoApplyCron = (io, userSocket) => {
   // const CRON_SCHEDULE = '0 */6 * * *'
 
   //For testing
-  const CRON_SCHEDULE = "*/30 * * * * *";
+  const CRON_SCHEDULE = process.env.AUTO_APPLY_CRON_JOB
 
   console.log("Auto Schedule cron job initized");
   console.log(`Schedule: ${CRON_SCHEDULE}`);

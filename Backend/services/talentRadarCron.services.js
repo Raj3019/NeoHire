@@ -8,7 +8,7 @@ const initTalentRadarCron = (io, userSockets) => {
   // const TALENT_RADAR_SCHEDULE = '0 */6 * * *';
 
   // For testing: Every 30 seconds
-  const TALENT_RADAR_SCHEDULE = '*/30 * * * * *';
+  const TALENT_RADAR_SCHEDULE = process.env.TALENT_RADAR_CRON_JOB;
 
   console.log("Talent Radar CRON job initialized");
   console.log(`Schedule: ${TALENT_RADAR_SCHEDULE}`);

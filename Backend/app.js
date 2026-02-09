@@ -20,8 +20,8 @@ const autoApplyRouter = require('./routers/autoApply.router')
 const { initAutoApplyCron } = require("./services/autoApplyCron.services");
 const { initTalentRadarCron } = require("./services/talentRadarCron.services");
 const { generalLimiter } = require("./middleware/rateLimit.middleware")
-const planRouter = require('./routers/plan.router')
-const subscriptionRouter = require('./routers/subscription.router')
+// const planRouter = require('./routers/plan.router')
+// const subscriptionRouter = require('./routers/subscription.router')
 const talentRadarRouter = require('./routers/talentRadar.router')
 const frontendURL = process.env.FRONTEND_URL
 
@@ -107,8 +107,8 @@ app.use('/api/notifications', notificationRouter)
 app.use('/api/try', roastResumeRouter)
 app.use('/api/admin', adminRouter)
 app.use('/api/auto-apply', autoApplyRouter)
-app.use('/api/plans', planRouter)
-app.use('/api/subscriptions', subscriptionRouter)
+// app.use('/api/plans', planRouter)
+// app.use('/api/subscriptions', subscriptionRouter)
 app.use('/api/talent-radar', talentRadarRouter)
 
 app.get('/', (req, res) => {

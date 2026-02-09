@@ -14,6 +14,7 @@ const createAlert = async (req, res) => {
       return res.status(404).json({ message: 'Recruiter not found' });
     }
 
+    /* ========== TEST MODE: Plan check bypassed ==========
     // Check if recruiter has a plan and if Talent Radar is enabled
     if (!recruiter.currentPlan) {
       return res.status(403).json({
@@ -40,6 +41,11 @@ const createAlert = async (req, res) => {
         limit: alertLimit
       });
     }
+    ========== END TEST MODE ========== */
+
+    // TEST MODE: Allow unlimited alerts for testing
+    const existingAlertsCount = await TalentAlert.countDocuments({ recruiter: recruiter._id });
+    const alertLimit = -1; // Unlimited for testing
 
     // create alert
     const { name, requiredSkills, minExperience, minFitScore, location, workMode } = req.body;
@@ -367,6 +373,7 @@ const toggleTalentRadarOptIn = async (req, res) => {
       return res.status(404).json({ message: 'Candidate not found' });
     }
 
+    /* ========== TEST MODE: Plan check bypassed ==========
     // Check plan for Talent Radar access (Premium only)
     const hasTalentRadarAccess = employee.currentPlan?.features?.talentRadarVisible || false;
 
@@ -376,6 +383,10 @@ const toggleTalentRadarOptIn = async (req, res) => {
         upgradeRequired: true
       });
     }
+    ========== END TEST MODE ========== */
+
+    // TEST MODE: Allow Talent Radar opt-in for all users
+    const hasTalentRadarAccess = true;
 
     // Check if they have a resume (required for opt-in)
     if (optIn && !employee.resumeFileURL) {

@@ -79,7 +79,7 @@ const uploadResume = async (req, res) => {
 
     // Use findByIdAndUpdate to only update resume fields without triggering full document validation
     await Employee.findByIdAndUpdate(
-      employeeId,
+      employee._id,
       {
         resumeFileURL: result.url,
         resumePublicLinkId: result.public_id
@@ -137,7 +137,7 @@ const profileEmployee = async (req, res) => {
 
     const employee = await Employee.findOne({ betterAuthUserId: req.user.id })
       .select('-password')
-      .populate('currentPlan');
+    // .populate('currentPlan');
 
     if (!employee) {
       return res.status(401).json({ message: "Employee with this id not found" })
@@ -213,13 +213,13 @@ const editEmployee = async (req, res) => {
 const employeeDashboard = async (req, res) => {
   try {
     //fetch all the applied jobs 
-    const employeeId = req.user.id
+    const employee = await Employee.findOne({ betterAuthUserId: req.user.id })
 
-    if (!employeeId) {
+    if (!employee) {
       return res.status(401).json({ message: "Unable to fetch employee details" })
     }
 
-    const jobs = await Application.find({ JobSeeker: employeeId }).populate("job")
+    const jobs = await Application.find({ JobSeeker: employee._id }).populate("job")
     const appliedJob = jobs.map(app => app.job)
 
     return res.status(200).json({ data: appliedJob, message: "Fetched all the applied job" })
@@ -235,8 +235,12 @@ const employeeDashboard = async (req, res) => {
 
 const getMyApplications = async (req, res) => {
   try {
-    const employeeId = req.user.id;
-    const applicants = await Application.find({ JobSeeker: employeeId })
+    const employee = await Employee.findOne({ betterAuthUserId: req.user.id })
+    if (!employee) {
+      return res.status(404).json({ message: "Employee not found" })
+    }
+
+    const applicants = await Application.find({ JobSeeker: employee._id })
       .populate('job', 'title companyName location workType jobType salary status')
       .sort({ appliedAt: -1 })
 
@@ -258,11 +262,14 @@ const getMyApplications = async (req, res) => {
 const getApplicationById = async (req, res) => {
   try {
     const { applicationId } = req.params;
-    const employeeId = req.user.id
+    const employee = await Employee.findOne({ betterAuthUserId: req.user.id })
+    if (!employee) {
+      return res.status(404).json({ message: "Employee not found" })
+    }
 
     const application = await Application.findOne({
       _id: applicationId,
-      JobSeeker: employeeId
+      JobSeeker: employee._id
     }).populate('job', 'title companyName location status workType')
       .populate('postedBy', 'fullName companyName email phone')
 

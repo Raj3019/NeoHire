@@ -3,7 +3,7 @@ const rateLimit = require("express-rate-limit")
 const generalLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 min
   max: 100,
-  message:{
+  message: {
     success: false,
     message: 'Too many request, Please try again later.'
   },
@@ -13,8 +13,8 @@ const generalLimiter = rateLimit({
 
 const applicationLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
-  max: 1,
-  message:{
+  max: 10,
+  message: {
     success: false,
     message: 'Application limit reached. Try again in sometime'
   }
