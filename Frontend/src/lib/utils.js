@@ -162,7 +162,7 @@ export const getMissingProfileFields = (user) => {
     // if (!user.currentEmployer) missing.push('currentEmployer');
     if (!user.resumeFileURL) missing.push('resumeFileURL');
     if (!user.skills || user.skills.length === 0) missing.push('skills');
-    if (!user.education?.graduation?.degree) missing.push('education.graduation');
+    if (!user.languages || user.languages.length === 0) missing.push('languages');
   }
 
   return missing;

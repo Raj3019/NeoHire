@@ -110,7 +110,7 @@ const RecruiterDashboard = () => {
         switch (s) {
             case 'active': return 'bg-neo-green text-white border-neo-green dark:border-white';
             case 'closed': return 'bg-gray-200 text-gray-500 border-gray-200 dark:bg-zinc-700 dark:text-gray-300 dark:border-zinc-700';
-            case 'draft': return 'bg-neo-yellow text-black border-neo-yellow dark:border-white';
+            case 'draft': return 'bg-gray-100 text-gray-500 border-gray-100 dark:bg-zinc-800 dark:text-gray-400 dark:border-zinc-800';
             default: return 'bg-gray-100 text-gray-500';
         }
     };
@@ -221,7 +221,7 @@ const RecruiterDashboard = () => {
                             </div>
                         </NeoCard>
 
-                        <NeoCard className="bg-yellow-50 dark:bg-zinc-800 border-4 shadow-neo-lg flex flex-col">
+                        <NeoCard className="bg-blue-50/30 dark:bg-zinc-900 border-4 shadow-neo-lg flex flex-col">
                             <div className="mb-6">
                                 <div className="flex items-center gap-3 mb-4">
                                     <span className="bg-neo-black text-white px-3 font-bold text-xs py-1 uppercase tracking-wider border dark:border-white">AI Analysis</span>

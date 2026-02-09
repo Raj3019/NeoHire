@@ -64,7 +64,7 @@ const DisplayField = ({ label, value, name, type = "text", onChange, isTextarea 
             value={value || ''}
             onChange={onChange}
             maxLength={maxLength}
-            className="w-full bg-white dark:bg-zinc-900 border-2 border-neo-black dark:border-white p-3 focus:outline-none focus:ring-2 focus:ring-neo-yellow font-mono text-sm h-24 resize-none dark:text-white"
+            className="w-full bg-white dark:bg-zinc-900 border-2 border-neo-black dark:border-white p-3 focus:outline-none focus:ring-2 focus:ring-neo-blue font-mono text-sm h-24 resize-none dark:text-white"
             placeholder={placeholder}
           />
         </div>
@@ -568,10 +568,12 @@ export default function RecruiterProfilePage() {
                     <span className="block text-xs text-gray-400 dark:text-gray-500 font-bold uppercase">Member Since</span>
                     <span className="font-bold dark:text-white uppercase">{formatMemberSince(formData.createdAt)}</span>
                   </div>
+                  {/*
                   <div>
                     <span className="block text-xs text-gray-400 dark:text-gray-500 font-bold uppercase">Hires</span>
                     <span className="font-bold dark:text-white">{formData.totalHires} Total</span>
                   </div>
+                  */}
                 </div>
               </NeoCard>
             </div>
@@ -579,7 +581,7 @@ export default function RecruiterProfilePage() {
             <div className="md:w-2/3">
               <div className="mb-6 flex justify-end gap-3">
                 {!isEditing ? (
-                  <NeoButton onClick={() => setIsEditing(true)} className="bg-neo-yellow text-neo-black">
+                  <NeoButton variant="black" onClick={() => setIsEditing(true)}>
                     <Edit2 className="w-4 h-4 mr-2" /> Edit Profile
                   </NeoButton>
                 ) : (
@@ -607,13 +609,13 @@ export default function RecruiterProfilePage() {
                         className="flex flex-col items-center group"
                       >
                         <div className={`w-12 h-12 rounded-full border-4 flex items-center justify-center text-lg font-bold transition-all z-10 
-                                ${isActive ? 'bg-neo-orange border-neo-black dark:border-white text-white scale-110' :
+                                ${isActive ? 'bg-neo-blue border-neo-black dark:border-white text-white scale-110 shadow-neo-sm' :
                             isCompleted ? 'bg-neo-green border-neo-black dark:border-white text-white' :
                               'bg-white dark:bg-zinc-800 border-gray-300 dark:border-zinc-600 text-gray-400'}`}>
                           {isCompleted ? '✓' : step.id}
                         </div>
                         <span className={`mt-2 text-xs font-bold uppercase tracking-wide bg-white dark:bg-black px-1 
-                                ${isActive ? 'text-neo-orange' : 'text-gray-400'}`}>
+                                ${isActive ? 'text-neo-blue' : 'text-gray-400'}`}>
                           {step.label}
                         </span>
                       </button>
@@ -642,7 +644,7 @@ export default function RecruiterProfilePage() {
                         <div>
                           <label className="block font-bold text-sm mb-1 dark:text-white">Gender</label>
                           {isEditing ? (
-                            <select name="gender" value={formData.gender} onChange={handleInputChange} className="w-full bg-white dark:bg-zinc-900 border-2 border-neo-black dark:border-white p-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-neo-yellow h-[46px] dark:text-white">
+                            <select name="gender" value={formData.gender} onChange={handleInputChange} className="w-full bg-white dark:bg-zinc-900 border-2 border-neo-black dark:border-white p-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-neo-blue h-[46px] dark:text-white">
                               <option value="">Select...</option>
                               <option value="Male">Male</option>
                               <option value="Female">Female</option>
@@ -797,7 +799,7 @@ export default function RecruiterProfilePage() {
                                   value={formData.education[level]?.grade || ''}
                                   onChange={(e) => handleEducationChange(level, 'grade', e.target.value)}
                                   disabled={!isEditing}
-                                  className="w-full bg-white dark:bg-zinc-900 border-2 border-black p-2 font-mono text-sm dark:text-white focus:outline-none focus:ring-2 focus:ring-neo-yellow"
+                                  className="w-full bg-white dark:bg-zinc-900 border-2 border-black p-2 font-mono text-sm dark:text-white focus:outline-none focus:ring-2 focus:ring-neo-blue"
                                 >
                                   <option value="">Select Grade</option>
                                   {['A+', 'A', 'B+', 'B', 'C', 'D', 'E', 'F'].map(g => (
@@ -915,7 +917,7 @@ export default function RecruiterProfilePage() {
                                     <Trash2 className="w-4 h-4" />
                                   </button>
                                 )}
-                                <span className="absolute -top-3 left-3 bg-neo-yellow px-2 py-0.5 text-[10px] font-black uppercase border-2 border-black">Certificate #{i + 1}</span>
+                                <span className="absolute -top-3 left-3 bg-neo-blue text-white px-2 py-0.5 text-[10px] font-black uppercase border-2 border-black">Certificate #{i + 1}</span>
 
                                 <div className="grid md:grid-cols-2 gap-3 mt-1">
                                   <div>
@@ -1203,7 +1205,7 @@ export default function RecruiterProfilePage() {
                     <NeoButton onClick={prevStep} variant="secondary">Previous</NeoButton>
                   ) : <div />}
                   {activeStep < 4 ? (
-                    <NeoButton onClick={nextStep} className="bg-neo-black text-white">Next</NeoButton>
+                    <NeoButton onClick={nextStep} variant="black">Next</NeoButton>
                   ) : <div />}
                 </div>
               </NeoCard>

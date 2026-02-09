@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, Suspense, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { NeoButton } from '@/components/ui/neo';
@@ -22,6 +22,24 @@ const NavbarContent = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const profileMenuRef = useRef(null);
+
+  // Close profile menu on click outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
+        setShowProfileMenu(false);
+      }
+    };
+
+    if (showProfileMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showProfileMenu]);
   const mode = searchParams.get('mode')?.toLowerCase();
   const isGuestRecruiter = mode === 'recruiter';
 
@@ -167,7 +185,7 @@ const NavbarContent = () => {
                 <div className="mr-2">
                   <NotificationBell />
                 </div>
-                <div className="ml-4 relative">
+                <div className="ml-4 relative" ref={profileMenuRef}>
                   <button
                     onClick={() => setShowProfileMenu(!showProfileMenu)}
                     className="flex items-center gap-2 border-2 border-neo-black dark:border-white p-1 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors shadow-neo-sm dark:shadow-[2px_2px_0px_0px_#ffffff] active:translate-y-[2px] active:shadow-none bg-white dark:bg-zinc-900"
@@ -190,11 +208,21 @@ const NavbarContent = () => {
                       <Link href={(user?.role === 'Recruiter' || user?.role?.toLowerCase() === 'recruiter') ? '/recruiter/profile' : '/profile'}>
                         <button
                           onClick={() => setShowProfileMenu(false)}
-                          className="block w-full text-left px-4 py-3 text-sm font-bold text-neo-black dark:text-white hover:bg-neo-yellow dark:hover:text-black border-b-2 border-neo-black dark:border-white"
+                          className={`block w-full text-left px-4 py-3 text-sm font-bold text-neo-black dark:text-white border-b-2 border-neo-black dark:border-white transition-colors ${isRecruiterMode ? 'hover:bg-neo-blue hover:text-white' : 'hover:bg-neo-yellow dark:hover:text-black'}`}
                         >
                           MY PROFILE
                         </button>
                       </Link>
+                      {!(user?.role === 'Recruiter' || user?.role?.toLowerCase() === 'recruiter') && (
+                        <Link href="/candidate/settings">
+                          <button
+                            onClick={() => setShowProfileMenu(false)}
+                            className="block w-full text-left px-4 py-3 text-sm font-bold text-neo-black dark:text-white hover:bg-neo-blue hover:text-white border-b-2 border-neo-black dark:border-white transition-colors"
+                          >
+                            SETTINGS
+                          </button>
+                        </Link>
+                      )}
                       {/* <button 
                       onClick={() => setShowProfileMenu(false)}
                       className="block w-full text-left px-4 py-3 text-sm font-bold text-neo-black dark:text-white hover:bg-neo-blue hover:text-white border-b-2 border-neo-black dark:border-white"
@@ -253,6 +281,9 @@ const NavbarContent = () => {
             {user && (
               <div className="border-t-2 border-gray-200 dark:border-zinc-700 mt-4 pt-4">
                 <Link href={(user?.role === 'Recruiter' || user?.role?.toLowerCase() === 'recruiter') ? '/recruiter/profile' : '/profile'} onClick={() => setIsMobileMenuOpen(false)} className="block w-full text-left py-2 font-bold hover:bg-gray-100 dark:hover:bg-zinc-800 px-2">MY PROFILE</Link>
+                {!(user?.role === 'Recruiter' || user?.role?.toLowerCase() === 'recruiter') && (
+                  <Link href="/candidate/settings" onClick={() => setIsMobileMenuOpen(false)} className="block w-full text-left py-2 font-bold hover:bg-gray-100 dark:hover:bg-zinc-800 px-2">SETTINGS</Link>
+                )}
                 <button onClick={() => { logout(); setIsMobileMenuOpen(false); router.push('/'); }} className="block w-full text-left py-2 font-bold text-red-600 hover:bg-red-50 px-2">LOGOUT</button>
               </div>
             )}

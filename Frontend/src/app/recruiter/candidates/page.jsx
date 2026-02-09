@@ -44,9 +44,9 @@ export default function CandidatesPage() {
   }, []);
 
   const filteredCandidates = candidates.filter(c =>
-    c.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (c.currentJobTitle && c.currentJobTitle.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (c.skills && c.skills.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase())))
+    (c.fullName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (c.currentJobTitle?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (c.skills && c.skills.some(skill => skill?.toLowerCase().includes(searchTerm.toLowerCase())))
   );
 
   // Pagination logic
@@ -84,7 +84,7 @@ export default function CandidatesPage() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <NeoButton className="bg-neo-black text-white px-8 h-12 dark:border-white">Filter</NeoButton>
+            <NeoButton variant="black" className="px-8 h-12 dark:border-white">Filter</NeoButton>
           </div>
 
           {loading ? (
@@ -111,12 +111,12 @@ export default function CandidatesPage() {
                           />
                         </div>
                       ) : (
-                        <div className="w-12 h-12 bg-neo-yellow border-2 border-neo-black dark:border-white rounded-full flex items-center justify-center font-black text-xl text-black">
-                          {c.fullName.charAt(0)}
+                        <div className="w-12 h-12 bg-neo-blue border-2 border-neo-black dark:border-white rounded-full flex items-center justify-center font-black text-xl text-white">
+                          {(c.fullName || 'U').charAt(0)}
                         </div>
                       )}
                       <div>
-                        <h4 className="font-bold text-lg leading-tight text-neo-black dark:text-white">{c.fullName}</h4>
+                        <h4 className="font-bold text-lg leading-tight text-neo-black dark:text-white">{c.fullName || 'Unknown'}</h4>
                         <p className="font-mono text-xs text-gray-500 dark:text-gray-400">{c.currentJobTitle || 'Professional'}</p>
                       </div>
                     </div>
@@ -144,7 +144,7 @@ export default function CandidatesPage() {
                     <div className="col-span-2 border-2 border-neo-black dark:border-white h-10 bg-transparent flex items-center px-3 text-xs font-mono overflow-hidden whitespace-nowrap">
                       {c.email}
                     </div>
-                    <NeoButton className="bg-neo-yellow text-black border-2 border-neo-black h-10 hover:bg-yellow-400 font-bold w-full shadow-none">Contact</NeoButton>
+                    <NeoButton variant="blue" className="h-10 font-bold w-full shadow-none">Contact</NeoButton>
                   </div>
 
                 </NeoCard>
@@ -161,7 +161,7 @@ export default function CandidatesPage() {
                   <button
                     onClick={() => handlePageChange(currentPage - 1)}
                     disabled={currentPage === 1}
-                    className="p-2 border-2 border-neo-black dark:border-white bg-white dark:bg-zinc-800 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neo-yellow dark:hover:bg-neo-yellow dark:hover:text-black transition-colors"
+                    className="p-2 border-2 border-neo-black dark:border-white bg-white dark:bg-zinc-800 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neo-blue dark:hover:bg-neo-blue hover:text-white transition-colors"
                   >
                     <ChevronLeft className="w-5 h-5" />
                   </button>
@@ -172,8 +172,8 @@ export default function CandidatesPage() {
                         key={page}
                         onClick={() => handlePageChange(page)}
                         className={`w-10 h-10 flex items-center justify-center border-2 font-black text-sm transition-all ${currentPage === page
-                            ? "bg-neo-blue text-white border-neo-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] translate-x-[-1px] translate-y-[-1px]"
-                            : "bg-white dark:bg-zinc-800 text-neo-black dark:text-white border-neo-black dark:border-white hover:bg-gray-100 dark:hover:bg-zinc-700 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]"
+                          ? "bg-neo-blue text-white border-neo-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] translate-x-[-1px] translate-y-[-1px]"
+                          : "bg-white dark:bg-zinc-800 text-neo-black dark:text-white border-neo-black dark:border-white hover:bg-gray-100 dark:hover:bg-zinc-700 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]"
                           }`}
                       >
                         {page}
@@ -184,7 +184,7 @@ export default function CandidatesPage() {
                   <button
                     onClick={() => handlePageChange(currentPage + 1)}
                     disabled={currentPage === totalPages}
-                    className="p-2 border-2 border-neo-black dark:border-white bg-white dark:bg-zinc-800 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neo-yellow dark:hover:bg-neo-yellow dark:hover:text-black transition-colors"
+                    className="p-2 border-2 border-neo-black dark:border-white bg-white dark:bg-zinc-800 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neo-blue dark:hover:bg-neo-blue hover:text-white transition-colors"
                   >
                     <ChevronRight className="w-5 h-5" />
                   </button>

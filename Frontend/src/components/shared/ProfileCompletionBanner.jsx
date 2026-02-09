@@ -10,20 +10,20 @@ import { NeoButton } from '@/components/ui/neo';
 const ProfileCompletionBanner = () => {
     const { user } = useAuthStore();
     const pathname = usePathname();
-    
+
     if (!user) return null;
-    
+
     // Support both Employee (candidate) and Recurter (recruiter) roles
     const isCandidate = user.role === 'Employee' || user.role?.toLowerCase() === 'employee' || user.role?.toLowerCase() === 'candidate';
     const isRecruiter = user.role === 'Recruiter';
 
     if (!isCandidate && !isRecruiter) return null;
-    
+
     const missingFields = getMissingProfileFields(user);
     const totalRequired = isCandidate ? 15 : 12; // Different counts for different roles
     const completedCount = Math.max(0, totalRequired - missingFields.length);
     const percentage = Math.round((completedCount / totalRequired) * 100);
-    
+
     if (missingFields.length === 0) return null;
 
     // Show only the first 3 missing fields as examples
@@ -35,23 +35,22 @@ const ProfileCompletionBanner = () => {
         <div className="bg-[#FFF4F2] dark:bg-neo-red/5 border-b-4 border-neo-black dark:border-white py-3 px-4 w-full relative overflow-hidden group">
             {/* Background Accent */}
             <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-neo-red"></div>
-            
+
             <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 relative z-10">
                 <div className="flex items-center gap-4">
                     <div className="bg-neo-red/10 p-2 hidden sm:block border border-neo-red/20">
                         <AlertCircle className="w-5 h-5 text-neo-red" />
                     </div>
-                    
+
                     <div>
                         <div className="flex items-center gap-3 mb-0.5">
                             <h3 className="font-black uppercase tracking-tight text-neo-black dark:text-white text-sm md:text-base leading-none">
                                 Profile <span className="text-neo-red">Incomplete</span>
                             </h3>
-                            <div className={`px-2 py-0.5 border-2 border-neo-black dark:border-white text-[10px] font-black uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] transition-colors ${
-                                percentage < 30 ? 'bg-neo-red text-white' : 
-                                percentage < 70 ? 'bg-neo-yellow text-black' : 
-                                'bg-neo-green text-white'
-                            }`}>
+                            <div className={`px-2 py-0.5 border-2 border-neo-black dark:border-white text-[10px] font-black uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] transition-colors ${percentage < 30 ? 'bg-neo-red text-white' :
+                                    percentage < 70 ? 'bg-neo-yellow text-black' :
+                                        'bg-neo-green text-white'
+                                }`}>
                                 {percentage}% DONE
                             </div>
                         </div>
@@ -65,21 +64,21 @@ const ProfileCompletionBanner = () => {
                     {/* Compact Modern Progress Bar */}
                     <div className="flex-1 lg:min-w-[200px] w-full sm:w-auto">
                         <div className="h-4 bg-gray-100 dark:bg-zinc-800 border-2 border-neo-black dark:border-white relative shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]">
-                            <div 
-                                className={`h-full transition-all duration-1000 ${
-                                    percentage < 30 ? 'bg-neo-red' : 
-                                    percentage < 70 ? 'bg-neo-yellow' : 
-                                    'bg-neo-green'
-                                }`}
+                            <div
+                                className={`h-full transition-all duration-1000 ${percentage < 30 ? 'bg-neo-red' :
+                                        percentage < 70 ? 'bg-neo-yellow' :
+                                            'bg-neo-green'
+                                    }`}
                                 style={{ width: `${percentage}%` }}
                             ></div>
                         </div>
                     </div>
 
                     <div className="hidden lg:flex items-center gap-2">
-                         {displayFields.map(f => {
+                        {displayFields.map(f => {
                             let label;
                             if (f === 'resumeFileURL') label = 'RESUME';
+                            else if (f === 'languages') label = 'LANGUAGES';
                             else if (f === 'profilePicture') label = 'PROFILE PICTURE';
                             else label = f.split('.').pop().replace(/([A-Z])/g, ' $1').toUpperCase();
 
@@ -93,7 +92,7 @@ const ProfileCompletionBanner = () => {
 
                     {pathname !== profileLink && (
                         <Link href={profileLink} className="w-full sm:w-auto">
-                            <NeoButton 
+                            <NeoButton
                                 className="bg-neo-black text-white dark:bg-white dark:text-neo-black w-full min-w-[140px] h-10 flex items-center justify-center gap-2 hover:bg-neo-red hover:text-white transition-all shadow-neo-sm"
                             >
                                 <span className="font-black uppercase tracking-widest text-[10px]">Finish Profile</span>

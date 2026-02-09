@@ -7,8 +7,6 @@ import { NeoCard, NeoButton } from '@/components/ui/neo';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import ProfileCompletionBanner from '@/components/shared/ProfileCompletionBanner';
 import { employeeAPI, jobsAPI } from '@/lib/api';
-import AutoApplySettings from '@/components/candidate/AutoApplySettings';
-import TalentRadarOptIn from '@/components/candidate/TalentRadarOptIn';
 
 export default function CandidateDashboard() {
   const { user, fetchProfile } = useAuthStore();
@@ -117,11 +115,6 @@ export default function CandidateDashboard() {
             <h3 className="font-mono text-sm opacity-80">Profile Views (beta)</h3>
             <p className="text-5xl font-black mt-2">{user?.profileViews || 0}</p>
           </NeoCard>
-        </div>
-
-        <div className="mb-8 space-y-8">
-          <AutoApplySettings />
-          <TalentRadarOptIn />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

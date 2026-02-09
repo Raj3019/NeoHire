@@ -368,9 +368,13 @@ export default function JobDetailsPage() {
                         ))}
                       </ul>
                     ) : (
-                      <div className="font-mono text-sm leading-relaxed whitespace-pre-line dark:text-gray-300">
-                        {requirements}
-                      </div>
+                      <div
+                        className="font-mono text-sm leading-relaxed dark:text-gray-300 prose prose-sm dark:prose-invert max-w-none
+                          [&_ul]:list-disc [&_ul]:ml-5 [&_ul]:my-2
+                          [&_ol]:list-decimal [&_ol]:ml-5 [&_ol]:my-2
+                          [&_li]:my-1"
+                        dangerouslySetInnerHTML={{ __html: requirements }}
+                      />
                     )}
                   </div>
                 );
@@ -407,17 +411,16 @@ export default function JobDetailsPage() {
               </NeoCard>
             )}
 
-            {/* Benefits */}
             <NeoCard>
               <h3 className="font-black text-xl uppercase border-b-4 border-neo-black dark:border-white pb-2 mb-4 dark:text-white">Benefits</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {getJobDataList('benefits').length > 0 ? getJobDataList('benefits').map((benefit, i) => (
-                  <div key={i} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-zinc-800 border-2 border-gray-200 dark:border-zinc-700">
+                  <div key={i} className="flex items-center gap-3 p-3 bg-white dark:bg-zinc-800 border-2 border-neo-black dark:border-white shadow-neo-sm">
                     <span className="text-neo-yellow text-xl">★</span>
                     <span className="font-bold text-sm dark:text-white">{benefit}</span>
                   </div>
                 )) : (job.benefits || ['Health', 'Dental', '401k']).map((benefit, i) => (
-                  <div key={i} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-zinc-800 border-2 border-gray-200 dark:border-zinc-700">
+                  <div key={i} className="flex items-center gap-3 p-3 bg-white dark:bg-zinc-800 border-2 border-neo-black dark:border-white shadow-neo-sm">
                     <span className="text-neo-yellow text-xl">★</span>
                     <span className="font-bold text-sm dark:text-white">{benefit}</span>
                   </div>

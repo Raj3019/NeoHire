@@ -12,6 +12,9 @@ const buttonVariants = cva(
       variant: {
         primary: "bg-neo-yellow text-neo-black shadow-neo dark:shadow-[4px_4px_0px_0px_#ffffff] hover:bg-[#ffe066]",
         secondary: "bg-white text-neo-black shadow-neo dark:shadow-[4px_4px_0px_0px_#ffffff] hover:bg-gray-50 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700",
+        blue: "bg-neo-blue text-white shadow-neo dark:shadow-[4px_4px_0px_0px_#ffffff] hover:bg-blue-600",
+        green: "bg-neo-green text-white shadow-neo dark:shadow-[4px_4px_0px_0px_#ffffff] hover:bg-green-600",
+        black: "bg-neo-black text-white shadow-neo dark:shadow-[4px_4px_0px_0px_#ffffff] hover:bg-zinc-800",
         danger: "bg-neo-red text-white shadow-neo dark:shadow-[4px_4px_0px_0px_#ffffff] hover:bg-red-600",
         ghost: "bg-transparent border-transparent shadow-none hover:bg-gray-100 dark:hover:bg-zinc-800 dark:text-white border-none active:translate-x-0 active:translate-y-0",
         outline: "bg-transparent border-2 border-neo-black text-neo-black hover:bg-gray-100", // Added outline as generic fallback
@@ -70,27 +73,27 @@ export const NeoInput = React.forwardRef(({ className, type, label, error, icon:
     <div className="flex flex-col gap-1.5 w-full">
       {label && <label className="text-sm font-bold text-neo-black dark:text-white">{label}</label>}
       <div className="relative">
-          {Icon && (
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
-                <Icon className="w-4 h-4" />
-            </div>
+        {Icon && (
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
+            <Icon className="w-4 h-4" />
+          </div>
+        )}
+        <input
+          type={type}
+          className={cn(
+            "w-full bg-white border-2 border-neo-black p-3 focus:outline-none focus:ring-2 focus:ring-neo-yellow focus:ring-offset-0 font-mono text-sm dark:bg-zinc-800 dark:border-white dark:text-white dark:focus:ring-neo-blue dark:placeholder-gray-500",
+            Icon && "pl-10",
+            error && "border-neo-red",
+            className
           )}
-          <input
-            type={type}
-            className={cn(
-              "w-full bg-white border-2 border-neo-black p-3 focus:outline-none focus:ring-2 focus:ring-neo-yellow focus:ring-offset-0 font-mono text-sm dark:bg-zinc-800 dark:border-white dark:text-white dark:focus:ring-neo-blue dark:placeholder-gray-500",
-              Icon && "pl-10",
-              error && "border-neo-red",
-              className
-            )}
-            ref={ref}
-            onKeyDown={(e) => {
-              if (type === 'number' && (e.key === '-' || e.key === 'e')) {
-                e.preventDefault();
-              }
-            }}
-            {...props}
-          />
+          ref={ref}
+          onKeyDown={(e) => {
+            if (type === 'number' && (e.key === '-' || e.key === 'e')) {
+              e.preventDefault();
+            }
+          }}
+          {...props}
+        />
       </div>
       {error && <span className="text-xs font-bold text-neo-red">{error}</span>}
     </div>
@@ -155,11 +158,11 @@ export const NeoModal = ({ isOpen, onClose, title, children, maxWidth = 'max-w-l
 export const NeoCheckbox = React.forwardRef(({ className, checked, onCheckedChange, label, id, disabled, ...props }, ref) => {
   return (
     <div className={cn("flex items-center gap-3", className)}>
-      <div 
+      <div
         className={cn(
           "w-6 h-6 border-2 border-neo-black bg-white flex items-center justify-center transition-all cursor-pointer shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none dark:border-white dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] dark:bg-zinc-900",
-           checked && "bg-neo-yellow dark:bg-neo-yellow",
-           disabled && "opacity-50 cursor-not-allowed"
+          checked && "bg-neo-yellow dark:bg-neo-yellow",
+          disabled && "opacity-50 cursor-not-allowed"
         )}
         onClick={() => !disabled && onCheckedChange(!checked)}
         role="checkbox"
@@ -169,8 +172,8 @@ export const NeoCheckbox = React.forwardRef(({ className, checked, onCheckedChan
         {checked && <Check className="w-4 h-4 text-neo-black stroke-[4]" />}
       </div>
       {label && (
-        <label 
-          htmlFor={id} 
+        <label
+          htmlFor={id}
           className={cn("font-bold text-sm uppercase cursor-pointer dark:text-white select-none", disabled && "cursor-not-allowed text-gray-400")}
           onClick={() => !disabled && onCheckedChange(!checked)}
         >
@@ -186,11 +189,11 @@ NeoCheckbox.displayName = "NeoCheckbox";
 export const NeoRadio = React.forwardRef(({ className, checked, onChange, label, id, disabled, ...props }, ref) => {
   return (
     <div className={cn("flex items-center gap-3", className)}>
-      <div 
+      <div
         className={cn(
           "w-6 h-6 border-2 border-neo-black bg-white rounded-full flex items-center justify-center transition-all cursor-pointer shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none dark:border-white dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] dark:bg-zinc-900",
-           checked && "bg-white dark:bg-zinc-900",
-           disabled && "opacity-50 cursor-not-allowed"
+          checked && "bg-white dark:bg-zinc-900",
+          disabled && "opacity-50 cursor-not-allowed"
         )}
         onClick={() => !disabled && onChange && onChange(!checked)}
         role="radio"
@@ -200,8 +203,8 @@ export const NeoRadio = React.forwardRef(({ className, checked, onChange, label,
         {checked && <div className="w-2.5 h-2.5 bg-neo-yellow rounded-full border-2 border-neo-black dark:border-neo-black" />}
       </div>
       {label && (
-        <label 
-          htmlFor={id} 
+        <label
+          htmlFor={id}
           className={cn("font-bold text-sm uppercase cursor-pointer dark:text-white select-none", disabled && "cursor-not-allowed text-gray-400")}
           onClick={() => !disabled && onChange && onChange(!checked)}
         >
@@ -217,7 +220,7 @@ NeoRadio.displayName = "NeoRadio";
 export const NeoDatePicker = ({ value, onChange, label, placeholder = "Select date", minDate, maxDate, className, ...props }) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const [viewDate, setViewDate] = React.useState(value ? new Date(value) : new Date());
-  
+
   // Handle outside click to close
   const containerRef = React.useRef(null);
   React.useEffect(() => {
@@ -242,20 +245,40 @@ export const NeoDatePicker = ({ value, onChange, label, placeholder = "Select da
     setIsOpen(false);
   };
 
-  const years = Array.from({ length: 100 }, (_, i) => getYear(new Date()) - i); // Last 100 years
+  const currentYear = getYear(new Date());
+
+  // Calculate dynamic year range based on min/max dates
+  let startYear = currentYear + 10; // Default: 10 years in future
+  let endYear = currentYear - 90;   // Default: 90 years in past
+
+  if (minDate) {
+    endYear = getYear(new Date(minDate));
+  }
+  if (maxDate) {
+    startYear = getYear(new Date(maxDate));
+  }
+
+  // If only minDate is provided, allow 10 years into the future from current
+  if (minDate && !maxDate) {
+    startYear = Math.max(startYear, currentYear + 10);
+  }
+
+  const rangeCount = Math.max(1, startYear - endYear + 1);
+  const years = Array.from({ length: rangeCount }, (_, i) => startYear - i);
+
   const months = [
-    "January", "February", "March", "April", "May", "June", 
+    "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"
   ];
 
   return (
     <div className="relative w-full" ref={containerRef}>
       {label && <label className="block text-sm font-bold text-neo-black dark:text-white mb-1.5">{label}</label>}
-      
-      <div 
+
+      <div
         className={cn(
-            "w-full bg-white border-2 border-neo-black p-3 flex items-center justify-between cursor-pointer focus-within:ring-2 focus-within:ring-neo-yellow dark:bg-zinc-900 dark:border-white dark:text-white",
-            className
+          "w-full bg-white border-2 border-neo-black p-3 flex items-center justify-between cursor-pointer focus-within:ring-2 focus-within:ring-neo-yellow dark:bg-zinc-900 dark:border-white dark:text-white",
+          className
         )}
         onClick={() => setIsOpen(!isOpen)}
       >
@@ -267,83 +290,83 @@ export const NeoDatePicker = ({ value, onChange, label, placeholder = "Select da
 
       {isOpen && (
         <div className="absolute z-50 mt-2 p-4 bg-white border-2 border-neo-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] w-[320px] dark:bg-black dark:border-white dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] animate-in fade-in zoom-in-95 duration-200">
-           
-           {/* Header Controls */}
-           <div className="flex justify-between items-center mb-4 gap-2">
-              <button 
-                onClick={(e) => { e.stopPropagation(); setViewDate(subMonths(viewDate, 1)); }}
-                className="p-1 border-2 border-neo-black hover:bg-gray-100 dark:border-white dark:text-white dark:hover:bg-zinc-800"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              
-              <div className="flex gap-2">
-                 <select 
-                   value={getMonth(viewDate)} 
-                   onChange={(e) => setViewDate(setMonth(viewDate, parseInt(e.target.value)))}
-                   className="font-bold text-xs bg-transparent border-none focus:outline-none dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-800 p-1 rounded"
-                   onClick={(e) => e.stopPropagation()}
-                 >
-                    {months.map((m, i) => <option key={i} value={i} className="text-black">{m}</option>)}
-                 </select>
-                 <select 
-                   value={getYear(viewDate)} 
-                   onChange={(e) => setViewDate(setYear(viewDate, parseInt(e.target.value)))}
-                   className="font-bold text-xs bg-transparent border-none focus:outline-none dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-800 p-1 rounded"
-                   onClick={(e) => e.stopPropagation()}
-                 >
-                    {years.map((y) => <option key={y} value={y} className="text-black">{y}</option>)}
-                 </select>
-              </div>
 
-              <button 
-                 onClick={(e) => { e.stopPropagation(); setViewDate(addMonths(viewDate, 1)); }}
-                 className="p-1 border-2 border-neo-black hover:bg-gray-100 dark:border-white dark:text-white dark:hover:bg-zinc-800"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-           </div>
+          {/* Header Controls */}
+          <div className="flex justify-between items-center mb-4 gap-2">
+            <button
+              onClick={(e) => { e.stopPropagation(); setViewDate(subMonths(viewDate, 1)); }}
+              className="p-1 border-2 border-neo-black hover:bg-gray-100 dark:border-white dark:text-white dark:hover:bg-zinc-800"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
 
-           {/* Days Grid */}
-           <div className="grid grid-cols-7 mb-2 text-center">
-              {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(d => (
-                <div key={d} className="text-xs font-black text-gray-400 uppercase">{d}</div>
-              ))}
-           </div>
-           
-           <div className="grid grid-cols-7 gap-1">
-              {eachDayOfInterval({
-                 start: startOfWeek(startOfMonth(viewDate)),
-                 end: endOfWeek(endOfMonth(viewDate))
-              }).map((day, idx) => {
-                 const isSelected = value && isSameDay(new Date(value), day);
-                 const isCurrentMonth = isSameMonth(day, viewDate);
-                 
-                 // Check if date is disabled
-                 const isDisabled = (minDate && day < new Date(minDate)) || (maxDate && day > new Date(maxDate));
-                 
-                 return (
-                   <button
-                     key={idx}
-                     onClick={(e) => { 
-                       e.stopPropagation(); 
-                       if (!isDisabled) handleDateClick(day); 
-                     }}
-                     disabled={isDisabled}
-                     className={cn(
-                       "h-8 w-8 flex items-center justify-center text-sm font-bold border-2 border-transparent relative transition-all rounded-sm",
-                       !isCurrentMonth && !isDisabled && "text-gray-300 dark:text-zinc-700",
-                       isSelected && !isDisabled && "bg-neo-yellow text-neo-black border-neo-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] z-10",
-                       isSameDay(day, new Date()) && !isSelected && !isDisabled && "border-neo-black border-dashed",
-                       !isDisabled && "hover:border-neo-black dark:hover:border-white dark:text-white",
-                       isDisabled && "opacity-20 cursor-not-allowed text-gray-400 dark:text-gray-600"
-                     )}
-                   >
-                     {format(day, 'd')}
-                   </button>
-                 );
-              })}
-           </div>
+            <div className="flex gap-2">
+              <select
+                value={getMonth(viewDate)}
+                onChange={(e) => setViewDate(setMonth(viewDate, parseInt(e.target.value)))}
+                className="font-bold text-xs bg-transparent border-none focus:outline-none dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-800 p-1 rounded"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {months.map((m, i) => <option key={i} value={i} className="text-black">{m}</option>)}
+              </select>
+              <select
+                value={getYear(viewDate)}
+                onChange={(e) => setViewDate(setYear(viewDate, parseInt(e.target.value)))}
+                className="font-bold text-xs bg-transparent border-none focus:outline-none dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-800 p-1 rounded"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {years.map((y) => <option key={y} value={y} className="text-black">{y}</option>)}
+              </select>
+            </div>
+
+            <button
+              onClick={(e) => { e.stopPropagation(); setViewDate(addMonths(viewDate, 1)); }}
+              className="p-1 border-2 border-neo-black hover:bg-gray-100 dark:border-white dark:text-white dark:hover:bg-zinc-800"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Days Grid */}
+          <div className="grid grid-cols-7 mb-2 text-center">
+            {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(d => (
+              <div key={d} className="text-xs font-black text-gray-400 uppercase">{d}</div>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-7 gap-1">
+            {eachDayOfInterval({
+              start: startOfWeek(startOfMonth(viewDate)),
+              end: endOfWeek(endOfMonth(viewDate))
+            }).map((day, idx) => {
+              const isSelected = value && isSameDay(new Date(value), day);
+              const isCurrentMonth = isSameMonth(day, viewDate);
+
+              // Check if date is disabled
+              const isDisabled = (minDate && day < new Date(minDate)) || (maxDate && day > new Date(maxDate));
+
+              return (
+                <button
+                  key={idx}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (!isDisabled) handleDateClick(day);
+                  }}
+                  disabled={isDisabled}
+                  className={cn(
+                    "h-8 w-8 flex items-center justify-center text-sm font-bold border-2 border-transparent relative transition-all rounded-sm",
+                    !isCurrentMonth && !isDisabled && "text-gray-300 dark:text-zinc-700",
+                    isSelected && !isDisabled && "bg-neo-yellow text-neo-black border-neo-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] z-10",
+                    isSameDay(day, new Date()) && !isSelected && !isDisabled && "border-neo-black border-dashed",
+                    !isDisabled && "hover:border-neo-black dark:hover:border-white dark:text-white",
+                    isDisabled && "opacity-20 cursor-not-allowed text-gray-400 dark:text-gray-600"
+                  )}
+                >
+                  {format(day, 'd')}
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>

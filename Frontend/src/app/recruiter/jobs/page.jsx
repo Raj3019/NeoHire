@@ -8,6 +8,7 @@ import { jobsAPI, recruiterAPI } from '@/lib/api';
 import { ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
 import { getMissingProfileFields, formatDate, getCurrencySymbol } from '@/lib/utils';
 import ProfileCompletionBanner from '@/components/shared/ProfileCompletionBanner';
+import RichTextEditor from '@/components/ui/RichTextEditor';
 
 const INITIAL_FORM_STATE = {
   id: '',
@@ -29,7 +30,7 @@ const INITIAL_FORM_STATE = {
   industry: '',
   benefits: [],
   educationRequired: '',
-  jobRequirements: [],
+  jobRequirements: '',
   postedBy: 'r1',
   applicantsCount: 0
 };
@@ -177,7 +178,7 @@ export default function RecruiterJobs() {
         salaryMax: jobData.salary?.max || jobData.salaryMax || 0,
         currency: jobData.salary?.currency || jobData.currency || 'USD',
         company: jobData.companyName || jobData.company || '',
-        jobRequirements: jobData.jobRequirements || jobData.jobRequirement || jobData.requirements || jobData.requirement || [],
+        jobRequirements: jobData.jobRequirements || jobData.jobRequirement || jobData.requirements || jobData.requirement || '',
       });
     } catch (err) {
       if (!err.isHandled) {
@@ -272,7 +273,7 @@ export default function RecruiterJobs() {
           {/* Header with Search */}
           <div className="flex flex-col md:flex-row justify-between items-end mb-8 border-b-4 border-neo-black dark:border-white pb-4 gap-4">
             <div>
-              <h1 className="text-4xl md:text-5xl font-black uppercase leading-none mb-2 dark:text-white">Job <span className="text-neo-orange">Management</span></h1>
+              <h1 className="text-4xl md:text-5xl font-black uppercase leading-none mb-2 dark:text-white">Job <span className="text-neo-blue">Management</span></h1>
               <p className="font-mono text-gray-600 dark:text-gray-400 font-bold">Manage postings and view applicants</p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto items-end">
@@ -301,13 +302,13 @@ export default function RecruiterJobs() {
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <h3 className="text-2xl font-black uppercase dark:text-white">{job.title}</h3>
-                      <span className={`text-xs font-bold px-3 py-1 border-2 border-black rounded-full dark:border-white ${job.status === 'active' || job.status === 'Active' ? 'bg-neo-green text-white' : job.status === 'Draft' ? 'bg-neo-yellow text-black' : 'bg-gray-200 text-gray-500'}`}>
+                      <span className={`text-xs font-bold px-3 py-1 border-2 border-black rounded-full dark:border-white ${job.status === 'active' || job.status === 'Active' ? 'bg-neo-green text-white' : job.status === 'Draft' ? 'bg-gray-100 text-gray-500 border-gray-200' : 'bg-gray-200 text-gray-500'}`}>
                         {job.status}
                       </span>
                     </div>
                     <p className="font-mono text-xs text-gray-500 dark:text-gray-400 mb-2">{job.companyName || job.company} • {job.location} • Closes: {formatDate(job.applicationDeadline || job.deadline || job.application_deadline || job.applicationdeadline || job.ApplicationDeadline || job.closingDate)}</p>
                     <div className="flex flex-wrap gap-2 mt-2">
-                      <span className="text-xs font-mono font-bold bg-neo-yellow text-black px-2 py-1 border-2 border-black uppercase">
+                      <span className="text-xs font-mono font-bold bg-neo-blue text-white px-2 py-1 border-2 border-black uppercase">
                         Dept: {job.department}
                       </span>
                       <span className="text-xs font-mono font-bold bg-neo-black text-white px-2 py-1 border-2 border-black dark:border-white">
@@ -372,7 +373,7 @@ export default function RecruiterJobs() {
           <NeoModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={isEditing ? "EDIT JOB POST" : "CREATE NEW JOB POST"} maxWidth="max-w-4xl">
             {isFormLoading && !formData.title && isEditing ? (
               <div className="flex justify-center items-center py-20">
-                <div className="animate-spin rounded-full h-12 w-12 border-4 border-neo-orange border-t-transparent"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-4 border-neo-blue border-t-transparent"></div>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-6 p-2">
@@ -410,7 +411,7 @@ export default function RecruiterJobs() {
                   </div>
                   <div>
                     <label className="block font-black uppercase mb-1 text-xs dark:text-white">Job Type *</label>
-                    <select name="jobType" value={formData.jobType || 'Full-time'} onChange={handleInputChange} className="w-full bg-white dark:bg-zinc-800 dark:text-white border-4 border-neo-black dark:border-white p-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-neo-yellow" required>
+                    <select name="jobType" value={formData.jobType || 'Full-time'} onChange={handleInputChange} className="w-full bg-white dark:bg-zinc-800 dark:text-white border-4 border-neo-black dark:border-white p-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-neo-blue" required>
                       <option value="Full-time">Full-time</option>
                       <option value="Part-time">Part-time</option>
                       <option value="Contract">Contract</option>
@@ -420,7 +421,7 @@ export default function RecruiterJobs() {
                   </div>
                   <div>
                     <label className="block font-black uppercase mb-1 text-xs dark:text-white">Work Type *</label>
-                    <select name="workType" value={formData.workType || 'On-site'} onChange={handleInputChange} className="w-full bg-white dark:bg-zinc-800 dark:text-white border-4 border-neo-black dark:border-white p-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-neo-yellow" required>
+                    <select name="workType" value={formData.workType || 'On-site'} onChange={handleInputChange} className="w-full bg-white dark:bg-zinc-800 dark:text-white border-4 border-neo-black dark:border-white p-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-neo-blue" required>
                       <option value="On-site">On-site</option>
                       <option value="Remote">Remote</option>
                       <option value="Hybrid">Hybrid</option>
@@ -430,19 +431,18 @@ export default function RecruiterJobs() {
 
                 <div>
                   <label className="block font-black uppercase mb-1 text-xs dark:text-white">Job Description *</label>
-                  <textarea name="description" value={formData.description ?? ''} onChange={handleInputChange} className="w-full h-40 bg-white dark:bg-zinc-800 dark:text-white border-4 border-neo-black dark:border-white p-3 font-mono text-sm focus:outline-none focus:ring-4 focus:ring-neo-orange placeholder:text-gray-400" placeholder="Describe the role..." required></textarea>
+                  <textarea name="description" value={formData.description ?? ''} onChange={handleInputChange} className="w-full h-40 bg-white dark:bg-zinc-800 dark:text-white border-4 border-neo-black dark:border-white p-3 font-mono text-sm focus:outline-none focus:ring-4 focus:ring-neo-blue placeholder:text-gray-400" placeholder="Describe the role..." required></textarea>
                 </div>
 
                 <div>
                   <label className="block font-black uppercase mb-1 text-xs dark:text-white">Job Requirements *</label>
-                  <textarea
+                  <RichTextEditor
                     name="jobRequirements"
                     value={Array.isArray(formData.jobRequirements) ? formData.jobRequirements.join('\n') : (formData.jobRequirements || '')}
                     onChange={handleInputChange}
-                    className="w-full h-48 bg-white dark:bg-zinc-800 dark:text-white border-4 border-neo-black dark:border-white p-3 font-mono text-sm focus:outline-none focus:ring-4 focus:ring-neo-blue placeholder:text-gray-400"
-                    placeholder="Key Responsibilities:&#10;- Bullet 1&#10;- Bullet 2&#10;&#10;Qualifications:&#10;- Bullet 1"
+                    placeholder="Key Responsibilities:&#10;• Bullet 1&#10;• Bullet 2&#10;&#10;Qualifications:&#10;• Bullet 1"
                     required
-                  ></textarea>
+                  />
                 </div>
 
                 <div>
@@ -453,7 +453,7 @@ export default function RecruiterJobs() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block font-black uppercase mb-1 text-xs dark:text-white">Experience Level *</label>
-                    <select name="experienceLevel" value={formData.experienceLevel || 'Mid'} onChange={handleInputChange} className="w-full bg-white dark:bg-zinc-800 dark:text-white border-4 border-neo-black dark:border-white p-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-neo-yellow" required>
+                    <select name="experienceLevel" value={formData.experienceLevel || 'Mid'} onChange={handleInputChange} className="w-full bg-white dark:bg-zinc-800 dark:text-white border-4 border-neo-black dark:border-white p-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-neo-blue" required>
                       <option value="Junior">Junior</option>
                       <option value="Mid">Mid</option>
                       <option value="Senior">Senior</option>
@@ -483,7 +483,7 @@ export default function RecruiterJobs() {
                         name="currency"
                         value={formData.currency || 'INR'}
                         onChange={handleInputChange}
-                        className="w-full bg-white dark:bg-zinc-800 dark:text-white border-4 border-neo-black dark:border-white p-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-neo-yellow"
+                        className="w-full bg-white dark:bg-zinc-800 dark:text-white border-4 border-neo-black dark:border-white p-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-neo-blue"
                         required
                       >
                         <option value="INR">INR (₹)</option>
@@ -504,6 +504,7 @@ export default function RecruiterJobs() {
                       value={formData.applicationDeadline ? formData.applicationDeadline.split('T')[0] : ''}
                       onChange={handleInputChange}
                       minDate={new Date().toISOString().split('T')[0]}
+                      maxDate={`${new Date().getFullYear()}-12-31`}
                       className="border-4"
                       required
                     />
@@ -514,7 +515,7 @@ export default function RecruiterJobs() {
                   </div>
                   <div>
                     <label className="block font-black uppercase mb-1 text-xs dark:text-white">Status *</label>
-                    <select name="status" value={formData.status || 'Draft'} onChange={handleInputChange} required className="w-full bg-white dark:bg-zinc-800 dark:text-white border-4 border-neo-black dark:border-white p-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-neo-yellow">
+                    <select name="status" value={formData.status || 'Draft'} onChange={handleInputChange} required className="w-full bg-white dark:bg-zinc-800 dark:text-white border-4 border-neo-black dark:border-white p-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-neo-blue">
                       <option value="Active">Active</option>
                       {/* <option value="Draft">Draft</option> */}
                       {/* <option value="Paused">Paused</option> */}
@@ -532,10 +533,10 @@ export default function RecruiterJobs() {
                   <NeoButton type="button" variant="ghost" onClick={() => setIsModalOpen(false)} disabled={isFormLoading}>CANCEL</NeoButton>
                   {isProfileIncomplete ? (
                     <Link href="/recruiter/profile">
-                      <NeoButton className="bg-neo-orange text-white">COMPLETE PROFILE TO POST</NeoButton>
+                      <NeoButton variant="black">COMPLETE PROFILE TO POST</NeoButton>
                     </Link>
                   ) : (
-                    <NeoButton type="submit" className="bg-neo-orange text-white border-neo-black" isLoading={isFormLoading} disabled={isFormLoading}>
+                    <NeoButton type="submit" variant="black" isLoading={isFormLoading} disabled={isFormLoading}>
                       {isEditing ? 'UPDATE JOB' : 'PUBLISH JOB'}
                     </NeoButton>
                   )}
@@ -564,7 +565,7 @@ export default function RecruiterJobs() {
                   <p className="font-bold text-lg">Candidates sorted by relevance.</p>
                 </div>
                 <div className="text-right">
-                  <span className="text-4xl font-black text-neo-yellow">{selectedJob?.applicantsCount || 0}</span>
+                  <span className="text-4xl font-black text-neo-blue">{selectedJob?.applicantsCount || 0}</span>
                   <span className="block text-xs uppercase font-bold">Applicants</span>
                 </div>
               </div>
@@ -659,7 +660,7 @@ export default function RecruiterJobs() {
                                       {data.image ? (
                                         <img src={data.image} alt={data.name} className="w-12 h-12 rounded-full border-2 border-neo-black object-cover" />
                                       ) : (
-                                        <div className="w-12 h-12 bg-neo-yellow border-2 border-neo-black rounded-full flex items-center justify-center font-black text-xl text-black">
+                                        <div className="w-12 h-12 bg-neo-blue border-2 border-neo-black rounded-full flex items-center justify-center font-black text-xl text-white">
                                           {data.name.charAt(0)}
                                         </div>
                                       )}
@@ -670,7 +671,7 @@ export default function RecruiterJobs() {
                                     </div>
                                     <div className="flex items-center gap-2 mt-2">
                                       <span className={`inline-block text-[10px] font-black uppercase px-2 py-1 border border-black ${data.status === 'Applied' ? 'bg-gray-200 text-neo-black dark:bg-zinc-700 dark:text-white' :
-                                        data.status === 'Pending' ? 'bg-neo-yellow text-black' :
+                                        data.status === 'Pending' ? 'bg-neo-blue text-white' :
                                           data.status === 'Shortlist' ? 'bg-neo-blue text-white' :
                                             data.status === 'Accept' ? 'bg-neo-green text-white' :
                                               data.status === 'Reject' ? 'bg-red-500 text-white' :
@@ -687,7 +688,7 @@ export default function RecruiterJobs() {
                                   </div>
                                   <div className="mt-4">
                                     <span className="block text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-1">MATCH SCORE</span>
-                                    <div className={`text-5xl font-black leading-none ${data.score > 70 ? 'text-neo-green' : data.score > 40 ? 'text-neo-yellow' : 'text-red-500'}`}>
+                                    <div className={`text-5xl font-black leading-none ${data.score > 70 ? 'text-neo-green' : data.score > 40 ? 'text-neo-blue' : 'text-red-500'}`}>
                                       {data.score}%
                                     </div>
                                   </div>
@@ -717,7 +718,7 @@ export default function RecruiterJobs() {
                                   </button>
                                   <div className="border-t border-gray-200 dark:border-zinc-700 my-1"></div>
                                   <div className="grid grid-cols-2 gap-2">
-                                    <button onClick={() => handleUpdateStatus(selectedJobId, data.applicationId, 'Pending')} className={`py-2 text-[10px] font-black uppercase tracking-wider border-2 transition-all active:translate-y-0.5 flex items-center justify-center gap-1 ${data.status === 'Pending' ? 'bg-neo-yellow text-black border-neo-black cursor-default' : 'bg-white dark:bg-zinc-900 text-neo-black dark:text-white border-neo-black dark:border-white hover:bg-neo-yellow hover:text-black'} ${data.status === 'Accept' || data.status === 'Reject' ? 'opacity-50 cursor-not-allowed' : ''}`} disabled={data.status === 'Pending' || data.status === 'Accept' || data.status === 'Reject'}>
+                                    <button onClick={() => handleUpdateStatus(selectedJobId, data.applicationId, 'Pending')} className={`py-2 text-[10px] font-black uppercase tracking-wider border-2 transition-all active:translate-y-0.5 flex items-center justify-center gap-1 ${data.status === 'Pending' ? 'bg-neo-blue text-white border-neo-black cursor-default' : 'bg-white dark:bg-zinc-900 text-neo-black dark:text-white border-neo-black dark:border-white hover:bg-neo-blue hover:text-white'} ${data.status === 'Accept' || data.status === 'Reject' ? 'opacity-50 cursor-not-allowed' : ''}`} disabled={data.status === 'Pending' || data.status === 'Accept' || data.status === 'Reject'}>
                                       ⏳ Pending
                                     </button>
                                     <button onClick={() => handleUpdateStatus(selectedJobId, data.applicationId, 'Shortlist')} className={`py-2 text-[10px] font-black uppercase tracking-wider border-2 transition-all active:translate-y-0.5 flex items-center justify-center gap-1 ${data.status === 'Shortlist' ? 'bg-neo-blue text-white border-neo-black cursor-default' : 'bg-white dark:bg-zinc-900 text-neo-black dark:text-white border-neo-black dark:border-white hover:bg-neo-blue hover:text-white'} ${data.status === 'Accept' || data.status === 'Reject' ? 'opacity-50 cursor-not-allowed' : ''}`} disabled={data.status === 'Shortlist' || data.status === 'Accept' || data.status === 'Reject'}>
@@ -737,7 +738,7 @@ export default function RecruiterJobs() {
 
                           {Math.ceil(filteredApps.length / appPageSize) > 1 && (
                             <div className="flex flex-wrap justify-center items-center gap-2 mt-8 py-4 border-t-2 border-gray-100 dark:border-zinc-800">
-                              <button onClick={() => setCurrentAppPage(prev => Math.max(1, prev - 1))} disabled={currentAppPage === 1} className="p-1.5 border-2 border-neo-black dark:border-white bg-white dark:bg-zinc-800 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_#fff] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neo-yellow dark:hover:bg-neo-yellow dark:hover:text-black transition-colors">
+                              <button onClick={() => setCurrentAppPage(prev => Math.max(1, prev - 1))} disabled={currentAppPage === 1} className="p-1.5 border-2 border-neo-black dark:border-white bg-white dark:bg-zinc-800 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_#fff] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neo-blue dark:hover:bg-neo-blue hover:text-white transition-colors">
                                 <ChevronLeft className="w-4 h-4" />
                               </button>
                               <div className="flex gap-1.5">
@@ -747,7 +748,7 @@ export default function RecruiterJobs() {
                                   </button>
                                 ))}
                               </div>
-                              <button onClick={() => setCurrentAppPage(prev => Math.min(Math.ceil(filteredApps.length / appPageSize), prev + 1))} disabled={currentAppPage === Math.ceil(filteredApps.length / appPageSize)} className="p-1.5 border-2 border-neo-black dark:border-white bg-white dark:bg-zinc-800 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_#fff] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neo-yellow dark:hover:bg-neo-yellow dark:hover:text-black transition-colors">
+                              <button onClick={() => setCurrentAppPage(prev => Math.min(Math.ceil(filteredApps.length / appPageSize), prev + 1))} disabled={currentAppPage === Math.ceil(filteredApps.length / appPageSize)} className="p-1.5 border-2 border-neo-black dark:border-white bg-white dark:bg-zinc-800 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_#fff] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neo-blue dark:hover:bg-neo-blue hover:text-white transition-colors">
                                 <ChevronRight className="w-4 h-4" />
                               </button>
                             </div>

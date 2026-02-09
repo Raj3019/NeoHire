@@ -24,14 +24,14 @@ export default function CandidateJobs() {
   const workTypes = ['All', 'Remote', 'Hybrid', 'On-site'];
 
   const filteredJobs = jobs.filter(job => {
-    const matchesSearch = 
+    const matchesSearch =
       job.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       job.company?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       job.location?.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     const jobType = job.jobType || job.type;
     const workType = job.workType;
-    
+
     const matchesType = selectedType === 'All' || jobType === selectedType;
     const matchesWorkType = selectedWorkType === 'All' || workType === selectedWorkType;
 
@@ -60,7 +60,7 @@ export default function CandidateJobs() {
       const { min, max, currency } = salary;
       const symbol = getCurrencySymbol(currency);
       if (min !== undefined && max !== undefined) {
-         return `${symbol}${min.toLocaleString()} - ${symbol}${max.toLocaleString()}`;
+        return `${symbol}${min.toLocaleString()} - ${symbol}${max.toLocaleString()}`;
       }
       return 'Competitive Salary';
     }
@@ -72,7 +72,7 @@ export default function CandidateJobs() {
       <ProfileCompletionBanner />
       <div className="max-w-7xl mx-auto px-4 py-8">
         <h1 className="text-4xl font-black uppercase mb-8 dark:text-white">Available <span className="text-neo-green">Positions</span></h1>
-        
+
         {/* Search and Filters */}
         <div className="mb-10 space-y-6">
           <div className="flex flex-col md:flex-row gap-4">
@@ -85,7 +85,7 @@ export default function CandidateJobs() {
                 className="border-2"
               />
               {searchQuery && (
-                <button 
+                <button
                   onClick={() => setSearchQuery('')}
                   className="absolute right-4 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded-full"
                 >
@@ -108,8 +108,8 @@ export default function CandidateJobs() {
                       onClick={() => setSelectedType(type)}
                       className={cn(
                         "px-3 py-1 text-sm font-bold border-2 transition-all uppercase tracking-wider",
-                        selectedType === type 
-                          ? "bg-neo-blue text-white border-neo-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] translate-x-[-2px] translate-y-[-2px]" 
+                        selectedType === type
+                          ? "bg-neo-blue text-white border-neo-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] translate-x-[-2px] translate-y-[-2px]"
                           : "bg-white text-neo-black border-neo-black hover:bg-gray-50 dark:bg-zinc-800 dark:text-white dark:border-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
                       )}
                     >
@@ -128,8 +128,8 @@ export default function CandidateJobs() {
                       onClick={() => setSelectedWorkType(type)}
                       className={cn(
                         "px-3 py-1 text-sm font-bold border-2 transition-all uppercase tracking-wider",
-                        selectedWorkType === type 
-                          ? "bg-neo-pink text-white border-neo-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] translate-x-[-2px] translate-y-[-2px]" 
+                        selectedWorkType === type
+                          ? "bg-neo-pink text-white border-neo-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] translate-x-[-2px] translate-y-[-2px]"
                           : "bg-white text-neo-black border-neo-black hover:bg-gray-50 dark:bg-zinc-800 dark:text-white dark:border-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
                       )}
                     >
@@ -171,31 +171,30 @@ export default function CandidateJobs() {
               {/* Pagination Controls */}
               {totalPages > 1 && (
                 <div className="flex flex-wrap justify-center items-center gap-3 mt-12 py-6">
-                  <button 
+                  <button
                     onClick={() => handlePageChange(currentPage - 1)}
                     disabled={currentPage === 1}
                     className="p-2 border-2 border-neo-black dark:border-white bg-white dark:bg-zinc-800 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neo-yellow dark:hover:bg-neo-yellow dark:hover:text-black transition-colors"
                   >
                     <ChevronLeft className="w-5 h-5" />
                   </button>
-                  
+
                   <div className="flex gap-2">
                     {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
                       <button
                         key={page}
                         onClick={() => handlePageChange(page)}
-                        className={`w-10 h-10 flex items-center justify-center border-2 font-black text-sm transition-all ${
-                          currentPage === page 
-                          ? "bg-neo-blue text-white border-neo-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] translate-x-[-1px] translate-y-[-1px]" 
-                          : "bg-white dark:bg-zinc-800 text-neo-black dark:text-white border-neo-black dark:border-white hover:bg-gray-100 dark:hover:bg-zinc-700 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]"
-                        }`}
+                        className={`w-10 h-10 flex items-center justify-center border-2 font-black text-sm transition-all ${currentPage === page
+                            ? "bg-neo-blue text-white border-neo-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] translate-x-[-1px] translate-y-[-1px]"
+                            : "bg-white dark:bg-zinc-800 text-neo-black dark:text-white border-neo-black dark:border-white hover:bg-gray-100 dark:hover:bg-zinc-700 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]"
+                          }`}
                       >
                         {page}
                       </button>
                     ))}
                   </div>
 
-                  <button 
+                  <button
                     onClick={() => handlePageChange(currentPage + 1)}
                     disabled={currentPage === totalPages}
                     className="p-2 border-2 border-neo-black dark:border-white bg-white dark:bg-zinc-800 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neo-yellow dark:hover:bg-neo-yellow dark:hover:text-black transition-colors"
@@ -209,8 +208,8 @@ export default function CandidateJobs() {
             <div className="text-center py-20 border-4 border-dashed border-gray-300 dark:border-zinc-700">
               <h3 className="text-2xl font-black uppercase text-gray-400">No matching positions found</h3>
               <p className="text-gray-500 font-bold mt-2">Try adjusting your filters or search terms</p>
-              <NeoButton 
-                variant="secondary" 
+              <NeoButton
+                variant="secondary"
                 className="mt-6"
                 onClick={() => {
                   setSearchQuery('');

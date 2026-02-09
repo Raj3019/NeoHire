@@ -19,8 +19,8 @@ export default function TalentRadarDashboard() {
   const [matches, setMatches] = useState([]);
   const [isLoadingMatches, setIsLoadingMatches] = useState(false);
 
-  const alertLimit = user?.currentPlan?.features?.talentRadarAlerts || 0;
-  const hasAccess = alertLimit > 0 || alertLimit === -1;
+  const alertLimit = user?.currentPlan?.features?.talentRadarAlerts || -1; // Default to unlimited for now
+  const hasAccess = true; // FEATURE UNLOCKED: Plan check bypassed for testing/early access
 
   useEffect(() => {
     loadAlerts();
@@ -122,17 +122,13 @@ export default function TalentRadarDashboard() {
     return (
       <div className="space-y-8 animate-in fade-in duration-500">
         <NeoCard className="py-16 text-center border-4 border-dashed border-neo-blue/30 bg-blue-50/10 dark:bg-blue-950/10 relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-8 opacity-5">
-            <Radio className="w-64 h-64" />
-          </div>
-
           <div className="relative z-10 max-w-2xl mx-auto px-6">
             <div className="w-14 h-14 bg-neo-blue/20 rounded-2xl flex items-center justify-center mx-auto mb-6 border-2 border-neo-blue shadow-sm">
-              <Crown className="w-7 h-7 text-neo-blue" />
+              <Radio className="w-7 h-7 text-neo-blue" />
             </div>
 
             <h2 className="text-3xl font-black uppercase tracking-tight dark:text-white mb-3">
-              Talent Radar is <span className="text-neo-blue">Premium</span>
+              Talent <span className="text-neo-blue">Radar</span>
             </h2>
 
             <p className="text-gray-500 dark:text-gray-400 font-medium text-base leading-relaxed mb-8 max-w-lg mx-auto">
@@ -220,7 +216,8 @@ export default function TalentRadarDashboard() {
             setEditingAlert(null);
             setShowCreateModal(true);
           }}
-          className="bg-neo-black text-white hover:bg-gray-800 px-8"
+          variant="black"
+          className="px-8"
         >
           <Plus className="w-5 h-5 mr-2" /> Launch New Alert
         </NeoButton>
@@ -235,7 +232,7 @@ export default function TalentRadarDashboard() {
           </p>
           <NeoButton
             onClick={() => setShowCreateModal(true)}
-            className="bg-neo-blue text-white"
+            variant="blue"
           >
             Set Up My First Radar
           </NeoButton>

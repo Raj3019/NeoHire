@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { autoApplyAPI } from '@/lib/api';
 import { useAuthStore } from '@/lib/store';
-import { NeoCard, NeoButton, NeoBadge } from '@/components/ui/neo';
+import { NeoCard, NeoButton, NeoBadge, NeoModal } from '@/components/ui/neo';
 import { Zap, CheckCircle2, AlertCircle, Clock, MapPin, Building2, ChevronRight, Info, AlertTriangle, X, Crown, Sparkles } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 
@@ -14,6 +14,7 @@ export default function AutoApplySettings() {
   const [isLoading, setIsLoading] = useState(true);
   const [isToggling, setIsToggling] = useState(false);
   const [feedback, setFeedback] = useState({ type: '', message: '' });
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -85,7 +86,7 @@ export default function AutoApplySettings() {
     status?.canEnable?.hasJobPreferences &&
     status?.canEnable?.hasProfilePicture;
 
-  const hasAccess = user?.currentPlan?.features?.autoApplyPerDay > 0;
+  const hasAccess = true; // FEATURE UNLOCKED: Plan check bypassed for testing/early access
 
   return (
     <div className="space-y-6 relative">
@@ -114,16 +115,13 @@ export default function AutoApplySettings() {
             <div className="flex items-center gap-3">
               <div className="p-2.5 bg-gradient-to-br from-amber-400 via-yellow-300 to-amber-500 border-2 border-amber-600 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] relative overflow-hidden">
                 <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
-                <Crown className="w-5 h-5 text-amber-900" />
+                <Zap className="w-5 h-5 text-amber-900" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
                   <h3 className="text-xl font-black uppercase dark:text-white">Smart Auto-Apply</h3>
-                  <span className="px-2 py-0.5 text-[10px] font-black uppercase bg-gradient-to-r from-amber-400 to-yellow-300 text-amber-900 border border-amber-500 shadow-sm">
-                    ✨ PRO
-                  </span>
                 </div>
-                <p className="text-xs text-amber-700 dark:text-amber-400 font-bold">Premium Feature</p>
+                <p className="text-xs text-amber-700 dark:text-amber-400 font-bold uppercase tracking-widest">AI Agent Active</p>
               </div>
             </div>
             <p className="text-sm text-gray-600 dark:text-gray-400 max-w-md font-medium">
@@ -134,11 +132,11 @@ export default function AutoApplySettings() {
           <div className="flex flex-col items-center md:items-end gap-3">
             <button
               onClick={handleToggle}
-              disabled={isToggling || !requirementsMet || !hasAccess}
+              disabled={isToggling || !requirementsMet}
               className={`
                 relative w-16 h-8 rounded-full border-2 border-black transition-all duration-300 shadow-neo-sm
                 ${status?.enabled ? 'bg-neo-green' : 'bg-gray-200 dark:bg-zinc-800'}
-                ${!requirementsMet || !hasAccess || isToggling ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-105 active:scale-95'}
+                ${!requirementsMet || isToggling ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-105 active:scale-95'}
               `}
             >
               <div className={`
@@ -151,20 +149,6 @@ export default function AutoApplySettings() {
             </span>
           </div>
         </div>
-
-        {/* Access Notification */}
-        {!hasAccess && (
-          <div className="mt-6 p-4 bg-amber-500/10 border-2 border-amber-500/30 rounded-lg flex gap-3 items-start">
-            <Crown className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-            <div>
-              <p className="text-sm font-bold text-amber-600 uppercase">Upgrade Required</p>
-              <p className="text-xs text-gray-500 mt-1 font-medium italic">Auto-Apply is a premium feature that works for you while you sleep. Upgrade to unlock autonomous job applications.</p>
-              <Link href="/candidate/profile">
-                <NeoButton variant="secondary" size="sm" className="mt-3 text-[10px] py-1 border-amber-500 text-amber-700">View Plans &rarr;</NeoButton>
-              </Link>
-            </div>
-          </div>
-        )}
         {/* Requirements Box */}
         {hasAccess && !requirementsMet && (
           <div className="mt-6 p-4 bg-neo-pink/10 border-2 border-neo-pink/30 rounded-lg flex gap-3 items-start">
@@ -211,68 +195,112 @@ export default function AutoApplySettings() {
       </NeoCard>
 
       {/* History Card */}
-      <NeoCard className="border-4">
+      <NeoCard className="border-4 bg-white dark:bg-zinc-900/50">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-black uppercase dark:text-white flex items-center gap-2">
-            <Clock className="w-5 h-5" />
-            Auto-Apply History
-          </h3>
-          <NeoBadge variant="blue" className="font-mono">{history.length} APPLICATIONS</NeoBadge>
+          <div className="flex items-center gap-2">
+            <Clock className="w-5 h-5 text-neo-blue" />
+            <h3 className="text-lg font-black uppercase dark:text-white">Recent Activity</h3>
+          </div>
+          {history.length > 0 && (
+            <NeoButton
+              variant="outline"
+              size="sm"
+              onClick={() => setIsHistoryOpen(true)}
+              className="text-[10px] h-8 border-2"
+            >
+              VIEW ALL ({history.length})
+            </NeoButton>
+          )}
         </div>
 
         <div className="space-y-4">
           {history.length === 0 ? (
-            <div className="text-center py-12 border-2 border-dashed border-gray-200 dark:border-zinc-800 rounded-lg">
-              <div className="w-12 h-12 bg-gray-100 dark:bg-zinc-900 rounded-full flex items-center justify-center mx-auto mb-3">
-                <Building2 className="w-6 h-6 text-gray-400" />
+            <div className="text-center py-10 border-2 border-dashed border-gray-200 dark:border-zinc-800 rounded-lg">
+              <div className="w-10 h-10 bg-gray-50 dark:bg-zinc-800 flex items-center justify-center mx-auto mb-2 border-2 border-neo-black/10 dark:border-white/10">
+                <Building2 className="w-5 h-5 text-gray-400" />
               </div>
-              <p className="text-gray-500 font-mono text-sm">No auto-applications yet.</p>
-              {status?.enabled ? (
-                <p className="text-xs text-gray-400 mt-1">We'll let you know when we find a match!</p>
-              ) : (
-                <p className="text-xs text-gray-400 mt-1">Activate the system to start matching.</p>
-              )}
+              <p className="text-gray-500 font-mono text-xs uppercase">No applications yet</p>
             </div>
           ) : (
             history.slice(0, 1).map((app) => (
               <div
                 key={app.applicationId}
-                className="group border-2 border-black dark:border-white p-4 hover:translate-x-1 hover:-translate-y-1 transition-all bg-white dark:bg-zinc-900 shadow-none hover:shadow-neo-sm cursor-pointer"
+                className="group border-2 border-black dark:border-white p-4 bg-white dark:bg-zinc-800 shadow-neo-sm relative overflow-hidden"
               >
                 <div className="flex justify-between items-start gap-4">
                   <div className="space-y-1">
-                    <h4 className="font-black text-neo-black dark:text-white group-hover:text-neo-blue transition-colors uppercase flex items-center gap-2">
+                    <h4 className="font-black text-neo-black dark:text-white group-hover:text-neo-blue transition-colors uppercase flex items-center gap-2 text-sm">
                       {app.jobTitle}
-                      <span className="px-2 py-0.5 text-[10px] font-black bg-neo-pink text-white border border-black">RECENT</span>
+                      <span className="px-1.5 py-0.5 text-[8px] font-black bg-neo-pink text-white border border-black">LATEST</span>
                     </h4>
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-bold text-gray-500 uppercase tracking-tight">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-bold text-gray-400 uppercase tracking-tight">
                       <span className="flex items-center gap-1"><Building2 className="w-3 h-3" /> {app.company}</span>
                       <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {app.location}</span>
                     </div>
                   </div>
                   <div className="text-right shrink-0">
-                    <div className="text-xl font-black text-neo-green">{app.matchScore}%</div>
-                    <div className="text-[10px] font-mono text-gray-400 uppercase">Skills Match</div>
+                    <div className="text-lg font-black text-neo-green">{app.matchScore}%</div>
+                    <div className="text-[8px] font-mono text-gray-400 uppercase">Match</div>
                   </div>
-                </div>
-
-                <div className="mt-4 pt-3 border-t border-gray-100 dark:border-zinc-800 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-3 h-3 text-neo-green" />
-                    <span className="text-[10px] font-black uppercase tracking-widest text-neo-green">Applied {formatDate(app.appliedAt)}</span>
-                  </div>
-                  <NeoBadge
-                    variant={app.status === 'Applied' ? 'default' : app.status === 'Reject' ? 'red' : 'green'}
-                    className="text-[10px] py-0 px-2 h-5"
-                  >
-                    {app.status}
-                  </NeoBadge>
                 </div>
               </div>
             ))
           )}
+          {history.length > 1 && (
+            <p className="text-[10px] text-center font-mono text-gray-400 uppercase tracking-wider">
+              + {history.length - 1} more automated applications
+            </p>
+          )}
         </div>
-      </NeoCard >
-    </div >
+      </NeoCard>
+
+      {/* History Modal */}
+      <NeoModal
+        isOpen={isHistoryOpen}
+        onClose={() => setIsHistoryOpen(false)}
+        title="ALL AUTO-APPLICATIONS"
+        maxWidth="max-w-2xl"
+      >
+        <div className="space-y-4 py-2">
+          {history.map((app) => (
+            <div
+              key={app.applicationId}
+              className="border-2 border-neo-black dark:border-white p-4 bg-white dark:bg-zinc-900 shadow-neo-sm hover:-translate-y-1 transition-transform"
+            >
+              <div className="flex justify-between items-start gap-4">
+                <div className="space-y-1">
+                  <h4 className="font-black text-neo-black dark:text-white uppercase text-base">
+                    {app.jobTitle}
+                  </h4>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-bold text-gray-500 uppercase">
+                    <span className="flex items-center gap-1.5"><Building2 className="w-4 h-4" /> {app.company}</span>
+                    <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4" /> {app.location}</span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-2xl font-black text-neo-green">{app.matchScore}%</div>
+                  <div className="text-[10px] font-mono text-gray-400 uppercase">AI Score</div>
+                </div>
+              </div>
+
+              <div className="mt-4 pt-3 border-t border-gray-100 dark:border-zinc-800 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-3.5 h-3.5 text-neo-blue" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">
+                    Applied {formatDate(app.appliedAt)}
+                  </span>
+                </div>
+                <NeoBadge
+                  variant={app.status === 'Applied' ? 'default' : app.status === 'Reject' ? 'red' : 'green'}
+                  className="text-[10px] py-0.5 px-3 h-auto"
+                >
+                  {app.status}
+                </NeoBadge>
+              </div>
+            </div>
+          ))}
+        </div>
+      </NeoModal>
+    </div>
   );
 }

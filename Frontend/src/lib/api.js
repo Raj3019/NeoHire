@@ -250,12 +250,12 @@ export const jobsAPI = {
   },
 
   getById: async (id) => {
-    const response = await api.get(`/job/${id}`);
+    const response = await api.get(`/jobs/${id}`);
     return response.data;
   },
 
   scoreResume: async (id, formData) => {
-    const response = await api.post(`/job/score/${id}`, formData, {
+    const response = await api.post(`/applications/score/${id}`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -264,7 +264,7 @@ export const jobsAPI = {
   },
 
   apply: async (id, formData) => {
-    const response = await api.post(`/job/${id}`, formData, {
+    const response = await api.post(`/applications/${id}`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -273,12 +273,12 @@ export const jobsAPI = {
   },
 
   update: async (id, data) => {
-    const response = await api.put(`/job/${id}`, data);
+    const response = await api.put(`/jobs/${id}`, data);
     return response.data;
   },
 
   create: async (data) => {
-    const response = await api.post('/job/create', data);
+    const response = await api.post('/jobs/create', data);
     return response.data;
   },
 };

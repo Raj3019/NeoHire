@@ -54,7 +54,7 @@ export default function TalentRadarOptIn() {
   };
 
   const hasResume = !!user?.resumeFileURL;
-  const hasAccess = user?.currentPlan?.features?.talentRadarVisible === true;
+  const hasAccess = true; // FEATURE UNLOCKED: Plan check bypassed for testing/early access
 
   if (isLoading) {
     return (
@@ -91,16 +91,13 @@ export default function TalentRadarOptIn() {
           <div className="space-y-2">
             <div className="flex items-center gap-3">
               <div className="p-2.5 bg-gradient-to-br from-neo-blue via-blue-400 to-blue-600 border-2 border-black dark:border-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)]">
-                <Crown className="w-5 h-5 text-white" />
+                <Radio className="w-5 h-5 text-white" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
                   <h3 className="text-xl font-black uppercase dark:text-white">Talent Radar Visibility</h3>
-                  <span className="px-2 py-0.5 text-[10px] font-black uppercase bg-gradient-to-r from-neo-blue to-blue-400 text-white border border-black shadow-sm">
-                    ✨ PRO
-                  </span>
                 </div>
-                <p className="text-xs text-neo-blue font-bold">Premium Feature</p>
+                <p className="text-xs text-neo-blue font-bold tracking-widest uppercase">Passive Discovery</p>
               </div>
             </div>
             <p className="text-sm text-gray-600 dark:text-gray-400 max-w-md font-medium">
@@ -129,18 +126,6 @@ export default function TalentRadarOptIn() {
             </span>
           </div>
         </div>
-
-        {/* Access Notification */}
-        {!hasAccess && (
-          <div className="mt-6 p-4 bg-neo-yellow/10 border-2 border-neo-yellow/30 rounded-lg flex gap-3 items-start">
-            <Crown className="w-5 h-5 text-neo-yellow shrink-0 mt-0.5" />
-            <div>
-              <p className="text-sm font-bold text-neo-yellow uppercase">Upgrade Required</p>
-              <p className="text-xs text-gray-500 mt-1 font-medium italic">Discoverability is reserved for our premium members. Upgrade your plan to be seen by top recruiters.</p>
-              <NeoButton variant="secondary" size="sm" className="mt-3 text-[10px] py-1">View Pricing &rarr;</NeoButton>
-            </div>
-          </div>
-        )}
 
         {/* Requirements Notification */}
         {hasAccess && !hasResume && (
