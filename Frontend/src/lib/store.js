@@ -206,7 +206,14 @@ export const useAuthStore = create(
                 empErr.response?.data?.error || empErr.response?.data?.message ||
                 recErr.response?.data?.error || recErr.response?.data?.message ||
                 'Failed to fetch profile.';
-              if (empErr.response?.status === 401 || empErr.response?.status === 403 || recErr.response?.status === 401 || recErr.response?.status === 403) {
+              // Only logout if both returned 401 (Invalid Session)
+              // If one returned 403/404, it might just be a role mismatch or missing profile, not invalid authentication
+              const isValidSessionError = (status) => status === 401 || status === 403;
+              const recStatus = recErr.response?.status;
+              const empStatus = empErr.response?.status;
+
+              // If both returned 401, the session is definitely invalid
+              if (recStatus === 401 && empStatus === 401) {
                 set({ user: null, isAuthenticated: false, error: errorMessage, isLoading: false });
               } else {
                 set({ isLoading: false });
@@ -216,7 +223,7 @@ export const useAuthStore = create(
           }
         } catch (error) {
           const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Failed to fetch profile.';
-          if (error.response?.status === 401 || error.response?.status === 403) {
+          if (error.response?.status === 401) {
             set({ user: null, isAuthenticated: false, error: errorMessage, isLoading: false });
           } else {
             // Check for rate limit/server error before setting local error

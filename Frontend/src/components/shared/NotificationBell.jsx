@@ -10,6 +10,7 @@ import Link from 'next/link';
 const NotificationBell = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
+  const [isPositioned, setIsPositioned] = useState(false); // Track if position is calculated
   const { notifications, unreadCount, fetchNotifications, markAsRead, markAllAsRead, deleteNotification, isLoading } = useNotifications();
   const buttonRef = useRef(null);
   const dropdownRef = useRef(null);
@@ -41,25 +42,36 @@ const NotificationBell = () => {
   // Update dropdown position when opening
   useEffect(() => {
     if (isOpen && buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      const dropdownWidth = 384; // w-96 = 24rem = 384px
-      const windowWidth = window.innerWidth;
+      // Reset positioned state first
+      setIsPositioned(false);
 
-      // Calculate left position - prefer right-aligned but ensure it doesn't overflow
-      let left = rect.right - dropdownWidth;
-      if (left < 10) {
-        // If it would overflow left, align to left edge of button instead
-        left = rect.left;
-      }
-      // Ensure it doesn't overflow right side
-      if (left + dropdownWidth > windowWidth - 10) {
-        left = windowWidth - dropdownWidth - 10;
-      }
+      // Use requestAnimationFrame to ensure DOM is ready
+      requestAnimationFrame(() => {
+        const rect = buttonRef.current.getBoundingClientRect();
+        const dropdownWidth = 384; // w-96 = 24rem = 384px
+        const windowWidth = window.innerWidth;
 
-      setDropdownPosition({
-        top: rect.bottom + 12, // mt-3 = 12px
-        left: Math.max(10, left)
+        // Calculate left position - prefer right-aligned but ensure it doesn't overflow
+        let left = rect.right - dropdownWidth;
+        if (left < 10) {
+          // If it would overflow left, align to left edge of button instead
+          left = rect.left;
+        }
+        // Ensure it doesn't overflow right side
+        if (left + dropdownWidth > windowWidth - 10) {
+          left = windowWidth - dropdownWidth - 10;
+        }
+
+        setDropdownPosition({
+          top: rect.bottom + 12, // mt-3 = 12px
+          left: Math.max(10, left)
+        });
+
+        // Mark as positioned after setting position
+        setIsPositioned(true);
       });
+    } else {
+      setIsPositioned(false);
     }
   }, [isOpen]);
 
@@ -68,14 +80,15 @@ const NotificationBell = () => {
       case 'JobPosted': return <Briefcase className="w-4 h-4 text-neo-blue" />;
       case 'ApplicationStatusUpdate': return <CheckCircle2 className="w-4 h-4 text-neo-green" />;
       case 'NewApplication': return <FileText className="w-4 h-4 text-neo-orange" />;
+      case 'AUTO_APPLY_SUCCESS': return <CheckCircle2 className="w-4 h-4 text-purple-500" />;
       default: return <Bell className="w-4 h-4 text-gray-500" />;
     }
   };
 
-  const dropdownContent = isOpen && mounted ? createPortal(
+  const dropdownContent = isOpen && mounted && isPositioned ? createPortal(
     <div
       ref={dropdownRef}
-      className="fixed w-80 md:w-96 bg-white dark:bg-zinc-900 border-4 border-neo-black dark:border-white shadow-neo dark:shadow-[8px_8px_0px_0px_#ffffff] z-[9999] animate-in fade-in slide-in-from-top-2"
+      className="fixed w-80 md:w-96 bg-white dark:bg-zinc-900 border-4 border-neo-black dark:border-white shadow-neo dark:shadow-[8px_8px_0px_0px_#ffffff] z-[9999] animate-in fade-in slide-in-from-top-2 duration-150"
       style={{ top: dropdownPosition.top, left: dropdownPosition.left }}
     >
       <div className="p-4 border-b-4 border-neo-black dark:border-white flex justify-between items-center bg-neo-yellow dark:bg-zinc-800">
@@ -106,7 +119,7 @@ const NotificationBell = () => {
           </div>
         ) : (
           <div className="divide-y-2 divide-neo-black dark:divide-white">
-            {notifications.map((notif) => (
+            {notifications.slice(0, 2).map((notif) => (
               <div
                 key={notif._id}
                 className={`p-4 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors relative group ${!notif.isRead ? 'bg-neo-blue/5' : ''}`}

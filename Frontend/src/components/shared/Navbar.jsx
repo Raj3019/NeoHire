@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { NeoButton } from '@/components/ui/neo';
 import { useAuthStore } from '@/lib/store';
-import { cookieStorage } from '@/lib/utils';
+// Update import to include hasValidAuth
+import { cookieStorage, hasValidAuth } from '@/lib/utils';
 import NotificationBell from './NotificationBell';
 import { useNotificationSocket } from '@/lib/notificationStore';
 
@@ -114,6 +115,17 @@ const NavbarContent = () => {
     }
 
     if (!user) {
+      // Check if we are on a protected route where we expect auth to load
+      const isProtectedRoute = pathname?.startsWith('/recruiter') ||
+        pathname?.startsWith('/candidate') ||
+        pathname?.startsWith('/admin');
+
+      // If we have a valid auth token OR we are on a protected route,
+      // hide the public links while we wait for auth state to hydrate/fetch
+      if (hasValidAuth() || isProtectedRoute) {
+        return null;
+      }
+
       return (
         <>
           <Link href={isRecruiterMode ? "/?mode=recruiter" : "/"} className={baseClass}>HOME</Link>

@@ -71,35 +71,43 @@ export const scrubStorage = () => {
 
 /**
  * Robust check if the user might be authenticated.
- * Checks for actual token cookies OR a persisted authenticated state in auth-storage.
+ * Since httpOnly cookies cannot be read via JS, we rely on stored state.
+ * If ANY stored auth data exists, we should attempt to verify with the server.
  */
 export const hasValidAuth = () => {
   if (typeof window === 'undefined') return false;
 
-  // 1. Check for Better Auth session cookie (httpOnly, so we check document.cookie)
-  // Note: httpOnly cookies can't be read via JS, but we can check if it exists in the string
-  if (typeof document !== 'undefined' && document.cookie.includes('neohire_session')) {
-    return true;
-  }
-
-  // 2. Check for auth-storage in COOKIES (Zustand persisted state)
+  // 1. Check for auth-storage in COOKIES (Zustand persisted state)
   const authCookie = cookieStorage.getItem('auth-storage');
   if (authCookie) {
     try {
       const parsed = JSON.parse(authCookie);
       const state = parsed.state || parsed;
-      if (state && state.isAuthenticated && state.user) return true;
+      // If we have any user info stored, consider it a valid auth hint
+      if (state && (state.isAuthenticated || state.user)) return true;
     } catch (e) { }
   }
 
-  // 3. Check for auth-storage in LOCALSTORAGE (Fallback for large state)
+  // 2. Check for auth-storage in LOCALSTORAGE (Fallback for large state)
   if (typeof localStorage !== 'undefined') {
     const localS = localStorage.getItem('auth-storage');
     if (localS) {
       try {
         const parsed = JSON.parse(localS);
         const state = parsed.state || parsed;
-        if (state && state.isAuthenticated && state.user) return true;
+        if (state && (state.isAuthenticated || state.user)) return true;
+      } catch (e) { }
+    }
+  }
+
+  // 3. Session storage may also have auth data
+  if (typeof sessionStorage !== 'undefined') {
+    const sessionS = sessionStorage.getItem('auth-storage');
+    if (sessionS) {
+      try {
+        const parsed = JSON.parse(sessionS);
+        const state = parsed.state || parsed;
+        if (state && (state.isAuthenticated || state.user)) return true;
       } catch (e) { }
     }
   }

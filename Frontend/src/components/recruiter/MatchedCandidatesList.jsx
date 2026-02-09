@@ -22,108 +22,114 @@ export default function MatchedCandidatesList({ matches, alertName, onClose }) {
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center p-6 bg-white dark:bg-zinc-900 border-4 border-neo-black dark:border-white shadow-neo-sm relative overflow-hidden">
-        {/* Subtle decorative element */}
-        <div className="absolute left-0 top-0 bottom-0 w-2 bg-neo-blue" />
-
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="w-2 h-2 bg-neo-green animate-ping rounded-full" />
-            <h2 className="text-2xl font-black uppercase dark:text-white leading-tight">
-              Matches for <span className="text-neo-blue">"{alertName}"</span>
-            </h2>
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row justify-between items-center p-5 bg-white dark:bg-zinc-900 border-4 border-neo-black dark:border-white shadow-neo relative">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-neo-yellow border-2 border-black flex items-center justify-center shadow-neo-sm">
+            <Zap className="w-6 h-6 text-black fill-current" />
           </div>
-          <p className="font-mono text-xs text-gray-400 font-bold uppercase tracking-wider">
-            Detected {matches.length} profile signals in the global database
-          </p>
+          <div>
+            <h2 className="text-2xl font-black uppercase dark:text-white leading-none">
+              Matches Found
+            </h2>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="font-mono text-xs font-bold bg-neo-black text-white px-2 py-0.5">
+                {matches.length} DETECTED
+              </span>
+              <span className="font-mono text-xs font-bold text-neo-blue uppercase tracking-wider">
+                FOR "{alertName}"
+              </span>
+            </div>
+          </div>
         </div>
 
-        <NeoButton variant="secondary" onClick={onClose} className="mt-4 md:mt-0 hover:bg-neo-red hover:text-white border-2">
-          <X className="w-5 h-5 mr-2" /> Close Results
+        <NeoButton
+          variant="secondary"
+          onClick={onClose}
+          className="mt-4 md:mt-0 border-2 shadow-neo-sm hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all"
+        >
+          <X className="w-5 h-5 mr-2" /> CLOSE RESULTS
         </NeoButton>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pb-10">
+      {/* Grid of Matches */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-12">
         {matches.map((match, index) => (
           <NeoCard
             key={match.employeeId || index}
-            className="border-4 bg-white dark:bg-zinc-950 shadow-neo-sm hover:shadow-neo hover:-translate-x-1 hover:-translate-y-1 transition-all group overflow-hidden"
+            className="border-4 bg-white dark:bg-zinc-950 shadow-neo hover:shadow-neo-lg hover:-translate-y-1 transition-all duration-200 group flex flex-col pt-0 px-0 pb-0 overflow-hidden"
           >
-            <div className="flex flex-col sm:flex-row justify-between items-start gap-4 p-6">
-              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
-                <div className="relative">
-                  <div className="w-20 h-20 bg-neo-pink border-4 border-neo-black dark:border-white flex items-center justify-center text-white font-black text-3xl shadow-neo-sm group-hover:scale-105 transition-transform">
-                    {match.name?.charAt(0) || 'U'}
-                  </div>
-                  <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-neo-blue border-2 border-black flex items-center justify-center shadow-sm text-white">
-                    <Zap className="w-4 h-4 fill-current" />
-                  </div>
+            {/* Candidate Head */}
+            <div className="p-5 border-b-4 border-black dark:border-white flex justify-between items-start gap-3 bg-gray-50 dark:bg-zinc-900/50">
+              <div className="flex gap-4">
+                <div className="w-16 h-16 bg-white border-2 border-black dark:border-white shadow-neo-sm flex items-center justify-center flex-shrink-0 group-hover:bg-neo-yellow transition-colors">
+                  <span className="font-black text-3xl uppercase">{match.name?.charAt(0) || 'U'}</span>
                 </div>
-
-                <div className="text-center sm:text-left">
-                  <h3 className="text-2xl font-black dark:text-white uppercase tracking-tight group-hover:text-neo-blue transition-colors">
+                <div>
+                  <h3 className="text-xl font-black uppercase leading-7 line-clamp-1 group-hover:text-neo-blue transition-colors">
                     {match.name}
                   </h3>
-                  <div className="flex flex-wrap justify-center sm:justify-start items-center gap-3 mt-2">
-                    <span className="flex items-center gap-1.5 font-mono text-xs font-black text-gray-500 dark:text-gray-400 uppercase">
-                      <Briefcase className="w-3.5 h-3.5" />
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    <span className="px-2 py-1 bg-white border-2 border-black text-[10px] font-black uppercase">
                       {match.experience} YRS XP
-                    </span>
-                    <span className="w-1.5 h-1.5 bg-gray-300 rounded-full" />
-                    <span className="flex items-center gap-1.5 font-mono text-xs font-black text-neo-blue uppercase">
-                      <Clock className="w-3.5 h-3.5" />
-                      {formatDate(match.matchedAt)}
                     </span>
                   </div>
                 </div>
               </div>
 
-              <div className="w-full sm:w-auto p-4 bg-neo-green/10 border-4 border-neo-green/30 text-center sm:text-right shadow-inner">
-                <div className="text-4xl font-black text-neo-green leading-none">{match.fitScore}%</div>
-                <div className="text-[10px] font-black text-neo-green/60 uppercase tracking-widest mt-1">Match Fit</div>
+              {/* Score Stamp */}
+              <div className="flex flex-col items-center">
+                <div className="bg-neo-green text-white border-2 border-black px-2 py-1 shadow-neo-sm transform rotate-2 group-hover:rotate-0 transition-transform">
+                  <span className="text-xl font-black leading-none">{match.fitScore}%</span>
+                </div>
+                <span className="text-[9px] font-black uppercase mt-1 tracking-widest opacity-50">FIT</span>
               </div>
             </div>
 
-            <div className="px-6 pb-6 pt-2">
-              <div className="text-xs font-black text-gray-400 uppercase mb-3 tracking-widest flex items-center gap-2">
-                <div className="flex-1 h-px bg-gray-100 dark:bg-zinc-800" />
-                Key Profile Signals
-                <div className="flex-1 h-px bg-gray-100 dark:bg-zinc-800" />
+            {/* Skills Body */}
+            <div className="p-5 flex-grow">
+              <div className="mb-4">
+                <div className="text-[10px] font-black uppercase text-gray-400 mb-2 flex items-center gap-2">
+                  <span className="w-2 h-2 bg-neo-blue border border-black"></span>
+                  Top Signals Detected
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {match.skills?.slice(0, 5).map(skill => (
+                    <span key={skill} className="px-2 py-1 bg-neo-blue/10 border-2 border-black dark:border-white text-[10px] font-black uppercase">
+                      {skill}
+                    </span>
+                  ))}
+                  {match.skills?.length > 5 && (
+                    <span className="px-2 py-1 bg-gray-200 border-2 border-black text-[10px] font-black uppercase">
+                      +{match.skills.length - 5}
+                    </span>
+                  )}
+                </div>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {match.skills?.slice(0, 6).map(skill => (
-                  <span key={skill} className="px-3 py-1 bg-white dark:bg-zinc-800 border-2 border-neo-black dark:border-white text-[10px] font-black uppercase shadow-neo-sm group-hover:shadow-none transition-shadow">
-                    {skill}
-                  </span>
-                ))}
-                {match.skills?.length > 6 && (
-                  <NeoBadge variant="secondary" className="text-[10px] uppercase font-black bg-gray-100 dark:bg-zinc-800">
-                    +{match.skills.length - 6} more
-                  </NeoBadge>
-                )}
+
+              <div className="flex justify-between items-end">
+                <div className="text-[10px] font-mono font-bold text-gray-500 uppercase">
+                  Matched: {formatDate(match.matchedAt)}
+                </div>
               </div>
             </div>
 
-            <div className="bg-gray-50 dark:bg-zinc-900 border-t-4 border-neo-black dark:border-white p-4 flex gap-4">
+            {/* Action Footer */}
+            <div className="p-4 bg-white dark:bg-zinc-900 border-t-4 border-black dark:border-white flex gap-3">
               {match.resumeUrl ? (
                 <a
                   href={match.resumeUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 flex items-center justify-center gap-3 bg-neo-blue text-white px-4 py-3 border-2 border-neo-black shadow-neo-sm hover:shadow-neo hover:-translate-y-0.5 active:translate-y-0 transition-all font-black uppercase text-xs"
+                  className="flex-1 bg-neo-black text-white hover:bg-neo-blue dark:bg-white dark:text-black dark:hover:bg-neo-blue dark:hover:text-white border-2 border-transparent hover:border-black transition-all py-3 px-4 flex items-center justify-center gap-2 font-black uppercase text-xs tracking-wider shadow-neo-sm hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]"
                 >
-                  <FileText className="w-4 h-4" />
-                  Request Full Profile
+                  <FileText className="w-4 h-4" /> View Profile
                 </a>
               ) : (
-                <div className="flex-1 text-center py-3 font-mono text-xs text-gray-400 uppercase font-bold italic">
-                  Profile Details Private
+                <div className="flex-1 bg-gray-100 border-2 border-gray-300 text-gray-400 py-3 px-4 flex items-center justify-center font-black uppercase text-xs tracking-wider cursor-not-allowed">
+                  Private
                 </div>
               )}
-
-              <button className="p-3 bg-white dark:bg-zinc-800 border-2 border-neo-black dark:border-white shadow-neo-sm hover:bg-neo-blue hover:text-white transition-all text-black dark:text-white">
-                <ExternalLink className="w-4 h-4" />
-              </button>
             </div>
           </NeoCard>
         ))}

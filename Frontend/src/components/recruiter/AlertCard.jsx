@@ -53,30 +53,29 @@ export default function AlertCard({ alert, onEdit, onDelete, onToggle, onViewMat
         </div>
       </div>
 
-      <div className="space-y-4 mb-8 h-32 overflow-hidden relative">
-        <div>
-          <div className="flex flex-wrap gap-2">
-            {alert.requiredSkills?.map(skill => (
-              <span key={skill} className="px-2 py-1 bg-white dark:bg-zinc-800 border-2 border-black dark:border-white text-[9px] font-black text-black dark:text-white uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-none">
-                {skill}
-              </span>
-            ))}
-          </div>
+      {/* Skills - fixed height with overflow */}
+      <div className="mb-4 h-16 overflow-hidden relative">
+        <div className="flex flex-wrap gap-2">
+          {alert.requiredSkills?.map(skill => (
+            <span key={skill} className="px-2 py-1 bg-white dark:bg-zinc-800 border-2 border-black dark:border-white text-[9px] font-black text-black dark:text-white uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-none">
+              {skill}
+            </span>
+          ))}
         </div>
+        {/* Fade Out Edge for skills */}
+        <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-white dark:from-zinc-900 to-transparent pointer-events-none" />
+      </div>
 
-        <div className="grid grid-cols-2 gap-4 pt-4 border-t-2 border-gray-100 dark:border-zinc-800">
-          <div className="flex flex-col">
-            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">XP Required</span>
-            <span className="font-black text-xl dark:text-white">{alert.minExperience}+ <span className="text-[10px] opacity-50">YRS</span></span>
-          </div>
-          <div className="flex flex-col">
-            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Threshold</span>
-            <span className="font-black text-xl text-neo-blue">{alert.minFitScore}%</span>
-          </div>
+      {/* XP Required and Threshold - always visible */}
+      <div className="grid grid-cols-2 gap-4 pt-4 mb-4 border-t-2 border-gray-100 dark:border-zinc-800">
+        <div className="flex flex-col">
+          <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">XP Required</span>
+          <span className="font-black text-xl dark:text-white">{alert.minExperience ?? 0}+ <span className="text-[10px] opacity-50">YRS</span></span>
         </div>
-
-        {/* Fade Out Edge */}
-        <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white dark:from-zinc-900 to-transparent pointer-events-none" />
+        <div className="flex flex-col">
+          <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Threshold</span>
+          <span className="font-black text-xl text-neo-blue">{alert.minFitScore ?? 80}%</span>
+        </div>
       </div>
 
       <div className="flex gap-3 relative z-20">

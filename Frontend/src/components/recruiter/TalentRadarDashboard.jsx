@@ -26,15 +26,15 @@ export default function TalentRadarDashboard() {
     loadAlerts();
   }, []);
 
-  const loadAlerts = async () => {
+  const loadAlerts = async (showLoading = true) => {
     try {
-      setIsLoading(true);
+      if (showLoading) setIsLoading(true);
       const res = await talentRadarAPI.getAlerts();
       setAlerts(res.alerts || []);
     } catch (error) {
       console.error('Failed to load alerts:', error);
     } finally {
-      setIsLoading(false);
+      if (showLoading) setIsLoading(false);
     }
   };
 
@@ -47,7 +47,7 @@ export default function TalentRadarDashboard() {
       }
       setShowCreateModal(false);
       setEditingAlert(null);
-      loadAlerts();
+      loadAlerts(!editingAlert); // Only show loading if creating new, optional
     } catch (error) {
       const errorMsg = error.response?.data?.message || 'Action failed';
       alert(errorMsg);
@@ -55,11 +55,17 @@ export default function TalentRadarDashboard() {
   };
 
   const handleToggle = async (alertId) => {
+    // Optimistic update to make UI feel instant
+    setAlerts(current => current.map(a =>
+      a._id === alertId ? { ...a, isActive: !a.isActive } : a
+    ));
+
     try {
       await talentRadarAPI.toggleAlert(alertId);
-      loadAlerts();
+      loadAlerts(false); // Refresh data silently in background
     } catch (error) {
       console.error('Toggle failed:', error);
+      loadAlerts(false); // Revert on failure
     }
   };
 
@@ -168,39 +174,39 @@ export default function TalentRadarDashboard() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       {/* Stats Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <NeoCard className="bg-neo-blue text-white shadow-neo border-4 dark:border-white">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <NeoCard className="bg-neo-blue text-white shadow-neo border-2 dark:border-white p-4">
           <div className="flex justify-between items-start">
             <div>
-              <h3 className="font-mono text-sm opacity-80 uppercase font-bold tracking-widest">Active Radars</h3>
-              <p className="text-5xl font-black mt-2">{activeAlerts}</p>
+              <h3 className="font-mono text-xs opacity-80 uppercase font-bold tracking-widest">Active Radars</h3>
+              <p className="text-4xl font-black mt-1">{activeAlerts}</p>
             </div>
-            <div className="p-3 bg-white/20 rounded-lg">
-              <Radio className="w-6 h-6 animate-pulse" />
+            <div className="p-2 bg-white/20 rounded-lg">
+              <Radio className="w-5 h-5 animate-pulse" />
             </div>
           </div>
         </NeoCard>
 
-        <NeoCard className="bg-neo-orange text-black shadow-neo border-4 dark:border-white">
+        <NeoCard className="bg-neo-orange text-black shadow-neo border-2 dark:border-white p-4">
           <div className="flex justify-between items-start">
             <div>
-              <h3 className="font-mono text-sm opacity-80 uppercase font-bold tracking-widest">Total Alerts</h3>
-              <p className="text-5xl font-black mt-2">{alerts.length}</p>
+              <h3 className="font-mono text-xs opacity-80 uppercase font-bold tracking-widest">Total Alerts</h3>
+              <p className="text-4xl font-black mt-1">{alerts.length}</p>
             </div>
-            <div className="p-3 bg-black/10 rounded-lg">
-              <Target className="w-6 h-6" />
+            <div className="p-2 bg-black/10 rounded-lg">
+              <Target className="w-5 h-5" />
             </div>
           </div>
         </NeoCard>
 
-        <NeoCard className="bg-neo-green text-white shadow-neo border-4 dark:border-white">
+        <NeoCard className="bg-neo-green text-white shadow-neo border-2 dark:border-white p-4">
           <div className="flex justify-between items-start">
             <div>
-              <h3 className="font-mono text-sm opacity-80 uppercase font-bold tracking-widest">Matched Talents</h3>
-              <p className="text-5xl font-black mt-2">{totalMatches}</p>
+              <h3 className="font-mono text-xs opacity-80 uppercase font-bold tracking-widest">Matched Talents</h3>
+              <p className="text-4xl font-black mt-1">{totalMatches}</p>
             </div>
-            <div className="p-3 bg-white/20 rounded-lg">
-              <Zap className="w-6 h-6" />
+            <div className="p-2 bg-white/20 rounded-lg">
+              <Zap className="w-5 h-5" />
             </div>
           </div>
         </NeoCard>
