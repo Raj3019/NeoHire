@@ -147,10 +147,11 @@ export default function CreateAlertModal({ alert, onClose, onSave }) {
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Remote, UK, etc."
-                  value={formData.location}
+                  placeholder={formData.workMode === 'Remote' ? 'Not required for Remote' : 'e.g. Mumbai, London, New York'}
+                  value={formData.workMode === 'Remote' ? '' : formData.location}
                   onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  className="w-full p-4 border-2 border-neo-black dark:border-white dark:bg-zinc-900 dark:text-white focus:outline-none font-bold shadow-neo-sm"
+                  disabled={formData.workMode === 'Remote'}
+                  className={`w-full p-4 border-2 border-neo-black dark:border-white dark:bg-zinc-900 dark:text-white focus:outline-none font-bold shadow-neo-sm ${formData.workMode === 'Remote' ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-zinc-800' : ''}`}
                 />
               </div>
 
@@ -161,7 +162,10 @@ export default function CreateAlertModal({ alert, onClose, onSave }) {
                 <div className="relative">
                   <select
                     value={formData.workMode}
-                    onChange={(e) => setFormData({ ...formData, workMode: e.target.value })}
+                    onChange={(e) => {
+                      const newMode = e.target.value;
+                      setFormData({ ...formData, workMode: newMode, ...(newMode === 'Remote' ? { location: '' } : {}) });
+                    }}
                     className="w-full p-4 border-2 border-neo-black dark:border-white dark:bg-zinc-900 dark:text-white focus:outline-none font-black appearance-none shadow-neo-sm"
                   >
                     <option value="">Any Mode</option>

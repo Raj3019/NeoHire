@@ -318,8 +318,14 @@ const runTalentRadarScan = async (io, userSockets) => {
         }
 
         // Location filter - only apply if alert has a non-empty location
-        if (alert.location && alert.location.trim() !== '' && employee.currentCity) {
-          if (!employee.currentCity.toLowerCase().includes(alert.location.toLowerCase())) {
+        // Skip location check if work mode is Remote (remote workers can be anywhere)
+        const isRemoteAlert = alert.workMode === 'Remote';
+        const locationValue = alert.location?.trim().toLowerCase() || '';
+        // If someone typed "remote" in location field, treat it as a work mode not a city
+        const isLocationJustRemote = locationValue === 'remote';
+
+        if (!isRemoteAlert && !isLocationJustRemote && locationValue !== '' && employee.currentCity) {
+          if (!employee.currentCity.toLowerCase().includes(locationValue)) {
             console.log(`  - ${employee.fullName}: Location mismatch - "${employee.currentCity}" doesn't match "${alert.location}"`);
             continue;
           }
