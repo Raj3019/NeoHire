@@ -7,28 +7,29 @@ require("dotenv").config();
 // const upload = multer({ dest: 'uploads/' })
 const upload = require("../middleware/multer.middleware");
 const { uploadLimiter } = require("../middleware/rateLimit.middleware");
+const { checkUserStatus } = require("../middleware/userStatus.middleware");
 
 //GET - PROFILE
-employeeRouter.get("/profile", authenticateSession, profileEmployee)
+employeeRouter.get("/profile", authenticateSession,checkUserStatus, profileEmployee)
 // PUT - PROFILE
 
-employeeRouter.put("/profile/:id", authenticateSession, editEmployee)
+employeeRouter.put("/profile/:id", authenticateSession, checkUserStatus,editEmployee)
 //POST - RESUME UPLOAD
-employeeRouter.post("/profile/resume", authenticateSession, uploadLimiter, upload.single('resume'), uploadResume)
+employeeRouter.post("/profile/resume", authenticateSession,checkUserStatus, uploadLimiter, upload.single('resume'), uploadResume)
 
-employeeRouter.post("/profile/picture", authenticateSession, uploadLimiter, upload.single('profilePicture'), uploadProfilePicture)
+employeeRouter.post("/profile/picture", authenticateSession, checkUserStatus, uploadLimiter, upload.single('profilePicture'), uploadProfilePicture)
 
 // Dashboard
-employeeRouter.get("/dashboard", authenticateSession, employeeDashboard)
+employeeRouter.get("/dashboard", authenticateSession, checkUserStatus, employeeDashboard)
 
 // GET - ALL APPLICATIONS
-employeeRouter.get("/applications", authenticateSession, getMyApplications)
+employeeRouter.get("/applications", authenticateSession,checkUserStatus, getMyApplications)
 
 // GET - APPLICATION BY ID
-employeeRouter.get("/application/:jobId", authenticateSession, getApplicationById)
+employeeRouter.get("/application/:jobId", authenticateSession,checkUserStatus, getApplicationById)
 
 //GET - RECOMMENDED JOBS
-employeeRouter.get("/recommendations", authenticateSession, recommendJobToEmployee)
+employeeRouter.get("/recommendations", authenticateSession, checkUserStatus,recommendJobToEmployee)
 
 
 module.exports = employeeRouter

@@ -23,6 +23,9 @@ const { generalLimiter } = require("./middleware/rateLimit.middleware")
 // const planRouter = require('./routers/plan.router')
 // const subscriptionRouter = require('./routers/subscription.router')
 const talentRadarRouter = require('./routers/talentRadar.router')
+const Employee = require('./model/employee.model')
+const Recruiter = require('./model/recruiter.model')
+
 const frontendURL = process.env.FRONTEND_URL
 
 const server = http.createServer(app)
@@ -98,6 +101,46 @@ app.use(cookieParser())
 app.use('/api', generalLimiter)
 
 // toNodeHandler -> Converts our auth instance to an Express-compatible handler
+
+// Pre-login interceptor: Block suspended/banned users BEFORE Better Auth creates a session
+app.post('/api/auth/sign-in/email', async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    if (!email) return next();
+
+    const lowerEmail = email.toLowerCase().trim();
+
+    // Check both collections for this email
+    const employee = await Employee.findOne({ email: lowerEmail }).select('status');
+    const recruiter = await Recruiter.findOne({ email: lowerEmail }).select('status');
+
+    const userDoc = employee || recruiter;
+
+    if (userDoc && userDoc.status === 'Suspended') {
+      return res.status(403).json({
+        success: false,
+        message: 'Your account has been suspended. Please contact support for assistance.',
+        statusCode: 'ACCOUNT_SUSPENDED'
+      });
+    }
+
+    if (userDoc && userDoc.status === 'Banned') {
+      return res.status(403).json({
+        success: false,
+        message: 'Your account has been permanently banned. Please contact support.',
+        statusCode: 'ACCOUNT_BANNED'
+      });
+    }
+
+    // User is Active (or not found — let Better Auth handle invalid credentials)
+    next();
+  } catch (error) {
+    console.error('Pre-login status check error:', error);
+    // Don't block login on errors — let Better Auth handle it
+    next();
+  }
+});
+
 app.all('/api/auth/*path', toNodeHandler(auth))
 app.use('/api/employee', employeeRouter)
 app.use('/api/recruiter', recruiterRoute)

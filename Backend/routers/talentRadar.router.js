@@ -12,11 +12,13 @@ const {
 } = require('../controller/talentRadar.controller');
 
 const { authenticateSession, authenticateRole } = require('../middleware/auth.middleware');
+const { checkUserStatus } = require('../middleware/userStatus.middleware');
 
 // Create a new talent alert
 talentRadarRouter.post(
   '/alerts',
   authenticateSession,
+  checkUserStatus,
   authenticateRole('Recruiter'),
   createAlert
 );
@@ -25,6 +27,7 @@ talentRadarRouter.post(
 talentRadarRouter.get(
   '/alerts',
   authenticateSession,
+  checkUserStatus,
   authenticateRole('Recruiter'),
   getMyAlerts
 );
@@ -33,6 +36,7 @@ talentRadarRouter.get(
 talentRadarRouter.put(
   '/alerts/:alertId',
   authenticateSession,
+  checkUserStatus,
   authenticateRole('Recruiter'),
   updateAlert
 );
@@ -41,6 +45,7 @@ talentRadarRouter.put(
 talentRadarRouter.delete(
   '/alerts/:alertId',
   authenticateSession,
+  checkUserStatus,
   authenticateRole('Recruiter'),
   deleteAlert
 );
@@ -49,6 +54,7 @@ talentRadarRouter.delete(
 talentRadarRouter.patch(
   '/alerts/:alertId/toggle',
   authenticateSession,
+  checkUserStatus,
   authenticateRole('Recruiter'),
   toggleAlert
 );
@@ -57,6 +63,7 @@ talentRadarRouter.patch(
 talentRadarRouter.get(
   '/alerts/:alertId/matches',
   authenticateSession,
+  checkUserStatus,
   authenticateRole('Recruiter'),
   getMatchedEmployees
 );
@@ -65,6 +72,7 @@ talentRadarRouter.get(
 talentRadarRouter.put(
   '/opt-in',
   authenticateSession,
+  checkUserStatus,
   authenticateRole('Employee'),
   toggleTalentRadarOptIn
 );

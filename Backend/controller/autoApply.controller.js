@@ -12,6 +12,7 @@ const runAutoApplyForAllCandidates = async (io, userSockets) => {
   try {
     const eligibleEmployee = await Employee.find({
       autoApplyEnabled: true,
+      status: "Active",
       resumeFileURL: { $exists: true, $ne: "" },
       skills: { $exists: true, $not: { $size: 0 } },
       phone: { $exists: true, $ne: "" },

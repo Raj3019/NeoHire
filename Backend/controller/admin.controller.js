@@ -3,6 +3,7 @@ const Recruiter = require("../model/recruiter.model")
 const Job = require("../model/job.model")
 const Application = require("../model/application.model")
 const { MongoClient } = require("mongodb")
+const { sendStatusChangeEmail } = require("../utils/emailService.utlis")
 
 // Connect to MongoDB to access Better Auth user collection
 const client = new MongoClient(process.env.MONGODB_URL)
@@ -283,6 +284,8 @@ const updateUserStatus = async (req, res) => {
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' })
     }
+    
+    await sendStatusChangeEmail(user.email, user.fullName,status)
 
     res.status(200).json({
       success: true,
