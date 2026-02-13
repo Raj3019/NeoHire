@@ -332,3 +332,99 @@ input[type="date"] {
 .dark .mock-btn::before {
   border-top-color: #FFFFFF;
 }
+
+/* ===== Landing Page Revamp Animations ===== */
+
+/* Floating decorative shapes in hero */
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-15px) rotate(3deg); }
+}
+
+@keyframes float-reverse {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(12px) rotate(-2deg); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-float-reverse {
+  animation: float-reverse 7s ease-in-out infinite;
+}
+
+/* Typing cursor blink for hero tagline */
+@keyframes blink-cursor {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.animate-blink {
+  animation: blink-cursor 0.8s step-end infinite;
+}
+
+/* Pulse border glow for featured pricing */
+@keyframes pulse-border {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 208, 38, 0.4), 8px 8px 0px 0px #1E1E1E; }
+  50% { box-shadow: 0 0 20px 4px rgba(255, 208, 38, 0.3), 8px 8px 0px 0px #1E1E1E; }
+}
+
+@keyframes pulse-border-recruiter {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.4), 8px 8px 0px 0px #1E1E1E; }
+  50% { box-shadow: 0 0 20px 4px rgba(255, 107, 107, 0.3), 8px 8px 0px 0px #1E1E1E; }
+}
+
+.animate-pulse-border {
+  animation: pulse-border 2.5s ease-in-out infinite;
+}
+
+.animate-pulse-border-recruiter {
+  animation: pulse-border-recruiter 2.5s ease-in-out infinite;
+}
+
+/* Diagonal stripes for coming-soon cards */
+.diagonal-stripes {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 8px,
+    rgba(0, 0, 0, 0.03) 8px,
+    rgba(0, 0, 0, 0.03) 16px
+  );
+}
+
+.dark .diagonal-stripes {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 8px,
+    rgba(255, 255, 255, 0.03) 8px,
+    rgba(255, 255, 255, 0.03) 16px
+  );
+}
+
+/* Connecting line draw animation for How It Works */
+@keyframes draw-line {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+
+.animate-draw-line {
+  animation: draw-line 1s ease-out forwards;
+}
+
+/* Smooth accordion expand */
+.accordion-content {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.35s ease;
+}
+
+.accordion-content.open {
+  grid-template-rows: 1fr;
+}
+
+.accordion-content > div {
+  overflow: hidden;
+}

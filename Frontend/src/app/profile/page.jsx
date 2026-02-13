@@ -1292,8 +1292,9 @@ export default function ProfilePage() {
               </NeoCard>
             </div>
           </div>
-        </div>
-      )}
-    </AuthGuard>
+        </div >
+      )
+      }
+    </AuthGuard >
   );
 }

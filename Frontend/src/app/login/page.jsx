@@ -3,6 +3,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/lib/store';
+import { resetAccountRestrictedFlag } from '@/lib/api';
 import { NeoButton, NeoCard, NeoInput } from '@/components/ui/neo';
 import { Briefcase, User, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { cn, cookieStorage, hasValidAuth } from '@/lib/utils';
@@ -28,6 +29,9 @@ function LoginForm() {
   // Wait for client-side hydration
   useEffect(() => {
     setMounted(true);
+    // Reset the account restricted flag so suspended/banned users
+    // can see proper error messages when trying to login again
+    resetAccountRestrictedFlag();
   }, []);
 
   // Redirect authenticated users away from login page

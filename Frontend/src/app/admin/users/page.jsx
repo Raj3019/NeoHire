@@ -19,6 +19,7 @@ import {
   MoreHorizontal
 } from 'lucide-react';
 import { adminAPI } from '@/lib/api';
+import { useAuthStore } from '@/lib/store';
 import { NeoCard, NeoButton, NeoBadge, NeoInput } from '@/components/ui/neo';
 import { formatDate } from '@/lib/utils';
 import { clsx } from 'clsx';
@@ -28,6 +29,7 @@ import { twMerge } from 'tailwind-merge';
 export default function UserManagement() {
   const [users, setUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const currentAdmin = useAuthStore((state) => state.user);
   const [filters, setFilters] = useState({
     type: '',
     status: '',
@@ -228,27 +230,33 @@ export default function UserManagement() {
                   </td>
                   <td className="p-3 text-right">
                     <div className="flex items-center justify-end gap-1.5">
-                      <button
-                        title="Activate"
-                        className="p-1.5 border-2 border-neo-black bg-neo-green hover:shadow-[2px_2px_0px_0px_#000] transition-all"
-                        onClick={() => handleStatusUpdate(user._id, user.userType, 'Active')}
-                      >
-                        <ShieldCheck className="w-3.5 h-3.5 text-neo-black" />
-                      </button>
-                      <button
-                        title="Suspend"
-                        className="p-1.5 border-2 border-neo-black bg-neo-yellow hover:shadow-[2px_2px_0px_0px_#000] transition-all"
-                        onClick={() => handleStatusUpdate(user._id, user.userType, 'Suspended')}
-                      >
-                        <ShieldAlert className="w-3.5 h-3.5 text-neo-black" />
-                      </button>
-                      <button
-                        title="Ban"
-                        className="p-1.5 border-2 border-neo-black bg-neo-red hover:shadow-[2px_2px_0px_0px_#000] transition-all"
-                        onClick={() => handleStatusUpdate(user._id, user.userType, 'Banned')}
-                      >
-                        <Ban className="w-3.5 h-3.5 text-white" />
-                      </button>
+                      {user.email === currentAdmin?.email ? (
+                        <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider">That's you</span>
+                      ) : (
+                        <>
+                          <button
+                            title="Activate"
+                            className="p-1.5 border-2 border-neo-black bg-neo-green hover:shadow-[2px_2px_0px_0px_#000] transition-all"
+                            onClick={() => handleStatusUpdate(user._id, user.userType, 'Active')}
+                          >
+                            <ShieldCheck className="w-3.5 h-3.5 text-neo-black" />
+                          </button>
+                          <button
+                            title="Suspend"
+                            className="p-1.5 border-2 border-neo-black bg-neo-yellow hover:shadow-[2px_2px_0px_0px_#000] transition-all"
+                            onClick={() => handleStatusUpdate(user._id, user.userType, 'Suspended')}
+                          >
+                            <ShieldAlert className="w-3.5 h-3.5 text-neo-black" />
+                          </button>
+                          <button
+                            title="Ban"
+                            className="p-1.5 border-2 border-neo-black bg-neo-red hover:shadow-[2px_2px_0px_0px_#000] transition-all"
+                            onClick={() => handleStatusUpdate(user._id, user.userType, 'Banned')}
+                          >
+                            <Ban className="w-3.5 h-3.5 text-white" />
+                          </button>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>

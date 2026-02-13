@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { employeeAPI, recruiterAPI, jobsAPI } from './api';
+import { employeeAPI, recruiterAPI, jobsAPI, resetAccountRestrictedFlag, isAccountCurrentlyRestricted } from './api';
 import { cookieStorage, scrubStorage } from './utils';
 
 export const useAuthStore = create(
@@ -13,6 +13,8 @@ export const useAuthStore = create(
 
       // Login function - calls backend API
       login: async (email, password, role) => {
+        // Reset the restricted flag so login requests can go through after redirect
+        resetAccountRestrictedFlag();
         set({ isLoading: true, error: null });
         try {
           const api = (role === 'Recruiter' || role?.toLowerCase() === 'recruiter') ? recruiterAPI : employeeAPI;
@@ -39,6 +41,20 @@ export const useAuthStore = create(
             } catch (otherError) {
               // Ignore
             }
+          }
+
+          // ✅ If account was flagged restricted during profile fetch, abort login immediately
+          if (isAccountCurrentlyRestricted()) {
+            // Clear any session that Better Auth may have created
+            try { await employeeAPI.logout().catch(() => {}); } catch (e) {}
+            scrubStorage();
+            set({ user: null, isAuthenticated: false, isLoading: false, error: 'Your account has been restricted.' });
+            return {
+              success: false,
+              error: 'Your account has been restricted.',
+              isAccountRestricted: true,
+              isHandled: true  // Toast already shown by interceptor
+            };
           }
 
           // Build user object
@@ -97,12 +113,26 @@ export const useAuthStore = create(
           return { success: true, user };
         } catch (error) {
           const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Login failed. Please try again.';
+          const statusCode = error.response?.data?.statusCode;
+
           // Only set local error if not already handled by global toast (429/500)
           if (!error.isHandled) {
             set({ error: errorMessage, isLoading: false });
           } else {
             set({ isLoading: false });
           }
+
+          if (statusCode === 'ACCOUNT_SUSPENDED' || statusCode === 'ACCOUNT_BANNED') {
+            const errObj = new Error(error.response.data.message);
+            errObj.isHandled = false; // Let it show in UI
+            set({ isLoading: false, error: error.response.data.message });
+            return {
+              success: false,
+              error: error.response.data.message,
+              isAccountRestricted: true
+            };
+          }
+
           return { success: false, error: errorMessage, isHandled: error.isHandled };
         }
       },
@@ -212,8 +242,13 @@ export const useAuthStore = create(
               const recStatus = recErr.response?.status;
               const empStatus = empErr.response?.status;
 
-              // If both returned 401, the session is definitely invalid
-              if (recStatus === 401 && empStatus === 401) {
+              // If both failed with auth-related errors, clear the session
+              const isRestricted = (err) =>
+                err.response?.status === 401 ||
+                err.response?.data?.statusCode === 'ACCOUNT_SUSPENDED' ||
+                err.response?.data?.statusCode === 'ACCOUNT_BANNED';
+
+              if (isRestricted(recErr) && isRestricted(empErr)) {
                 set({ user: null, isAuthenticated: false, error: errorMessage, isLoading: false });
               } else {
                 set({ isLoading: false });
@@ -223,7 +258,10 @@ export const useAuthStore = create(
           }
         } catch (error) {
           const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Failed to fetch profile.';
-          if (error.response?.status === 401) {
+          const statusCode = error.response?.data?.statusCode;
+          const status = error.response?.status;
+
+          if (status === 401 || statusCode === 'ACCOUNT_SUSPENDED' || statusCode === 'ACCOUNT_BANNED') {
             set({ user: null, isAuthenticated: false, error: errorMessage, isLoading: false });
           } else {
             // Check for rate limit/server error before setting local error
@@ -245,7 +283,8 @@ export const useAuthStore = create(
         } catch (error) {
           // Ignore errors since we're logging out anyway
         } finally {
-          // Reset auth state
+          // Reset auth state and account restricted flag
+          resetAccountRestrictedFlag();
           set({ user: null, isAuthenticated: false, error: null });
 
           scrubStorage();

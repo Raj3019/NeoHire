@@ -2,6 +2,16 @@ import axios from 'axios';
 import { cookieStorage, scrubStorage } from './utils';
 import { useToast } from './toastStore';
 
+// ✅ Global flag to prevent multiple 403 redirects/toasts for suspended/banned accounts
+let isAccountRestricted = false;
+
+export const resetAccountRestrictedFlag = () => {
+  isAccountRestricted = false;
+};
+
+// Synchronous check — used by AuthGuard on every render
+export const isAccountCurrentlyRestricted = () => isAccountRestricted;
+
 // ✅ Use environment variable in production, relative path in development
 const getBaseURL = () => {
   // In production, use the backend Railway URL
@@ -25,6 +35,12 @@ const api = axios.create({
 // No need to manually add Authorization header
 api.interceptors.request.use(
   (config) => {
+    // If account is already flagged as restricted, cancel ALL outgoing requests immediately
+    if (isAccountRestricted) {
+      const controller = new AbortController();
+      controller.abort();
+      config.signal = controller.signal;
+    }
     // Better Auth manages authentication via httpOnly cookies
     // The browser automatically sends cookies with withCredentials: true
     return config;
@@ -38,6 +54,12 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // If already handling account restriction, silently reject everything
+    if (isAccountRestricted) {
+      error.isHandled = true;
+      return Promise.reject(error);
+    }
+
     // Get the request URL to check if it's an auth request
     const requestUrl = error.config?.url || '';
     // Better Auth endpoints pattern
@@ -71,6 +93,41 @@ api.interceptors.response.use(
         window.location.href = '/login';
       }
     }
+
+    if (error.response?.status === 403) {
+      const statusCode = error.response?.data?.statusCode;
+
+      if (statusCode === 'ACCOUNT_SUSPENDED' || statusCode === 'ACCOUNT_BANNED') {
+        // Set flag IMMEDIATELY so no other request triggers duplicate toasts/redirects
+        isAccountRestricted = true;
+
+        const message = error.response.data.message || 'Your account has been restricted.';
+
+        // Only show toast if this is NOT a login request (login page shows error in the card)
+        const isLoginRequest = requestUrl.includes('/auth/sign-in');
+        if (!isLoginRequest) {
+          useToast.getState().addToast(message, 'error', 8000);
+        }
+
+        // Clear auth state (cookies/localStorage)
+        scrubStorage();
+
+        // Dispatch event so AuthGuard immediately clears in-memory zustand state
+        // This prevents the dashboard from rendering while redirect is in progress
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('account-restricted', { detail: { message } }));
+        }
+
+        // Redirect once — only if not already on login page
+        if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
+
+        // Mark as handled so downstream doesn't show duplicate errors
+        error.isHandled = true;
+      }
+    }
+
     return Promise.reject(error);
   }
 );

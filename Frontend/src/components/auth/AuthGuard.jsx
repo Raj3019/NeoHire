@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '@/lib/store';
 import { cookieStorage, hasValidAuth, getStoredAuth } from '@/lib/utils';
+import { isAccountCurrentlyRestricted } from '@/lib/api';
 import { Loader2 } from 'lucide-react';
 
 // Helper to check if user has an allowed role
@@ -70,6 +71,16 @@ export default function AuthGuard({ children, allowedRoles }) {
       // });
     }
   }, [mounted, user?.role, userRole, pathname, allowedRoles, isAuthenticated, isAllowed, user, isHydrating]);
+
+  // Listen for account-restricted event (fired by api.js 403 interceptor)
+  // This immediately clears in-memory auth state so dashboard content is hidden
+  useEffect(() => {
+    const handleRestricted = () => {
+      useAuthStore.setState({ user: null, isAuthenticated: false, error: null });
+    };
+    window.addEventListener('account-restricted', handleRestricted);
+    return () => window.removeEventListener('account-restricted', handleRestricted);
+  }, []);
 
   // Wait for client-side hydration
   useEffect(() => {
@@ -141,6 +152,16 @@ export default function AuthGuard({ children, allowedRoles }) {
 
   // Show loader while mounting, hydrating, or checking auth
   if (!mounted || isHydrating) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center bg-neo-bg dark:bg-zinc-950">
+        <Loader2 className="w-10 h-10 animate-spin text-neo-yellow" />
+      </div>
+    );
+  }
+
+  // ✅ If the account was flagged as restricted by the api.js 403 interceptor,
+  // immediately show loader instead of dashboard content while redirect is in progress
+  if (isAccountCurrentlyRestricted()) {
     return (
       <div className="h-screen w-full flex items-center justify-center bg-neo-bg dark:bg-zinc-950">
         <Loader2 className="w-10 h-10 animate-spin text-neo-yellow" />
