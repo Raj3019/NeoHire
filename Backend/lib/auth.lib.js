@@ -18,6 +18,13 @@ const auth = betterAuth({
     requireEmailVerification: true
   },
 
+  socialProviders: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    },
+  },
+
   emailVerification: {
     sendVerificationEmail: async ({ user, url }) => {
       try {
@@ -91,7 +98,7 @@ const auth = betterAuth({
     additionalFields: {
       role: {
         type: "string",
-        required: true,
+        required: false,
         defaultValue: "Employee",
         input: true
       },
@@ -117,10 +124,12 @@ const auth = betterAuth({
             const profileName = user.name || user.fullName || '';
 
             if (user.role === 'Employee') {
-              await Employee.create({ betterAuthUserId: user.id, email: user.email, fullName: profileName })
+              await Employee.create({ betterAuthUserId: user.id, email: user.email, fullName: profileName, profilePicture: user.profilePicture || user.image || "", status: "Active" })
             } else if (user.role === 'Recruiter') {
-              await Recruiter.create({ betterAuthUserId: user.id, email: user.email, fullName: profileName })
+              await Recruiter.create({ betterAuthUserId: user.id, email: user.email, fullName: profileName, profilePicture: user.profilePicture || user.image || "", status: "Active" })
             }
+            // If no role is set (e.g. Google OAuth), skip profile creation here.
+            // The /api/auth/set-role endpoint will handle it after the OAuth callback.
           } catch (error) {
             console.error("Profile creation failed:", error);
             throw error
@@ -131,4 +140,4 @@ const auth = betterAuth({
   }
 })
 
-module.exports = { auth }
+module.exports = { auth, client }

@@ -430,8 +430,8 @@ export const tryAPI = {
 
 // Admin API endpoints
 export const adminAPI = {
-  getDashboard: async () => {
-    const response = await api.get('/admin/dashboard');
+  getDashboard: async (range = 7) => {
+    const response = await api.get('/admin/dashboard', { params: { range } });
     return response.data;
   },
   getUsers: async (params) => {
@@ -454,6 +454,36 @@ export const adminAPI = {
     const response = await api.delete(`/admin/jobs/${id}`);
     return response.data;
   },
+};
+
+// Google OAuth sign-in - POST to Better Auth then redirect to Google
+export const googleSignIn = async (role) => {
+  try {
+    const callbackURL = `${window.location.origin}/auth/google-callback?role=${role}`;
+    const response = await api.post('/auth/sign-in/social', {
+      provider: 'google',
+      callbackURL,
+    });
+    // Better Auth returns { url: "https://accounts.google.com/..." } or redirects
+    const redirectUrl = response.data?.url || response.data?.redirect;
+    if (redirectUrl) {
+      window.location.href = redirectUrl;
+    }
+  } catch (error) {
+    // If Better Auth returns a redirect in the error response (302-like behavior)
+    const redirectUrl = error.response?.data?.url || error.response?.data?.redirect;
+    if (redirectUrl) {
+      window.location.href = redirectUrl;
+    } else {
+      console.error('Google sign-in error:', error);
+    }
+  }
+};
+
+// Set role for Google-authenticated users after OAuth callback
+export const setGoogleRole = async (role) => {
+  const response = await api.post('/auth/set-role', { role });
+  return response.data;
 };
 
 export default api;

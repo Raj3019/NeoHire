@@ -13,7 +13,7 @@ const jobRouter = require("./routers/job.router")
 const applicationRouter = require("./routers/application.router")
 const notificationRouter = require('./routers/notification.router')
 const roastResumeRouter = require('./routers/resumeRoast.router')
-const { auth } = require("./lib/auth.lib")
+const { auth, client } = require("./lib/auth.lib")
 const { toNodeHandler } = require("better-auth/node")
 const adminRouter = require('./routers/admin.router')
 const autoApplyRouter = require('./routers/autoApply.router')
@@ -138,6 +138,85 @@ app.post('/api/auth/sign-in/email', async (req, res, next) => {
     console.error('Pre-login status check error:', error);
     // Don't block login on errors — let Better Auth handle it
     next();
+  }
+});
+
+app.get('/api/auth/callback/google', async (req, res, next) => {
+  try {
+    next()
+  } catch (error) {
+    console.error("Google OAuth status check error: ", error)
+    next()
+  }
+})
+
+// Set role for Google OAuth users after callback
+app.post('/api/auth/set-role', async (req, res) => {
+  try {
+    const { role } = req.body;
+    if (!role || !['Employee', 'Recruiter'].includes(role)) {
+      return res.status(400).json({ success: false, message: 'Invalid role. Must be Employee or Recruiter.' });
+    }
+
+    // Get session from Better Auth using the request cookies
+    const session = await auth.api.getSession({ headers: req.headers });
+    if (!session || !session.user) {
+      return res.status(401).json({ success: false, message: 'Not authenticated.' });
+    }
+
+    const user = session.user;
+
+    // Check if user already has a profile (prevent role switching)
+    const existingEmployee = await Employee.findOne({ betterAuthUserId: user.id });
+    const existingRecruiter = await Recruiter.findOne({ betterAuthUserId: user.id });
+
+    if (existingEmployee || existingRecruiter) {
+      // User already has a profile — determine their existing role
+      const existingRole = existingEmployee ? 'Employee' : 'Recruiter';
+      if (existingRole !== role) {
+        return res.status(403).json({
+          success: false,
+          message: `This Google account is already registered as ${existingRole === 'Employee' ? 'a Candidate' : 'a Recruiter'}. You cannot switch roles.`,
+          existingRole
+        });
+      }
+      // Same role — just return success (login flow)
+      return res.json({ success: true, role: existingRole, isExisting: true });
+    }
+
+    // No profile exists — create one (new sign-up via Google)
+    const profileName = user.name || '';
+    const profilePicture = user.image || '';
+
+    if (role === 'Employee') {
+      await Employee.create({
+        betterAuthUserId: user.id,
+        email: user.email,
+        fullName: profileName,
+        profilePicture,
+        status: 'Active'
+      });
+    } else {
+      await Recruiter.create({
+        betterAuthUserId: user.id,
+        email: user.email,
+        fullName: profileName,
+        profilePicture,
+        status: 'Active'
+      });
+    }
+
+    // Update the user's role in Better Auth's user collection
+    const db = client.db();
+    await db.collection('user').updateOne(
+      { _id: user.id },
+      { $set: { role } }
+    );
+
+    return res.json({ success: true, role, isExisting: false });
+  } catch (error) {
+    console.error('Set role error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to set role.' });
   }
 });
 
