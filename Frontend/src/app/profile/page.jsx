@@ -641,7 +641,7 @@ export default function ProfilePage() {
                         <span className="text-xs font-bold text-gray-600 dark:text-gray-300">Uploading...</span>
                       </div>
                     ) : (
-                      <img src={user?.profilePicture || user?.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=Recruiter"} alt="Profile" className="w-full h-full object-cover" />
+                      <img src={user?.profilePicture || user?.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=Recruiter"} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                     )}
                   </div>
 
@@ -726,6 +726,10 @@ export default function ProfilePage() {
                   {activeStep === 1 && (
                     <div className="space-y-6">
                       <DisplayField isEditing={isEditing} label="Full Name" value={formData.fullName} name="fullName" onChange={handleInputChange} maxLength={FIELD_LIMITS.fullName} />
+                      <div>
+                        <label className="block font-bold text-xs mb-1 text-gray-400 dark:text-gray-500 uppercase">Email</label>
+                        <span className="font-bold dark:text-white text-lg block break-words">{user?.email || 'Not available'}</span>
+                      </div>
                       <DisplayField isEditing={isEditing} label="Headline" value={formData.headline} name="headline" onChange={handleInputChange} maxLength={FIELD_LIMITS.headline} />
                       <DisplayField isEditing={isEditing} label="About" value={formData.about} name="about" onChange={handleInputChange} isTextarea maxLength={FIELD_LIMITS.about} placeholder="Tell us about yourself..." />
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

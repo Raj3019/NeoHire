@@ -206,6 +206,7 @@ const NavbarContent = () => {
                       src={user.profilePicture || user.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=Recruiter"}
                       alt="User"
                       className="w-8 h-8 border border-neo-black dark:border-white object-cover"
+                      referrerPolicy="no-referrer"
                       onError={(e) => {
                         e.target.onerror = null;
                         e.target.src = "https://api.dicebear.com/7.x/avataaars/svg?seed=Recruiter";

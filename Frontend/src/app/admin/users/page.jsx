@@ -47,7 +47,13 @@ export default function UserManagement() {
     try {
       const response = await adminAPI.getUsers(filters);
       if (response.success) {
-        setUsers(response.data);
+        // Sort admins to top, preserve order for others
+        const sorted = [...response.data].sort((a, b) => {
+          if (a.userType === 'admin' && b.userType !== 'admin') return -1;
+          if (a.userType !== 'admin' && b.userType === 'admin') return 1;
+          return 0;
+        });
+        setUsers(sorted);
         setPagination({
           total: response.pagination.total,
           totalPages: response.pagination.totalPages
@@ -109,50 +115,85 @@ export default function UserManagement() {
       </div>
 
       {/* Filters Bar */}
-      <div className="flex flex-col lg:flex-row gap-4">
-        <div className="flex-1 relative group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-neo-black transition-colors" />
-          <input
-            type="text"
-            placeholder="Identity scan: name or email hash..."
-            className="w-full bg-white dark:bg-zinc-900 border-2 border-neo-black dark:border-white p-3 pl-10 font-bold uppercase tracking-tight shadow-[3px_3px_0px_0px_#000] focus:shadow-[5px_5px_0px_0px_#000] transition-all outline-none text-xs placeholder:text-gray-300 dark:text-white"
-            value={filters.search}
-            onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value, page: 1 }))}
-          />
-        </div>
+      <div className="space-y-4">
+        <div className="flex flex-col lg:flex-row gap-4">
+          <div className="flex-1 relative group bg-white dark:bg-zinc-900 border-2 border-neo-black dark:border-white shadow-[3px_3px_0px_0px_#000] focus-within:shadow-[5px_5px_0px_0px_#000] transition-all">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-neo-pink transition-colors" />
+            <input
+              type="text"
+              placeholder="IDENTITY SCAN: SEARCH NAME OR EMAIL..."
+              className="w-full bg-transparent p-3 pl-11 font-black uppercase tracking-tight outline-none text-[10px] md:text-xs placeholder:text-gray-300 dark:text-white"
+              value={filters.search}
+              onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value, page: 1 }))}
+            />
+          </div>
 
-        <div className="flex flex-wrap gap-4">
-          <select
-            className="bg-white dark:bg-zinc-900 border-2 border-neo-black dark:border-white px-4 py-2 font-black uppercase tracking-widest text-[10px] shadow-[3px_3px_0px_0px_#000] appearance-none cursor-pointer outline-none hover:bg-neo-blue/10 dark:text-white"
-            value={filters.type}
-            onChange={(e) => setFilters(prev => ({ ...prev, type: e.target.value, page: 1 }))}
-          >
-            <option value="">TYPE: ALL</option>
-            <option value="candidate">TALENT_POOL</option>
-            <option value="recruiter">RECRUITERS</option>
-            <option value="admin">ADMINS</option>
-          </select>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex bg-white dark:bg-zinc-900 border-2 border-neo-black dark:border-white p-0.5 shadow-[3px_3px_0px_0px_#000]">
+              {[
+                { label: 'ALL', val: '' },
+                { label: 'TALENT', val: 'candidate' },
+                { label: 'RECRUITER', val: 'recruiter' },
+                { label: 'ADMIN', val: 'admin' }
+              ].map((btn) => (
+                <button
+                  key={btn.val}
+                  onClick={() => setFilters(prev => ({ ...prev, type: btn.val, page: 1 }))}
+                  className={cn(
+                    "px-3 py-1.5 font-black text-[9px] uppercase tracking-widest transition-all",
+                    filters.type === btn.val
+                      ? "bg-neo-pink text-white shadow-[1px_1px_0px_0px_rgba(0,0,0,0.3)]"
+                      : "text-gray-400 hover:text-neo-black dark:hover:text-white"
+                  )}
+                >
+                  {btn.label}
+                </button>
+              ))}
+            </div>
 
-          <select
-            className="bg-white dark:bg-zinc-900 border-2 border-neo-black dark:border-white px-4 py-2 font-black uppercase tracking-widest text-[10px] shadow-[3px_3px_0px_0px_#000] appearance-none cursor-pointer outline-none hover:bg-neo-yellow/10 dark:text-white"
-            value={filters.status}
-            onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value, page: 1 }))}
-          >
-            <option value="">STATUS: ALL</option>
-            <option value="Active">OK_ACTIVE</option>
-            <option value="Suspended">PENDING</option>
-            <option value="Banned">TERMINATED</option>
-          </select>
+            <select
+              className="bg-white dark:bg-zinc-900 border-2 border-neo-black dark:border-white px-4 py-2 font-black uppercase tracking-widest text-[9px] shadow-[3px_3px_0px_0px_#000] appearance-none cursor-pointer outline-none hover:bg-neo-yellow/10 dark:text-white"
+              value={filters.status}
+              onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value, page: 1 }))}
+            >
+              <option value="">STATUS: ALL</option>
+              <option value="Active">OK_ACTIVE</option>
+              <option value="Suspended">PENDING</option>
+              <option value="Banned">TERMINATED</option>
+            </select>
 
-          <select
-            className="bg-white dark:bg-zinc-900 border-2 border-neo-black dark:border-white px-4 py-2 font-black uppercase tracking-widest text-[10px] shadow-[3px_3px_0px_0px_#000] appearance-none cursor-pointer outline-none hover:bg-neo-pink/10 dark:text-white"
-            value={filters.range}
-            onChange={(e) => setFilters(prev => ({ ...prev, range: e.target.value, page: 1 }))}
-          >
-            <option value="">TIME: ALL</option>
-            <option value="week">LAST_7_DAYS</option>
-            <option value="month">LAST_30_DAYS</option>
-          </select>
+            <div className="flex bg-white dark:bg-zinc-900 border-2 border-neo-black dark:border-white p-0.5 shadow-[3px_3px_0px_0px_#000]">
+              {[
+                { label: 'ALL', val: '' },
+                { label: '7D', val: '7' },
+                { label: '15D', val: '15' },
+                { label: '30D', val: '30' }
+              ].map((btn) => (
+                <button
+                  key={btn.val}
+                  onClick={() => setFilters(prev => ({ ...prev, range: btn.val, page: 1 }))}
+                  className={cn(
+                    "px-3 py-1.5 font-black text-[9px] uppercase tracking-widest transition-all",
+                    filters.range === btn.val
+                      ? "bg-neo-blue text-white shadow-[1px_1px_0px_0px_rgba(0,0,0,0.3)]"
+                      : "text-gray-400 hover:text-neo-black dark:hover:text-white"
+                  )}
+                >
+                  {btn.label}
+                </button>
+              ))}
+            </div>
+
+            {(filters.type || filters.status || filters.range || filters.search) && (
+              <button
+                onClick={() => setFilters({ type: '', status: '', range: '', search: '', page: 1 })}
+                className="p-2 border-2 border-neo-black bg-neo-red text-white shadow-[2px_2px_0px_0px_#000] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all"
+                title="Clear Filters"
+              >
+                <Filter className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -164,6 +205,7 @@ export default function UserManagement() {
               <th className="p-3 font-black uppercase tracking-widest text-[10px]">User</th>
               <th className="p-3 font-black uppercase tracking-widest text-[10px]">Email</th>
               <th className="p-3 font-black uppercase tracking-widest text-[10px]">Location</th>
+              <th className="p-3 font-black uppercase tracking-widest text-[10px]">Joined</th>
               <th className="p-3 font-black uppercase tracking-widest text-[10px]">Status</th>
               <th className="p-3 font-black uppercase tracking-widest text-[10px] text-right">Actions</th>
             </tr>
@@ -172,7 +214,7 @@ export default function UserManagement() {
             {isLoading ? (
               [1, 2, 3, 4, 5].map(i => (
                 <tr key={i} className="animate-pulse">
-                  <td colSpan="5" className="p-4 border-b border-neo-black/5 dark:border-white/5">
+                  <td colSpan="6" className="p-4 border-b border-neo-black/5 dark:border-white/5">
                     <div className="h-6 bg-gray-100 dark:bg-zinc-800 w-full mb-1"></div>
                   </td>
                 </tr>
@@ -218,6 +260,12 @@ export default function UserManagement() {
                     <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300">
                       <MapPin className="w-3.5 h-3.5 text-neo-red" />
                       {user.country || 'Distributed'}
+                    </div>
+                  </td>
+                  <td className="p-3 uppercase font-mono text-[10px]">
+                    <div className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400">
+                      <Calendar className="w-3.5 h-3.5" />
+                      {new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </div>
                   </td>
                   <td className="p-3">

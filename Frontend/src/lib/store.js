@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { employeeAPI, recruiterAPI, jobsAPI, resetAccountRestrictedFlag, isAccountCurrentlyRestricted } from './api';
+import { employeeAPI, recruiterAPI, jobsAPI, resetAccountRestrictedFlag, isAccountCurrentlyRestricted, setGoogleRole } from './api';
 import { cookieStorage, scrubStorage } from './utils';
 
 export const useAuthStore = create(
@@ -46,7 +46,7 @@ export const useAuthStore = create(
           // ✅ If account was flagged restricted during profile fetch, abort login immediately
           if (isAccountCurrentlyRestricted()) {
             // Clear any session that Better Auth may have created
-            try { await employeeAPI.logout().catch(() => {}); } catch (e) {}
+            try { await employeeAPI.logout().catch(() => { }); } catch (e) { }
             scrubStorage();
             set({ user: null, isAuthenticated: false, isLoading: false, error: 'Your account has been restricted.' });
             return {
@@ -170,6 +170,28 @@ export const useAuthStore = create(
             set({ isLoading: false });
           }
           return { success: false, error: errorMessage, isHandled: error.isHandled };
+        }
+      },
+      // Handle Google OAuth callback — set role and fetch profile
+      handleGoogleCallback: async (role) => {
+        set({ isLoading: true, error: null });
+        try {
+          const roleResult = await setGoogleRole(role);
+
+          if (!roleResult.success) {
+            set({ isLoading: false });
+            return { success: false, error: roleResult.message, existingRole: roleResult.existingRole };
+          }
+
+          // Fetch the user profile
+          const profileResult = await get().fetchProfile(role);
+          set({ isLoading: false });
+          return { success: true, role: roleResult.role, isExisting: roleResult.isExisting, user: profileResult?.data };
+        } catch (error) {
+          const errorMessage = error.response?.data?.message || 'Google sign-in failed. Please try again.';
+          const existingRole = error.response?.data?.existingRole;
+          set({ isLoading: false, error: errorMessage });
+          return { success: false, error: errorMessage, existingRole };
         }
       },
 

@@ -2,6 +2,7 @@ const Employee = require("../model/employee.model")
 const Recruiter = require("../model/recruiter.model")
 const Job = require("../model/job.model")
 const Application = require("../model/application.model")
+const TalentAlert = require("../model/talentAlert.model")
 const { MongoClient } = require("mongodb")
 const { sendStatusChangeEmail } = require("../utils/emailService.utlis")
 
@@ -19,42 +20,179 @@ const getAuthUserCollection = async () => {
 
 const getDashboardStats = async (req, res) => {
   try {
-    const oneWeekAgo = new Date()
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+    // Time range filter: 7, 15, or 30 days (default 7)
+    const rangeDays = parseInt(req.query.range) || 7
+    const startDate = new Date()
+    startDate.setDate(startDate.getDate() - rangeDays)
+    startDate.setHours(0, 0, 0, 0)
+
+    const nextWeek = new Date()
+    nextWeek.setDate(nextWeek.getDate() + 7)
+
     const [
       totalRecruiters,
       totalCandidates,
-      susendedRecruiter,
+      suspendedRecruiter,
       suspendedCandidate,
-      newRecruiterThisWeek,
-      newCandidateThisWeek,
+      newRecruitersInRange,
+      newCandidatesInRange,
       totalJobs,
       activeJobs,
       closedJobs,
-      jobsThisWeek,
+      jobsInRange,
       totalApplications,
-      applicationsThisWeek,
+      applicationsInRange,
       applicationsByStatus,
+      // New queries
+      jobsByType,
+      jobsByWorkType,
+      autoApplyCount,
+      avgAiScoreResult,
+      topCompanyResult,
+      closingSoonCount,
+      candidateTrend,
+      recruiterTrend,
+      applicationTrend,
+      recentCandidates,
+      recentRecruiters,
+      talentRadarCount,
+      talentAlertCount,
+      talentAlertsInRange,
     ] = await Promise.all([
       Recruiter.countDocuments(),
       Employee.countDocuments(),
       Recruiter.countDocuments({ status: "Suspended" }),
       Employee.countDocuments({ status: "Suspended" }),
-      Recruiter.countDocuments({ createdAt: { $gt: oneWeekAgo } }),
-      Employee.countDocuments({ createdAt: { $gt: oneWeekAgo } }),
+      Recruiter.countDocuments({ createdAt: { $gte: startDate } }),
+      Employee.countDocuments({ createdAt: { $gte: startDate } }),
       Job.countDocuments(),
       Job.countDocuments({ status: "Active" }),
       Job.countDocuments({ status: "Closed" }),
-      Job.countDocuments({ createdAt: { $gt: oneWeekAgo } }),
+      Job.countDocuments({ createdAt: { $gte: startDate } }),
       Application.countDocuments(),
-      Application.countDocuments({ createdAt: { $gt: oneWeekAgo } }),
+      Application.countDocuments({ createdAt: { $gte: startDate } }),
       Application.aggregate([{ $group: { _id: "$status", count: { $sum: 1 } } }]),
+      // Job type distribution
+      Job.aggregate([{ $group: { _id: "$jobType", count: { $sum: 1 } } }]),
+      // Work type distribution
+      Job.aggregate([{ $group: { _id: "$workType", count: { $sum: 1 } } }]),
+      // Auto-apply count
+      Application.countDocuments({ appliedVia: 'auto-apply' }),
+      // Average AI match score
+      Application.aggregate([
+        { $match: { 'aiMatchScore.overallScore': { $exists: true, $gt: 0 } } },
+        { $group: { _id: null, avg: { $avg: '$aiMatchScore.overallScore' } } }
+      ]),
+      // Top company by job count
+      Job.aggregate([
+        { $group: { _id: "$companyName", count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+        { $limit: 1 }
+      ]),
+      // Jobs closing within next 7 days
+      Job.countDocuments({
+        status: 'Active',
+        applicationDeadline: { $lte: nextWeek, $gte: new Date() }
+      }),
+      // Day-by-day candidate registration trend
+      Employee.aggregate([
+        { $match: { createdAt: { $gte: startDate } } },
+        { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } }, count: { $sum: 1 } } },
+        { $sort: { _id: 1 } }
+      ]),
+      // Day-by-day recruiter registration trend
+      Recruiter.aggregate([
+        { $match: { createdAt: { $gte: startDate } } },
+        { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } }, count: { $sum: 1 } } },
+        { $sort: { _id: 1 } }
+      ]),
+      // Day-by-day application trend split by appliedVia
+      Application.aggregate([
+        { $match: { appliedAt: { $gte: startDate } } },
+        {
+          $group: {
+            _id: {
+              date: { $dateToString: { format: "%Y-%m-%d", date: "$appliedAt" } },
+              via: "$appliedVia"
+            },
+            count: { $sum: 1 }
+          }
+        },
+        { $sort: { "_id.date": 1 } }
+      ]),
+      // Recent 5 candidates
+      Employee.find().select('fullName email profilePicture createdAt').sort({ createdAt: -1 }).limit(5).lean(),
+      // Recent 5 recruiters
+      Recruiter.find().select('fullName email profilePicture createdAt').sort({ createdAt: -1 }).limit(5).lean(),
+      // Talent Radar count
+      Employee.countDocuments({ talentRadarOptIn: true }),
+      // Talent Alert count
+      TalentAlert.countDocuments(),
+      // Talent Alerts created in range
+      TalentAlert.countDocuments({ createdAt: { $gte: startDate } })
     ])
 
+    // Process status breakdown
     const statusBreakDown = {};
     applicationsByStatus.forEach(item => {
       statusBreakDown[item._id.toLowerCase()] = item.count;
     });
+
+    // Process job type distribution
+    const byJobType = {};
+    jobsByType.forEach(item => { if (item._id) byJobType[item._id] = item.count; });
+
+    // Process work type distribution
+    const byWorkType = {};
+    jobsByWorkType.forEach(item => { if (item._id) byWorkType[item._id] = item.count; });
+
+    // Build day-by-day registration trend (fill gaps with 0)
+    const registrationTrend = []
+    const candidateMap = {}
+    candidateTrend.forEach(d => { candidateMap[d._id] = d.count; })
+    const recruiterMap = {}
+    recruiterTrend.forEach(d => { recruiterMap[d._id] = d.count; })
+
+    for (let i = 0; i < rangeDays; i++) {
+      const d = new Date(startDate)
+      d.setDate(d.getDate() + i)
+      const key = d.toISOString().split('T')[0]
+      registrationTrend.push({
+        date: key,
+        candidates: candidateMap[key] || 0,
+        recruiters: recruiterMap[key] || 0
+      })
+    }
+
+    // Build day-by-day application trend
+    const appTrendMap = {}
+    applicationTrend.forEach(d => {
+      const date = d._id.date
+      if (!appTrendMap[date]) appTrendMap[date] = { manual: 0, autoApply: 0 }
+      if (d._id.via === 'auto-apply') {
+        appTrendMap[date].autoApply = d.count
+      } else {
+        appTrendMap[date].manual = d.count
+      }
+    })
+
+    const applicationTrendData = []
+    for (let i = 0; i < rangeDays; i++) {
+      const d = new Date(startDate)
+      d.setDate(d.getDate() + i)
+      const key = d.toISOString().split('T')[0]
+      applicationTrendData.push({
+        date: key,
+        manual: appTrendMap[key]?.manual || 0,
+        autoApply: appTrendMap[key]?.autoApply || 0
+      })
+    }
+
+    // Merge recent users (candidates + recruiters), sort by newest, take 5
+    const recentUsers = [
+      ...recentCandidates.map(u => ({ ...u, userType: 'candidate' })),
+      ...recentRecruiters.map(u => ({ ...u, userType: 'recruiter' }))
+    ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5)
 
     res.status(200).json({
       success: true,
@@ -63,20 +201,36 @@ const getDashboardStats = async (req, res) => {
           total: totalCandidates + totalRecruiters,
           candidates: totalCandidates,
           recruiters: totalRecruiters,
-          newThisWeek: newCandidateThisWeek + newRecruiterThisWeek,
-          suspended: suspendedCandidate + susendedRecruiter
+          newInRange: newCandidatesInRange + newRecruitersInRange,
+          suspended: suspendedCandidate + suspendedRecruiter
         },
         jobs: {
           total: totalJobs,
           active: activeJobs,
           closed: closedJobs,
-          postedThisWeek: jobsThisWeek
+          postedInRange: jobsInRange,
+          byJobType,
+          byWorkType,
+          closingSoon: closingSoonCount
         },
         applications: {
           total: totalApplications,
-          thisWeek: applicationsThisWeek,
-          statusBreakDown
-        }
+          inRange: applicationsInRange,
+          statusBreakDown,
+          autoApplyCount,
+          avgAiScore: avgAiScoreResult[0]?.avg ? Math.round(avgAiScoreResult[0].avg) : 0
+        },
+        trends: {
+          registrations: registrationTrend,
+          applications: applicationTrendData
+        },
+        topCompany: topCompanyResult[0]?._id || 'N/A',
+        talentRadar: {
+          candidateOptIns: talentRadarCount,
+          recruiterAlerts: talentAlertCount,
+          newAlertsInRange: talentAlertsInRange
+        },
+        recentUsers
       }
     })
   } catch (error) {
@@ -100,12 +254,14 @@ const getAllUsers = async (req, res) => {
     // If range is provided, calculate the date
     if (range) {
       const date = new Date()
-      if (range === 'week') {
+      if (range === 'week' || range === '7') {
         date.setDate(date.getDate() - 7)
-      } else if (range === 'month') {
-        date.setMonth(date.getMonth() - 1)
+      } else if (range === '15') {
+        date.setDate(date.getDate() - 15)
+      } else if (range === 'month' || range === '30') {
+        date.setDate(date.getDate() - 30)
       }
-      filter.createdAt = { $gt: date }
+      filter.createdAt = { $gte: date }
     }
 
     // If status is provided, only get users with that status
@@ -284,8 +440,8 @@ const updateUserStatus = async (req, res) => {
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' })
     }
-    
-    await sendStatusChangeEmail(user.email, user.fullName,status)
+
+    await sendStatusChangeEmail(user.email, user.fullName, status)
 
     res.status(200).json({
       success: true,
@@ -300,17 +456,25 @@ const updateUserStatus = async (req, res) => {
 //GET ALL JOBS
 const getAllJobs = async (req, res) => {
   try {
-    const { status, page = 1, limit = 20, search } = req.query
+    const { status, page = 1, limit = 20, search, range } = req.query
 
     const skip = (page - 1) * limit
 
     let filter = {}
     if (status) filter.status = status
 
+    if (range) {
+      const date = new Date()
+      if (range === '7') date.setDate(date.getDate() - 7)
+      else if (range === '15') date.setDate(date.getDate() - 15)
+      else if (range === '30') date.setDate(date.getDate() - 30)
+      filter.createdAt = { $gte: date }
+    }
+
     if (search) {
       filter.$or = [
         { title: { $regex: search, $options: 'i' } },
-        { company: { $regex: search, $options: 'i' } }
+        { companyName: { $regex: search, $options: 'i' } }
       ]
     }
 

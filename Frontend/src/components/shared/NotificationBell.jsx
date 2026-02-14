@@ -48,7 +48,7 @@ const NotificationBell = () => {
       // Use requestAnimationFrame to ensure DOM is ready
       requestAnimationFrame(() => {
         const rect = buttonRef.current.getBoundingClientRect();
-        const dropdownWidth = 384; // w-96 = 24rem = 384px
+        const dropdownWidth = 320; // w-72/w-80 = 320px
         const windowWidth = window.innerWidth;
 
         // Calculate left position - prefer right-aligned but ensure it doesn't overflow
@@ -88,11 +88,11 @@ const NotificationBell = () => {
   const dropdownContent = isOpen && mounted && isPositioned ? createPortal(
     <div
       ref={dropdownRef}
-      className="fixed w-80 md:w-96 bg-white dark:bg-zinc-900 border-4 border-neo-black dark:border-white shadow-neo dark:shadow-[8px_8px_0px_0px_#ffffff] z-[9999] animate-in fade-in slide-in-from-top-2 duration-150"
+      className="fixed w-72 md:w-80 bg-white dark:bg-zinc-900 border-2 border-neo-black dark:border-white shadow-neo dark:shadow-[6px_6px_0px_0px_#ffffff] z-[9999] animate-in fade-in slide-in-from-top-2 duration-150"
       style={{ top: dropdownPosition.top, left: dropdownPosition.left }}
     >
-      <div className="p-4 border-b-4 border-neo-black dark:border-white flex justify-between items-center bg-neo-yellow dark:bg-zinc-800">
-        <h3 className="font-black uppercase tracking-tight dark:text-white">Notifications</h3>
+      <div className="px-3 py-2 border-b-2 border-neo-black dark:border-white flex justify-between items-center bg-neo-yellow dark:bg-zinc-800">
+        <h3 className="font-black uppercase tracking-tight text-sm dark:text-white">Notifications</h3>
         <div className="flex gap-2">
           {unreadCount > 0 && (
             <button
@@ -105,21 +105,19 @@ const NotificationBell = () => {
         </div>
       </div>
 
-      <div className="max-h-[400px] overflow-y-auto no-scrollbar">
+      <div className="max-h-[300px] overflow-y-auto no-scrollbar">
         {isLoading && notifications.length === 0 ? (
-          <div className="p-10 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-neo-black dark:border-white mx-auto"></div>
+          <div className="p-6 text-center">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-neo-black dark:border-white mx-auto"></div>
           </div>
         ) : notifications.length === 0 ? (
-          <div className="p-10 text-center">
-            <div className="w-12 h-12 bg-gray-100 dark:bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-3 border-2 border-neo-black dark:border-white">
-              <Bell className="w-6 h-6 text-gray-400" />
-            </div>
-            <p className="font-bold text-gray-500 uppercase text-xs">All caught up!</p>
+          <div className="p-6 text-center">
+            <Bell className="w-5 h-5 text-gray-300 mx-auto mb-2" />
+            <p className="font-bold text-gray-400 uppercase text-[10px]">All caught up!</p>
           </div>
         ) : (
-          <div className="divide-y-2 divide-neo-black dark:divide-white">
-            {notifications.slice(0, 2).map((notif) => (
+          <div className="divide-y divide-neo-black/10 dark:divide-white/10">
+            {notifications.slice(0, 5).map((notif) => (
               <div
                 key={notif._id}
                 className={`p-4 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors relative group ${!notif.isRead ? 'bg-neo-blue/5' : ''}`}
@@ -167,11 +165,11 @@ const NotificationBell = () => {
         )}
       </div>
 
-      <div className="p-3 border-t-4 border-neo-black dark:border-white bg-gray-50 dark:bg-zinc-800 text-center">
+      <div className="px-2 py-2 border-t-2 border-neo-black dark:border-white bg-gray-50 dark:bg-zinc-800 text-center">
         <Link href="/notifications" onClick={() => setIsOpen(false)}>
-          <NeoButton variant="ghost" size="sm" className="w-full text-xs font-black uppercase tracking-widest">
+          <button className="w-full text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-neo-black dark:hover:text-white py-1 transition-colors">
             View All Notifications
-          </NeoButton>
+          </button>
         </Link>
       </div>
     </div>,

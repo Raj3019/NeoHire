@@ -37,6 +37,7 @@ export default function JobManagement() {
   const [filters, setFilters] = useState({
     status: '',
     search: '',
+    range: '',
     page: 1
   });
   const [pagination, setPagination] = useState({
@@ -119,53 +120,82 @@ export default function JobManagement() {
       </div>
 
       {/* Filters Bar */}
-      <div className="flex flex-col lg:flex-row items-stretch gap-4">
-        <div className="flex-1 relative group bg-white dark:bg-zinc-900 border-2 border-neo-black dark:border-white shadow-[3px_3px_0px_0px_#000]">
-          <div className="h-full flex items-center px-4 py-2">
-            <Search className="w-4 h-4 text-gray-400 mr-2" />
+      <div className="space-y-4">
+        <div className="flex flex-col lg:flex-row items-center gap-4">
+          <div className="flex-1 relative group bg-white dark:bg-zinc-900 border-2 border-neo-black dark:border-white shadow-[3px_3px_0px_0px_#000] focus-within:shadow-[5px_5px_0px_0px_#000] transition-all w-full">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-neo-blue transition-colors" />
             <input
               type="text"
-              placeholder="Search by title or company..."
-              className="flex-1 bg-transparent border-none outline-none font-bold text-xs dark:text-white placeholder:text-gray-300"
+              placeholder="SEARCH BY TITLE OR COMPANY..."
+              className="w-full bg-transparent p-3 pl-11 font-black uppercase tracking-tight outline-none text-[10px] md:text-xs placeholder:text-gray-300 dark:text-white"
               value={filters.search}
               onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value, page: 1 }))}
             />
-            {filters.search && (
-              <button onClick={() => setFilters(prev => ({ ...prev, search: '' }))} className="p-1">
-                <X className="w-3.5 h-3.5 text-gray-400" />
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+            <div className="flex bg-white dark:bg-zinc-900 border-2 border-neo-black dark:border-white p-0.5 shadow-[3px_3px_0px_0px_#000]">
+              {[
+                { label: 'ALL', val: '' },
+                { label: 'ACTIVE', val: 'Active' },
+                { label: 'CLOSED', val: 'Closed' }
+              ].map((btn) => (
+                <button
+                  key={btn.val}
+                  onClick={() => setFilters(prev => ({ ...prev, status: btn.val, page: 1 }))}
+                  className={cn(
+                    "px-4 py-1.5 font-black text-[9px] uppercase tracking-widest transition-all",
+                    filters.status === btn.val
+                      ? "bg-neo-black text-white dark:bg-white dark:text-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.3)]"
+                      : "text-gray-400 hover:text-neo-black dark:hover:text-white"
+                  )}
+                >
+                  {btn.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex bg-white dark:bg-zinc-900 border-2 border-neo-black dark:border-white p-0.5 shadow-[3px_3px_0px_0px_#000]">
+              {[
+                { label: 'ALL', val: '' },
+                { label: '7D', val: '7' },
+                { label: '15D', val: '15' },
+                { label: '30D', val: '30' }
+              ].map((btn) => (
+                <button
+                  key={btn.val}
+                  onClick={() => setFilters(prev => ({ ...prev, range: btn.val, page: 1 }))}
+                  className={cn(
+                    "px-3 py-1.5 font-black text-[9px] uppercase tracking-widest transition-all",
+                    filters.range === btn.val
+                      ? "bg-neo-blue text-white shadow-[1px_1px_0px_0px_rgba(0,0,0,0.3)]"
+                      : "text-gray-400 hover:text-neo-black dark:hover:text-white"
+                  )}
+                >
+                  {btn.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex bg-white dark:bg-zinc-900 border-2 border-neo-black dark:border-white p-0.5 shadow-[3px_3px_0px_0px_#000]">
+              <button onClick={() => setViewMode('grid')} className={cn("p-1.5 transition-all", viewMode === 'grid' ? "bg-neo-blue text-white shadow-[1px_1px_0px_0px_#000]" : "text-gray-400")}>
+                <LayoutGrid className="w-4 h-4" />
+              </button>
+              <button onClick={() => setViewMode('list')} className={cn("p-1.5 transition-all", viewMode === 'list' ? "bg-neo-blue text-white shadow-[1px_1px_0px_0px_#000]" : "text-gray-400")}>
+                <List className="w-4 h-4" />
+              </button>
+            </div>
+
+            {(filters.status || filters.range || filters.search) && (
+              <button
+                onClick={() => setFilters({ status: '', range: '', search: '', page: 1 })}
+                className="p-2.5 border-2 border-neo-black bg-neo-red text-white shadow-[2px_2px_0px_0px_#000] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all"
+                title="Clear Filters"
+              >
+                <X className="w-4 h-4" />
               </button>
             )}
           </div>
-        </div>
-
-        <div className="flex bg-white dark:bg-zinc-900 border-2 border-neo-black dark:border-white p-0.5 shadow-[3px_3px_0px_0px_#000]">
-          {[
-            { label: 'ALL', val: '' },
-            { label: 'ACTIVE', val: 'Active' },
-            { label: 'CLOSED', val: 'Closed' }
-          ].map((btn) => (
-            <button
-              key={btn.val}
-              onClick={() => setFilters(prev => ({ ...prev, status: btn.val, page: 1 }))}
-              className={cn(
-                "px-4 py-1.5 font-black text-[9px] uppercase tracking-widest transition-all",
-                filters.status === btn.val
-                  ? "bg-neo-black text-white dark:bg-white dark:text-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.3)]"
-                  : "text-gray-500 hover:text-neo-black dark:hover:text-white"
-              )}
-            >
-              {btn.label}
-            </button>
-          ))}
-        </div>
-
-        <div className="hidden sm:flex bg-white dark:bg-zinc-900 border-2 border-neo-black dark:border-white p-0.5 shadow-[3px_3px_0px_0px_#000]">
-          <button onClick={() => setViewMode('grid')} className={cn("p-1.5 transition-all text-[10px]", viewMode === 'grid' ? "bg-neo-blue text-white shadow-[1px_1px_0px_0px_#000]" : "text-gray-400")}>
-            <LayoutGrid className="w-4 h-4" />
-          </button>
-          <button onClick={() => setViewMode('list')} className={cn("p-1.5 transition-all text-[10px]", viewMode === 'list' ? "bg-neo-blue text-white shadow-[1px_1px_0px_0px_#000]" : "text-gray-400")}>
-            <List className="w-4 h-4" />
-          </button>
         </div>
       </div>
 
