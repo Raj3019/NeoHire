@@ -22,6 +22,7 @@ const {
   deleteResumeFromCloudinary,
 } = require("../utils/cloudnary.utlis");
 const { sendVerificationEmail } = require("../utils/emailService.utlis");
+const { logActivity } = require('../utils/activityLog.utils');
 // const salt = process.env.SALT
 
 const uploadProfilePicture = async (req, res) => {
@@ -52,6 +53,19 @@ const uploadProfilePicture = async (req, res) => {
       message: "Profile Picture uploaded succesfully",
       profilePicture: result.url,
     });
+
+    logActivity({
+      action: 'PROFILE_PICTURE_UPDATED',
+      userId: recruiter._id,
+      userRole: 'recruiter',
+      resourceType: 'Recruiter',
+      resourceId: recruiter._id,
+      description: `Recruiter ${recruiter.fullName} updated their profile picture`,
+      ipAddress: req.ip,
+      method: req.method,
+      endpoint: req.originalUrl
+    })
+
   } catch (error) {
     if (req.file && fs.existsSync(req.file.path)) {
       fs.unlinkSync(req.file.path);
@@ -150,6 +164,19 @@ const uploadResume = async (req, res) => {
       message: "Resume Uploaded Successfully",
       resumeLink: result.url,
     });
+
+    logActivity({
+      action: 'RESUME_UPLOADED',
+      userId: recruiter._id,
+      userRole: 'recruiter',
+      resourceType: 'Recruiter',
+      resourceId: recruiter._id,
+      description: `Recruiter ${recruiter.fullName} uploaded a new resume`,
+      ipAddress: req.ip,
+      method: req.method,
+      endpoint: req.originalUrl
+    })
+
   } catch (error) {
     if (req.file && fs.existsSync(req.file.path)) {
       fs.unlinkSync(req.file.path);
@@ -176,6 +203,19 @@ const editRecruiter = async (req, res) => {
     if (!recruiter) {
       return res.status(401).json({ message: "Invalid profile" });
     }
+
+    logActivity({
+      action: 'PROFILE_UPDATED',
+      userId: recruiter._id,
+      userRole: 'recruiter',
+      resourceType: 'Recruiter',
+      resourceId: recruiter._id,
+      description: `Recruiter ${recruiter.fullName} updated their profile`,
+      metadata: { updatedFields: Object.keys(req.body) },
+      ipAddress: req.ip,
+      method: req.method,
+      endpoint: req.originalUrl
+    })
 
     return res
       .status(200)
@@ -407,6 +447,19 @@ const updateApplicationStatus = async (req, res) => {
       { _id: application.job, "appliedBy.applicant": application.JobSeeker },
       { $set: { "appliedBy.$.status": status } },
     );
+
+    logActivity({
+      action: 'APPLICATION_STATUS_CHANGED',
+      userId: recruiter._id,
+      userRole: 'recruiter',
+      resourceType: 'Application',
+      resourceId: application._id,
+      description: `Recruiter ${recruiter.fullName} changed application status to ${status} for ${job.title} at ${job.companyName || 'Unknown'}`,
+      metadata: { newStatus: status, jobId: job._id, jobTitle: job.title, applicantId: application.JobSeeker },
+      ipAddress: req.ip,
+      method: req.method,
+      endpoint: req.originalUrl
+    })
 
     // FIX 2: Create notification with correct field names
     const notification = await createNotification({

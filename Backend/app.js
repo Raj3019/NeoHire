@@ -25,6 +25,9 @@ const { generalLimiter } = require("./middleware/rateLimit.middleware")
 const talentRadarRouter = require('./routers/talentRadar.router')
 const Employee = require('./model/employee.model')
 const Recruiter = require('./model/recruiter.model')
+const { requestLogger } = require('./middleware/activityLog.middleware')
+const activityLogRouter = require('./routers/activityLog.router')
+const { logActivity } = require('./utils/activityLog.utils')
 
 const frontendURL = process.env.FRONTEND_URL
 
@@ -116,7 +119,22 @@ app.post('/api/auth/sign-in/email', async (req, res, next) => {
 
     const userDoc = employee || recruiter;
 
+    // Get actual role from Better Auth user collection (source of truth)
+    const db = client.db();
+    const authUser = await db.collection('user').findOne({ email: lowerEmail });
+    const actualRole = authUser?.role?.toLowerCase() || (employee ? 'employee' : recruiter ? 'recruiter' : 'system');
+
     if (userDoc && userDoc.status === 'Suspended') {
+      logActivity({
+        action: 'LOGIN_BLOCKED_SUSPENDED',
+        userId: userDoc._id,
+        userRole: actualRole,
+        description: `Login blocked for suspended account: ${lowerEmail}`,
+        ipAddress: req.ip,
+        method: 'POST',
+        endpoint: '/api/auth/sign-in/email',
+        statusCode: 403
+      })
       return res.status(403).json({
         success: false,
         message: 'Your account has been suspended. Please contact support for assistance.',
@@ -125,6 +143,16 @@ app.post('/api/auth/sign-in/email', async (req, res, next) => {
     }
 
     if (userDoc && userDoc.status === 'Banned') {
+      logActivity({
+        action: 'LOGIN_BLOCKED_BANNED',
+        userId: userDoc._id,
+        userRole: actualRole,
+        description: `Login blocked for banned account: ${lowerEmail}`,
+        ipAddress: req.ip,
+        method: 'POST',
+        endpoint: '/api/auth/sign-in/email',
+        statusCode: 403
+      })
       return res.status(403).json({
         success: false,
         message: 'Your account has been permanently banned. Please contact support.',
@@ -133,6 +161,16 @@ app.post('/api/auth/sign-in/email', async (req, res, next) => {
     }
 
     // User is Active (or not found — let Better Auth handle invalid credentials)
+    logActivity({
+      action: 'USER_LOGIN',
+      userId: userDoc?._id || null,
+      userRole: actualRole,
+      description: `Login attempt by ${lowerEmail}`,
+      ipAddress: req.ip,
+      method: 'POST',
+      endpoint: '/api/auth/sign-in/email',
+      statusCode: 200
+    })
     next();
   } catch (error) {
     console.error('Pre-login status check error:', error);
@@ -181,6 +219,15 @@ app.post('/api/auth/set-role', async (req, res) => {
         });
       }
       // Same role — just return success (login flow)
+      logActivity({
+        action: 'GOOGLE_LOGIN',
+        userId: (existingEmployee || existingRecruiter)._id,
+        userRole: existingRole.toLowerCase(),
+        description: `Google login: ${user.email} as ${existingRole}`,
+        ipAddress: req.ip,
+        method: 'POST',
+        endpoint: '/api/auth/set-role'
+      })
       return res.json({ success: true, role: existingRole, isExisting: true });
     }
 
@@ -213,6 +260,16 @@ app.post('/api/auth/set-role', async (req, res) => {
       { $set: { role } }
     );
 
+    logActivity({
+      action: 'GOOGLE_SIGNUP',
+      userRole: role.toLowerCase(),
+      description: `New Google signup: ${user.email} as ${role}`,
+      metadata: { name: profileName, email: user.email },
+      ipAddress: req.ip,
+      method: 'POST',
+      endpoint: '/api/auth/set-role'
+    })
+
     return res.json({ success: true, role, isExisting: false });
   } catch (error) {
     console.error('Set role error:', error);
@@ -221,6 +278,7 @@ app.post('/api/auth/set-role', async (req, res) => {
 });
 
 app.all('/api/auth/*path', toNodeHandler(auth))
+app.use(requestLogger)
 app.use('/api/employee', employeeRouter)
 app.use('/api/recruiter', recruiterRoute)
 app.use('/api/jobs', jobRouter)
@@ -228,6 +286,7 @@ app.use('/api/applications', applicationRouter)
 app.use('/api/notifications', notificationRouter)
 app.use('/api/try', roastResumeRouter)
 app.use('/api/admin', adminRouter)
+app.use('/api/activity', activityLogRouter)
 app.use('/api/auto-apply', autoApplyRouter)
 // app.use('/api/plans', planRouter)
 // app.use('/api/subscriptions', subscriptionRouter)

@@ -2,6 +2,7 @@ const Job = require("../model/job.model")
 const Recruiter = require("../model/recruiter.model");
 const Application = require("../model/application.model");
 const Employee = require("../model/employee.model");
+const { logActivity } = require("../utils/activityLog.utils");
 
 const createJob = async (req, res) => {
   try {
@@ -42,6 +43,16 @@ const createJob = async (req, res) => {
     // to save jobs in recuter model first it finds the recuter id from user 
     // then use $push to push in jobs table the newly created job id
     await Recruiter.findByIdAndUpdate(recruiter._id, { $push: { jobs: createdJob._id } })
+    logActivity({
+      action:'JOB_CREATED',
+      userId: recruiter._id,
+      userRole: 'recruiter',
+      resourceType: 'Job',
+      resourceId: createdJob._id,
+      description: `Recruiter ${recruiter.fullName} created job: ${title} at ${companyName}`,      ipAddress: req.ip,
+      method: req.method,
+      endpoint: req.originalUrl
+    })
     return res.status(200).json({ data: createdJob, message: "Job Created sucessfully" })
 
   } catch (err) {
@@ -95,6 +106,17 @@ const editJob = async (req, res) => {
       return res.status(401).json({ message: "This Job is not created by you" })
     }
     const updateJob = await Job.findByIdAndUpdate(jobId, req.body, { new: true })
+    logActivity({
+      action: 'JOB_EDITED',
+      userId: req.recruiterDoc._id,
+      userRole: 'recruiter',
+      resourceType: 'Job',
+      resourceId: updateJob._id,
+      description: `Recruiter ${req.recruiterDoc.fullName} edited job: ${updateJob.title} at ${updateJob.companyName}`,
+      ipAddress: req.ip,
+      method: req.method,
+      endpoint: req.originalUrl
+    })
     return res.status(200).json({ data: updateJob, message: "Job updated successfully" })
   } catch (error) {
     // console.log(error)

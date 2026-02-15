@@ -11,7 +11,8 @@ import {
   Menu,
   X,
   ShieldCheck,
-  ChevronRight
+  ChevronRight,
+  Activity
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/store';
 import { cookieStorage, cn } from '@/lib/utils';
@@ -36,6 +37,12 @@ const NAV_ITEMS = [
     icon: Briefcase,
     path: '/admin/jobs',
     color: 'bg-neo-yellow'
+  },
+  {
+    label: 'Activity',
+    icon: Activity,
+    path: '/admin/activity-logs',
+    color: 'bg-neo-green'
   }
 ];
 
@@ -68,8 +75,8 @@ export default function AdminSidebar() {
     }
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     router.push('/');
   };
 

@@ -136,7 +136,7 @@ export function NeoBadge({ className, variant, children, ...props }) {
 export const NeoModal = ({ isOpen, onClose, title, children, maxWidth = 'max-w-lg', contentClassName }) => {
   if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
       <div className={`w-full ${maxWidth} relative animate-in fade-in zoom-in duration-200`}>
         <NeoCard className="relative bg-white dark:bg-[#121212] max-h-[90vh] flex flex-col border-4">
           <div className="flex justify-between items-center mb-4 border-b-2 border-neo-black dark:border-white pb-4 shrink-0">

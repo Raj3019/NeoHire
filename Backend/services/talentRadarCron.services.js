@@ -2,6 +2,7 @@ const cron = require("node-cron");
 const {
   runTalentRadarScan,
 } = require("../controller/talentRadar.controller");
+const { logActivity } = require("../utils/activityLog.utils");
 
 const initTalentRadarCron = (io, userSockets) => {
   // Production: Every 6 hours
@@ -25,6 +26,17 @@ const initTalentRadarCron = (io, userSockets) => {
       console.log(`Employees scanned: ${results.employeeScanned || 0}`);
       console.log(`New matches found: ${results.newMatches}`);
 
+      logActivity({
+        action: 'CRON_TALENT_RADAR',
+        userRole: 'system',
+        description: `Talent Radar scan: ${results.alertsProcessed} alerts processed, ${results.employeeScanned || 0} employees scanned, ${results.newMatches} new matches`,
+        metadata: {
+          alertsProcessed: results.alertsProcessed,
+          employeesScanned: results.employeeScanned || 0,
+          newMatches: results.newMatches
+        }
+      })
+
       if (results.details && results.details.length) {
         console.log("\n🎯 TALENT RADAR MATCHES:");
         results.details.forEach((alert) => {
@@ -36,6 +48,12 @@ const initTalentRadarCron = (io, userSockets) => {
       }
     } catch (error) {
       console.error("❌ Talent Radar CRON ERROR:", error.message);
+      logActivity({
+        action: 'CRON_TALENT_RADAR_ERROR',
+        userRole: 'system',
+        description: `Talent Radar cron failed: ${error.message}`,
+        metadata: { error: error.message }
+      })
     }
   });
 

@@ -8,6 +8,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { deleteFromCloudinary, uploadToCloudinary, deleteResumeFromCloudinary, uploadResumeToCloudnary } = require("../utils/cloudnary.utlis.js");
 const { sendVerificationEmail } = require("../utils/emailService.utlis.js");
+const { logActivity } = require('../utils/activityLog.utils');
 const jwtToken = process.env.JWT_TOKEN_Secret
 // const salt = process.env.SALT
 
@@ -52,6 +53,18 @@ const uploadProfilePicture = async (req, res) => {
       profilePicture: result.url
     })
 
+    logActivity({
+      action: 'PROFILE_PICTURE_UPDATED',
+      userId: employee._id,
+      userRole: 'employee',
+      resourceType: 'Employee',
+      resourceId: employee._id,
+      description: `${employee.fullName} updated their profile picture`,
+      ipAddress: req.ip,
+      method: req.method,
+      endpoint: req.originalUrl
+    })
+
   } catch (error) {
     if (req.file && fs.existsSync(req.file.path)) {
       fs.unlinkSync(req.file.path);
@@ -93,6 +106,19 @@ const uploadResume = async (req, res) => {
       message: "Resume Uploaded Successfully",
       resumeLink: result.url
     })
+
+    logActivity({
+      action: 'RESUME_UPLOADED',
+      userId: employee._id,
+      userRole: 'employee',
+      resourceType: 'Employee',
+      resourceId: employee._id,
+      description: `${employee.fullName} uploaded a new resume`,
+      ipAddress: req.ip,
+      method: req.method,
+      endpoint: req.originalUrl
+    })
+
   } catch (error) {
     if (req.file && fs.existsSync(req.file.path)) {
       fs.unlinkSync(req.file.path);
@@ -184,6 +210,19 @@ const editEmployee = async (req, res) => {
     if (!employee) {
       return res.status(404).json({ message: "Employee not found" })
     }
+
+    logActivity({
+      action: 'PROFILE_UPDATED',
+      userId: employee._id,
+      userRole: 'employee',
+      resourceType: 'Employee',
+      resourceId: employee._id,
+      description: `${employee.fullName} updated their profile`,
+      metadata: { updatedFields: Object.keys(req.body) },
+      ipAddress: req.ip,
+      method: req.method,
+      endpoint: req.originalUrl
+    })
 
     return res.status(200).json({ data: employee, message: "Employee updated sucessfully" })
 

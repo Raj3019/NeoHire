@@ -9,6 +9,7 @@ const { uploadResumeToCloudnary } = require("../utils/cloudnary.utlis.js");
 const Employee = require("../model/employee.model.js");
 const axios = require('axios')
 const { createNotification, sendRealTimeNotification } = require('../utils/notification.utlis.js');
+const { logActivity } = require('../utils/activityLog.utils');
 
 
 async function extractTextFromPDF(source, isURL = false) {
@@ -395,6 +396,20 @@ const applyJob = async (req, res) => {
     const userSockets = req.app.get('userSockets');
     sendRealTimeNotification(io, userSockets, recuterId, notification);
 
+    logActivity({
+      action: 'APPLICATION_SUBMITTED',
+      userId: employeeDoc._id,
+      userRole: 'employee',
+      resourceType: 'Application',
+      resourceId: applyForJob._id,
+      description: `${employeeDoc.fullName} applied for ${jobById.title} at ${jobById.companyName || 'Unknown'} (AI Score: ${aiScoreData.overallScore || 0}%)`,
+      metadata: { jobId: jobById._id, overallScore: aiScoreData.overallScore, useExistingResume: useExistingResume === 'true' },
+      ipAddress: req.ip,
+      method: req.method,
+      endpoint: req.originalUrl,
+      statusCode: 200
+    })
+
     return res.status(200).json({
       data: applyForJob,
       message: "Applied for Job successfully",
@@ -581,6 +596,20 @@ const checkScore = async (req, res) => {
         console.error('Failed to delete temp file:', err)
       );
     }
+
+    logActivity({
+      action: 'AI_SCORE_CHECKED',
+      userId: req.user.id,
+      userRole: 'employee',
+      resourceType: 'Job',
+      resourceId: job._id,
+      description: `Employee checked AI score for ${job.title} at ${job.companyName || 'Unknown'} (Score: ${scoreData.overallScore || 0}%)`,
+      metadata: { overallScore: scoreData.overallScore, skillsMatch: scoreData.skillsMatch },
+      ipAddress: req.ip,
+      method: req.method,
+      endpoint: req.originalUrl,
+      statusCode: 200
+    })
 
     return res.status(200).json({
       success: true,

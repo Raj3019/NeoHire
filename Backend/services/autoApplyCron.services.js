@@ -2,6 +2,7 @@ const cron = require("node-cron");
 const {
   runAutoApplyForAllCandidates,
 } = require("../controller/autoApply.controller");
+const { logActivity } = require("../utils/activityLog.utils");
 
 const initAutoApplyCron = (io, userSocket) => {
   // const CRON_SCHEDULE = '0 */6 * * *'
@@ -25,6 +26,17 @@ const initAutoApplyCron = (io, userSocket) => {
       console.log(`Jobs checked: ${results.totalJobs}`);
       console.log(`Applications created: ${results.totalApplicationsCreated}`);
 
+      logActivity({
+        action: 'CRON_AUTO_APPLY',
+        userRole: 'system',
+        description: `Auto-apply cron: ${results.totalCandidates} candidates checked, ${results.totalJobs} jobs checked, ${results.totalApplicationsCreated} applications created`,
+        metadata: {
+          totalCandidates: results.totalCandidates,
+          totalJobs: results.totalJobs,
+          totalApplicationsCreated: results.totalApplicationsCreated
+        }
+      })
+
       // Log details of who got auto-applied
       if (!results.details.length) return;
       console.log("\n📋 AUTO-APPLIED DETAILS:");
@@ -36,6 +48,12 @@ const initAutoApplyCron = (io, userSocket) => {
       });
     } catch (error) {
       console.error("❌ CRON JOB ERROR:", error.message);
+      logActivity({
+        action: 'CRON_AUTO_APPLY_ERROR',
+        userRole: 'system',
+        description: `Auto-apply cron failed: ${error.message}`,
+        metadata: { error: error.message }
+      })
     }
   });
 

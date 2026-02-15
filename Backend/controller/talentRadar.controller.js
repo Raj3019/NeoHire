@@ -3,6 +3,7 @@ const Employee = require('../model/employee.model');
 const Recruiter = require('../model/recruiter.model');
 const { calculateSkillMatch, calculateExperienceMatch, calculateOverallMatch } = require('../utils/autoApply.utils');
 const { createNotification, sendRealTimeNotification } = require('../utils/notification.utlis');
+const { logActivity } = require('../utils/activityLog.utils');
 
 const createAlert = async (req, res) => {
   try {
@@ -65,6 +66,19 @@ const createAlert = async (req, res) => {
     })
 
     await newAlert.save();
+
+    logActivity({
+      action: 'TALENT_ALERT_CREATED',
+      userId: recruiter._id,
+      userRole: 'recruiter',
+      resourceType: 'TalentAlert',
+      resourceId: newAlert._id,
+      description: `Recruiter ${recruiter.fullName} created talent alert "${name}" (skills: ${requiredSkills?.join(', ')})`,
+      metadata: { alertName: name, requiredSkills, minExperience, minFitScore },
+      ipAddress: req.ip,
+      method: req.method,
+      endpoint: req.originalUrl
+    })
 
     return res.status(201).json({
       message: 'Talent alert created successfully',
@@ -149,6 +163,19 @@ const updateAlert = async (req, res) => {
 
     await alert.save()
 
+    logActivity({
+      action: 'TALENT_ALERT_UPDATED',
+      userId: recruiter._id,
+      userRole: 'recruiter',
+      resourceType: 'TalentAlert',
+      resourceId: alert._id,
+      description: `Recruiter ${recruiter.fullName} updated talent alert "${alert.name}"`,
+      metadata: { updatedFields: Object.keys(updates) },
+      ipAddress: req.ip,
+      method: req.method,
+      endpoint: req.originalUrl
+    })
+
     return res.status(200).json({
       message: 'Alert updated successfully',
       alert
@@ -177,6 +204,18 @@ const deleteAlert = async (req, res) => {
     if (!result) {
       return res.status(404).json({ message: 'Alert not found or access denied' });
     }
+
+    logActivity({
+      action: 'TALENT_ALERT_DELETED',
+      userId: recruiter._id,
+      userRole: 'recruiter',
+      resourceType: 'TalentAlert',
+      resourceId: alertId,
+      description: `Recruiter ${recruiter.fullName} deleted talent alert "${result.name}"`,
+      ipAddress: req.ip,
+      method: req.method,
+      endpoint: req.originalUrl
+    })
 
     return res.status(200).json({ message: 'Alert deleted successfully' });
 
@@ -208,6 +247,18 @@ const toggleAlert = async (req, res) => {
     // Toggle the isActive status
     alert.isActive = !alert.isActive;
     await alert.save();
+
+    logActivity({
+      action: alert.isActive ? 'TALENT_ALERT_ACTIVATED' : 'TALENT_ALERT_PAUSED',
+      userId: recruiter._id,
+      userRole: 'recruiter',
+      resourceType: 'TalentAlert',
+      resourceId: alert._id,
+      description: `Recruiter ${recruiter.fullName} ${alert.isActive ? 'activated' : 'paused'} talent alert "${alert.name}"`,
+      ipAddress: req.ip,
+      method: req.method,
+      endpoint: req.originalUrl
+    })
 
     return res.status(200).json({
       message: alert.isActive ? 'Alert activated' : 'Alert paused',
@@ -431,6 +482,18 @@ const toggleTalentRadarOptIn = async (req, res) => {
 
     employee.talentRadarOptIn = optIn;
     await employee.save();
+
+    logActivity({
+      action: optIn ? 'TALENT_RADAR_OPT_IN' : 'TALENT_RADAR_OPT_OUT',
+      userId: employee._id,
+      userRole: 'employee',
+      resourceType: 'Employee',
+      resourceId: employee._id,
+      description: `${employee.fullName} ${optIn ? 'opted into' : 'opted out of'} Talent Radar`,
+      ipAddress: req.ip,
+      method: req.method,
+      endpoint: req.originalUrl
+    })
 
     return res.status(200).json({
       message: optIn

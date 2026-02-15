@@ -299,17 +299,16 @@ export const useAuthStore = create(
 
       // Logout function - calls Better Auth API and clears user data
       logout: async () => {
+        // Clear state FIRST to prevent components from making API calls with dead session
+        resetAccountRestrictedFlag();
+        set({ user: null, isAuthenticated: false, error: null });
+        scrubStorage();
+
         try {
-          // Better Auth uses unified logout endpoint (both APIs point to same endpoint)
+          // Then tell the server to invalidate the session
           await employeeAPI.logout().catch(() => { });
         } catch (error) {
           // Ignore errors since we're logging out anyway
-        } finally {
-          // Reset auth state and account restricted flag
-          resetAccountRestrictedFlag();
-          set({ user: null, isAuthenticated: false, error: null });
-
-          scrubStorage();
         }
       },
 

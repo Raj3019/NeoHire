@@ -8,19 +8,25 @@ import { ArrowLeft, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { getMissingProfileFields } from '@/lib/utils';
 import ProfileCompletionBanner from '@/components/shared/ProfileCompletionBanner';
+import RichTextEditor from '@/components/ui/RichTextEditor';
 
 export default function CreateJob() {
   const router = useRouter();
   const { user } = useAuthStore();
   const { addJob } = useDataStore();
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const missingFields = getMissingProfileFields(user);
   const isProfileIncomplete = missingFields.length > 0;
 
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
   const [formData, setFormData] = useState({
     title: '',
-    company: user?.currentEmployer || '', 
+    company: user?.currentEmployer || '',
     location: '',
     salary: '',
     type: 'Full-time',
@@ -114,23 +120,23 @@ export default function CreateJob() {
                   </div>
 
                   <div>
-                    <label className="text-sm font-bold text-neo-black mb-1.5 block">Description</label>
-                    <textarea
-                      className="w-full neo-border p-3 bg-white focus:outline-none focus:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all h-32"
-                      placeholder="Describe the role..."
+                    <label className="text-sm font-bold text-neo-black dark:text-white mb-1.5 block uppercase">Job Description *</label>
+                    <RichTextEditor
+                      name="description"
                       value={formData.description}
-                      onChange={e => setFormData({ ...formData, description: e.target.value })}
+                      onChange={handleInputChange}
+                      placeholder="Describe the role and responsibilities..."
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="text-sm font-bold text-neo-black mb-1.5 block">Job Requirements</label>
-                    <textarea
-                      className="w-full neo-border p-3 bg-white focus:outline-none focus:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all h-32"
-                      placeholder="List key requirements or sections..."
+                    <label className="text-sm font-bold text-neo-black dark:text-white mb-1.5 block uppercase">Job Requirements *</label>
+                    <RichTextEditor
+                      name="jobRequirements"
                       value={formData.jobRequirements}
-                      onChange={e => setFormData({ ...formData, jobRequirements: e.target.value })}
+                      onChange={handleInputChange}
+                      placeholder="List key requirements, skills, and qualifications..."
                       required
                     />
                   </div>

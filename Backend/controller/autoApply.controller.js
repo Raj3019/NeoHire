@@ -3,6 +3,7 @@ const Application = require("../model/application.model")
 const Job = require("../model/job.model")
 const { calculateSkillMatch, hasAlreadyApplied } = require("../utils/autoApply.utils")
 const { createNotification, sendRealTimeNotification } = require('../utils/notification.utlis');
+const { logActivity } = require('../utils/activityLog.utils');
 
 const THRESHOLD = 80;
 
@@ -218,6 +219,18 @@ const toggleAutoApply = async (req, res) => {
     employee.autoApplyEnabled = enabled
     await employee.save()
 
+    logActivity({
+      action: enabled ? 'AUTO_APPLY_ENABLED' : 'AUTO_APPLY_DISABLED',
+      userId: employee._id,
+      userRole: 'employee',
+      resourceType: 'Employee',
+      resourceId: employee._id,
+      description: `${employee.fullName} ${enabled ? 'enabled' : 'disabled'} auto-apply`,
+      ipAddress: req.ip,
+      method: req.method,
+      endpoint: req.originalUrl
+    })
+
     return res.status(200).json({
       message: enabled ? "Auto-apply is enabled" : "Auto-apply is disabled",
       autoApplyEnabled: employee.autoApplyEnabled, // Directly for frontend ease
@@ -267,6 +280,18 @@ const runAutoApplyNow = async (req, res) => {
     const userSockets = req.app.get('userSockets');
 
     const results = await runAutoApplyForAllCandidates(io, userSockets);
+
+    logActivity({
+      action: 'AUTO_APPLY_MANUAL_RUN',
+      userId: req.user?.id || null,
+      userRole: 'admin',
+      resourceType: 'System',
+      description: `Admin manually triggered auto-apply: ${results.totalApplicationsCreated} applications created`,
+      metadata: { totalCandidates: results.totalCandidates, totalJobs: results.totalJobs, totalApplicationsCreated: results.totalApplicationsCreated },
+      ipAddress: req.ip,
+      method: req.method,
+      endpoint: req.originalUrl
+    })
 
     return res.status(200).json({
       message: "Auto-apply completed",

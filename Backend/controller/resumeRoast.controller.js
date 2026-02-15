@@ -1,6 +1,7 @@
 const { extractTextFromRoastPDF, resumeRoastText } = require("../utils/roast.utlis")
 const { uploadRoastResumeToCloudnary } = require("../utils/cloudnary.utlis")
 const fs = require('fs');
+const { logActivity } = require('../utils/activityLog.utils');
 
 const resumeRoast = async (req, res) => {
   try {
@@ -19,6 +20,17 @@ const resumeRoast = async (req, res) => {
 
     // Get roast result
     const roastResult = await resumeRoastText(resumeText)
+
+    logActivity({
+      action: 'RESUME_ROASTED',
+      userId: req.user?.id || null,
+      userRole: req.user?.role?.toLowerCase() || 'employee',
+      resourceType: 'Resume',
+      description: `User roasted their resume`,
+      ipAddress: req.ip,
+      method: req.method,
+      endpoint: req.originalUrl
+    })
 
     return res.status(201).json({
       success: true,

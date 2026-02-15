@@ -431,7 +431,13 @@ export default function RecruiterJobs() {
 
                 <div>
                   <label className="block font-black uppercase mb-1 text-xs dark:text-white">Job Description *</label>
-                  <textarea name="description" value={formData.description ?? ''} onChange={handleInputChange} className="w-full h-40 bg-white dark:bg-zinc-800 dark:text-white border-4 border-neo-black dark:border-white p-3 font-mono text-sm focus:outline-none focus:ring-4 focus:ring-neo-blue placeholder:text-gray-400" placeholder="Describe the role..." required></textarea>
+                  <RichTextEditor
+                    name="description"
+                    value={formData.description ?? ''}
+                    onChange={handleInputChange}
+                    placeholder="Describe the role..."
+                    required
+                  />
                 </div>
 
                 <div>

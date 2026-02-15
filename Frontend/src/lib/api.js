@@ -454,6 +454,18 @@ export const adminAPI = {
     const response = await api.delete(`/admin/jobs/${id}`);
     return response.data;
   },
+  getActivityLogs: async (params) => {
+    const response = await api.get('/activity/logs', { params });
+    return response.data;
+  },
+  getActivityStats: async (days = 7) => {
+    const response = await api.get('/activity/stats', { params: { days } });
+    return response.data;
+  },
+  deleteActivityLogs: async (days) => {
+    const response = await api.delete('/activity/logs', { data: { days } });
+    return response.data;
+  },
 };
 
 // Google OAuth sign-in - POST to Better Auth then redirect to Google

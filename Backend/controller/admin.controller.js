@@ -5,6 +5,7 @@ const Application = require("../model/application.model")
 const TalentAlert = require("../model/talentAlert.model")
 const { MongoClient } = require("mongodb")
 const { sendStatusChangeEmail } = require("../utils/emailService.utlis")
+const { logActivity } = require('../utils/activityLog.utils')
 
 // Connect to MongoDB to access Better Auth user collection
 const client = new MongoClient(process.env.MONGODB_URL)
@@ -443,6 +444,19 @@ const updateUserStatus = async (req, res) => {
 
     await sendStatusChangeEmail(user.email, user.fullName, status)
 
+    logActivity({
+      action: 'USER_STATUS_CHANGED',
+      userId: req.user?.id || null,
+      userRole: 'admin',
+      resourceType: userType === 'recruiter' ? 'Recruiter' : 'Employee',
+      resourceId: id,
+      description: `Admin changed ${user.fullName} (${user.email}) status to ${status}`,
+      metadata: { targetUserType: userType, newStatus: status, targetEmail: user.email },
+      ipAddress: req.ip,
+      method: req.method,
+      endpoint: req.originalUrl
+    })
+
     res.status(200).json({
       success: true,
       message: `User ${status === 'Active' ? 'activated' : status}`,
@@ -524,6 +538,19 @@ const updateJobStatus = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Job not found' })
     }
 
+    logActivity({
+      action: 'JOB_STATUS_CHANGED',
+      userId: req.user?.id || null,
+      userRole: 'admin',
+      resourceType: 'Job',
+      resourceId: id,
+      description: `Admin changed job "${job.title}" at ${job.companyName} status to ${status}`,
+      metadata: { newStatus: status, jobTitle: job.title, companyName: job.companyName },
+      ipAddress: req.ip,
+      method: req.method,
+      endpoint: req.originalUrl
+    })
+
     res.status(200).json({
       success: true,
       data: job
@@ -546,6 +573,19 @@ const deleteJob = async (req, res) => {
 
     // Also delete related applications
     await Application.deleteMany({ job: id })
+
+    logActivity({
+      action: 'JOB_DELETED',
+      userId: req.user?.id || null,
+      userRole: 'admin',
+      resourceType: 'Job',
+      resourceId: id,
+      description: `Admin deleted job "${job.title}" at ${job.companyName || 'Unknown'}`,
+      metadata: { jobTitle: job.title, companyName: job.companyName },
+      ipAddress: req.ip,
+      method: req.method,
+      endpoint: req.originalUrl
+    })
 
     res.status(200).json({
       success: true,

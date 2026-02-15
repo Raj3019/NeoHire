@@ -10,7 +10,6 @@ const authenticateSession = async (req, res, next) => {
     })
 
     if (!session) {
-      console.log("Validation failed: No session found for token");
       return res.status(401).json({ error: "Access denied, not authenticated" })
     }
 

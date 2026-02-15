@@ -243,7 +243,7 @@ const NavbarContent = () => {
                       SETTINGS
                     </button> */}
                       <button
-                        onClick={() => { logout(); setShowProfileMenu(false); router.push('/'); }}
+                        onClick={async () => { await logout(); setShowProfileMenu(false); router.push('/'); }}
                         className="block w-full text-left px-4 py-3 text-sm font-bold hover:bg-neo-orange hover:text-white text-red-600"
                       >
                         LOGOUT
@@ -297,7 +297,7 @@ const NavbarContent = () => {
                 {!(user?.role === 'Recruiter' || user?.role?.toLowerCase() === 'recruiter') && (
                   <Link href="/candidate/settings" onClick={() => setIsMobileMenuOpen(false)} className="block w-full text-left py-2 font-bold hover:bg-gray-100 dark:hover:bg-zinc-800 px-2">SETTINGS</Link>
                 )}
-                <button onClick={() => { logout(); setIsMobileMenuOpen(false); router.push('/'); }} className="block w-full text-left py-2 font-bold text-red-600 hover:bg-red-50 px-2">LOGOUT</button>
+                <button onClick={async () => { await logout(); setIsMobileMenuOpen(false); router.push('/'); }} className="block w-full text-left py-2 font-bold text-red-600 hover:bg-red-50 px-2">LOGOUT</button>
               </div>
             )}
           </div>
