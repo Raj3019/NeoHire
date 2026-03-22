@@ -28,6 +28,7 @@ const Recruiter = require('./model/recruiter.model')
 const { requestLogger } = require('./middleware/activityLog.middleware')
 const activityLogRouter = require('./routers/activityLog.router')
 const { logActivity } = require('./utils/activityLog.utils')
+const { getUserUsageLimits } = require('./middleware/usageLimit.middleware')
 
 const frontendURL = process.env.FRONTEND_URL
 
@@ -291,6 +292,10 @@ app.use('/api/auto-apply', autoApplyRouter)
 // app.use('/api/plans', planRouter)
 // app.use('/api/subscriptions', subscriptionRouter)
 app.use('/api/talent-radar', talentRadarRouter)
+
+// Usage limits endpoint
+const { authenticateSession: authSession } = require('./middleware/auth.middleware')
+app.get('/api/usage-limits', authSession, getUserUsageLimits)
 
 app.get('/', (req, res) => {
   res.send("Hello World")

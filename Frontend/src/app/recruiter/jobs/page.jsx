@@ -8,6 +8,8 @@ import { jobsAPI, recruiterAPI } from '@/lib/api';
 import { ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
 import { getMissingProfileFields, formatDate, getCurrencySymbol } from '@/lib/utils';
 import ProfileCompletionBanner from '@/components/shared/ProfileCompletionBanner';
+import UsageLimitBanner from '@/components/shared/UsageLimitBanner';
+import { useUsageLimits } from '@/lib/usageLimitsStore';
 import RichTextEditor from '@/components/ui/RichTextEditor';
 
 const INITIAL_FORM_STATE = {
@@ -51,6 +53,7 @@ export default function RecruiterJobs() {
   const [error, setError] = useState('');
   const [expandedInsightId, setExpandedInsightId] = useState(null);
 
+  const { limits, fetchLimits, refreshLimits } = useUsageLimits();
   const missingFields = getMissingProfileFields(user);
   const isProfileIncomplete = missingFields.length > 0;
 
@@ -66,6 +69,7 @@ export default function RecruiterJobs() {
   // Fetch profile on mount to ensure we have the latest jobs
   useEffect(() => {
     fetchProfile('Recruiter');
+    fetchLimits();
   }, []);
 
   // Sync jobs from user profile
@@ -243,6 +247,9 @@ export default function RecruiterJobs() {
         console.warn("Profile refresh failed:", profileRes.error);
       }
 
+      // Refresh usage limits
+      refreshLimits();
+
       setIsModalOpen(false);
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err) {
@@ -262,6 +269,12 @@ export default function RecruiterJobs() {
       <div className="min-h-screen bg-neo-bg dark:bg-zinc-950">
         <ProfileCompletionBanner />
         <div className="max-w-6xl mx-auto px-4 py-8">
+          {/* Usage Limit Banner */}
+          {limits?.jobCreation && (
+            <div className="mb-4">
+              <UsageLimitBanner usage={limits.jobCreation} label="Job Posts" />
+            </div>
+          )}
           {successMessage && (
             <div className="fixed top-24 right-4 z-[9999] animate-in slide-in-from-right-5">
               <div className="bg-neo-green border-2 border-neo-black dark:border-white px-6 py-3 shadow-neo dark:shadow-[4px_4px_0px_0px_#ffffff]">
@@ -286,7 +299,12 @@ export default function RecruiterJobs() {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <NeoButton onClick={handleOpenCreate} className="bg-neo-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 shadow-neo-md h-12 whitespace-nowrap">+ POST JOB</NeoButton>
+              <NeoButton
+                onClick={handleOpenCreate}
+                disabled={limits?.jobCreation && limits.jobCreation.remaining === 0}
+                className="bg-neo-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 shadow-neo-md h-12 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+                title={limits?.jobCreation?.remaining === 0 ? 'Job post limit reached' : ''}
+              >+ POST JOB</NeoButton>
             </div>
           </div>
 
@@ -716,10 +734,10 @@ export default function RecruiterJobs() {
                                 </div>
                                 {/* Right Column: Actions */}
                                 <div className="md:col-span-3 flex flex-col gap-2 justify-center">
-                                  <button className="w-full bg-neo-black text-white font-black py-2.5 text-xs border-2 border-neo-black dark:border-white hover:bg-gray-800 dark:hover:bg-zinc-700 uppercase tracking-wider shadow-sm active:translate-y-0.5 active:shadow-none transition-all flex items-center justify-center gap-2">
+                                  <button disabled={true} className="w-full bg-neo-black text-white font-black py-2.5 text-xs border-2 border-neo-black dark:border-white uppercase tracking-wider shadow-sm transition-all flex items-center justify-center gap-2 opacity-50 cursor-not-allowed">
                                     <span>📅</span> Schedule
                                   </button>
-                                  <button className="w-full bg-white dark:bg-zinc-900 text-black dark:text-white font-black py-2.5 text-xs border-2 border-neo-black dark:border-white hover:bg-gray-50 dark:hover:bg-zinc-800 uppercase tracking-wider shadow-sm active:translate-y-0.5 active:shadow-none transition-all flex items-center justify-center gap-2">
+                                  <button disabled={true} className="w-full bg-white dark:bg-zinc-900 text-black dark:text-white font-black py-2.5 text-xs border-2 border-neo-black dark:border-white uppercase tracking-wider shadow-sm transition-all flex items-center justify-center gap-2 opacity-50 cursor-not-allowed">
                                     <span>📄</span> Profile
                                   </button>
                                   <div className="border-t border-gray-200 dark:border-zinc-700 my-1"></div>

@@ -96,6 +96,7 @@ api.interceptors.response.use(
 
     if (error.response?.status === 403) {
       const statusCode = error.response?.data?.statusCode;
+      const limitType = error.response?.data?.limitType;
 
       if (statusCode === 'ACCOUNT_SUSPENDED' || statusCode === 'ACCOUNT_BANNED') {
         // Set flag IMMEDIATELY so no other request triggers duplicate toasts/redirects
@@ -124,6 +125,10 @@ api.interceptors.response.use(
         }
 
         // Mark as handled so downstream doesn't show duplicate errors
+        error.isHandled = true;
+      } else if (limitType) {
+        const message = error.response?.data?.message || 'Daily limit reached. slow down, legend.';
+        useToast.getState().addToast(message, 'warning');
         error.isHandled = true;
       }
     }
@@ -496,6 +501,14 @@ export const googleSignIn = async (role) => {
 export const setGoogleRole = async (role) => {
   const response = await api.post('/auth/set-role', { role });
   return response.data;
+};
+
+// Usage Limits API
+export const usageLimitsAPI = {
+  getLimits: async () => {
+    const response = await api.get('/usage-limits');
+    return response.data;
+  },
 };
 
 export default api;

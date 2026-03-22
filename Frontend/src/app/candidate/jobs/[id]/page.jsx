@@ -8,6 +8,8 @@ import { getMissingProfileFields, formatDate, getCurrencySymbol } from '@/lib/ut
 import { jobsAPI } from '@/lib/api';
 import { NeoCard, NeoButton, NeoBadge } from '@/components/ui/neo';
 import ProfileCompletionBanner from '@/components/shared/ProfileCompletionBanner';
+import UsageLimitBanner from '@/components/shared/UsageLimitBanner';
+import { useUsageLimits } from '@/lib/usageLimitsStore';
 import { useToast } from '@/lib/toastStore';
 
 const formatFieldName = (field) => {
@@ -52,6 +54,12 @@ export default function JobDetailsPage() {
   const [profileResumeUrl, setProfileResumeUrl] = useState('');
 
   const [error, setError] = useState(null);
+  const { limits, fetchLimits, refreshLimits } = useUsageLimits();
+  const isApplicationLimitReached = Boolean(
+    limits?.jobApplications &&
+    limits.jobApplications.limit !== 'Unlimited' &&
+    limits.jobApplications.remaining === 0
+  );
 
   // Color logic matching applications page
   const getStatusColor = (status) => {
@@ -103,6 +111,7 @@ export default function JobDetailsPage() {
     };
 
     fetchJobData();
+    fetchLimits();
   }, [params.id, jobs, user]);
 
   const getJobDataList = (fieldBase) => {
@@ -228,6 +237,7 @@ export default function JobDetailsPage() {
       setIsApplied(true);
       setApplicationStatus('Applied');
       useToast.getState().addToast('Application submitted successfully! Good luck.', 'success');
+      refreshLimits();
 
       // Sync Profile
       if (user && user.role) {
@@ -284,6 +294,13 @@ export default function JobDetailsPage() {
     <AuthGuard allowedRoles={['Employee']}>
       <ProfileCompletionBanner />
       <div className="max-w-7xl mx-auto px-4 py-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
+
+        {/* Usage Limit Banner */}
+        {limits?.jobApplications && (
+          <div className="mb-4">
+            <UsageLimitBanner usage={limits.jobApplications} label="Job Applications" />
+          </div>
+        )}
 
         {/* Navigation */}
         <Link href="/candidate/jobs" className="mb-6 flex items-center font-bold text-neo-black dark:text-white hover:underline group">
@@ -572,8 +589,10 @@ export default function JobDetailsPage() {
                           (resumeSource === 'upload' && !resumeFile) ||
                           (resumeSource === 'profile' && !hasProfileResume) ||
                           isProfileIncomplete ||
-                          isApplying
+                          isApplying ||
+                          isApplicationLimitReached
                         }
+                        title={isApplicationLimitReached ? `Monthly application limit reached (${limits?.jobApplications?.current} / ${limits?.jobApplications?.limit})` : ''}
                       >
                         {isApplying ? (
                           <span className="flex items-center justify-center gap-2">
@@ -585,6 +604,18 @@ export default function JobDetailsPage() {
                           </span>
                         ) : 'SUBMIT APPLICATION'}
                       </NeoButton>
+
+                      {isApplicationLimitReached && (
+                        <div className="mt-2 p-3 bg-red-50 dark:bg-red-900/20 border-2 border-red-300 dark:border-red-800 text-center rounded">
+                          <p className="text-xs font-black text-red-600 dark:text-red-300 uppercase">
+                            Application limit reached ({limits?.jobApplications?.current} / {limits?.jobApplications?.limit})
+                          </p>
+                          <p className="text-[11px] text-gray-600 dark:text-gray-300 mt-1">
+                            You have used all available applications for this cycle. Please try again after reset.
+                          </p>
+                        </div>
+                      )}
+
                       {isProfileIncomplete && (
                         <div className="mt-2 p-3 bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-900 text-center rounded">
                           <p className="text-xs font-bold text-red-600 dark:text-red-400 uppercase mb-1">Missing required fields:</p>
@@ -622,8 +653,8 @@ export default function JobDetailsPage() {
                 <h4 className="font-black uppercase text-sm mb-4 border-b-2 border-gray-200 dark:border-zinc-700 pb-2 dark:text-white">About Company</h4>
                 <p className="font-bold text-lg mb-1 dark:text-white">{job.company}</p>
                 <p className="font-mono text-xs text-gray-500 dark:text-gray-400 mb-4">{job.industry || 'Technology'}</p>
-                <a href="#" className="text-neo-blue font-bold text-sm hover:underline block">Visit Website &rarr;</a>
-                <a href="#" className="text-gray-500 dark:text-gray-400 font-bold text-xs hover:underline block mt-2">View other jobs</a>
+                <a href={job.companyWebisteURL} className="text-neo-blue font-bold text-sm hover:underline block">Visit Website &rarr;</a>
+                {/* <a href="#" className="text-gray-500 dark:text-gray-400 font-bold text-xs hover:underline block mt-2">View other jobs</a> */}
               </NeoCard>
             </div>
           </div>

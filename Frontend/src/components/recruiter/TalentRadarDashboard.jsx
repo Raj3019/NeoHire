@@ -8,9 +8,12 @@ import { NeoButton, NeoCard } from '@/components/ui/neo';
 import { Plus, Search, Target, TrendingUp, AlertCircle, Zap, Radio, Crown } from 'lucide-react';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/store';
+import UsageLimitBanner from '@/components/shared/UsageLimitBanner';
+import { useUsageLimits } from '@/lib/usageLimitsStore';
 
 export default function TalentRadarDashboard() {
   const { user } = useAuthStore();
+  const { limits, fetchLimits, refreshLimits } = useUsageLimits();
   const [alerts, setAlerts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [viewingMatches, setViewingMatches] = useState(null);
@@ -24,6 +27,7 @@ export default function TalentRadarDashboard() {
 
   useEffect(() => {
     loadAlerts();
+    fetchLimits();
   }, []);
 
   const loadAlerts = async (showLoading = true) => {
@@ -48,6 +52,7 @@ export default function TalentRadarDashboard() {
       setShowCreateModal(false);
       setEditingAlert(null);
       loadAlerts(!editingAlert); // Only show loading if creating new, optional
+      refreshLimits();
     } catch (error) {
       const errorMsg = error.response?.data?.message || 'Action failed';
       alert(errorMsg);
@@ -74,6 +79,7 @@ export default function TalentRadarDashboard() {
     try {
       await talentRadarAPI.deleteAlert(alertId);
       loadAlerts();
+      refreshLimits();
     } catch (error) {
       console.error('Delete failed:', error);
     }
@@ -173,6 +179,11 @@ export default function TalentRadarDashboard() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
+      {/* Usage Limit Banner */}
+      {limits?.talentRadarAlerts && (
+        <UsageLimitBanner usage={limits.talentRadarAlerts} label="Talent Radar Alerts" />
+      )}
+
       {/* Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <NeoCard className="bg-neo-blue text-white shadow-neo border-2 dark:border-white p-4">
@@ -224,6 +235,8 @@ export default function TalentRadarDashboard() {
           }}
           variant="black"
           className="px-8"
+          disabled={limits?.talentRadarAlerts && limits.talentRadarAlerts.remaining === 0}
+          title={limits?.talentRadarAlerts?.remaining === 0 ? 'Alert limit reached' : ''}
         >
           <Plus className="w-5 h-5 mr-2" /> Launch New Alert
         </NeoButton>

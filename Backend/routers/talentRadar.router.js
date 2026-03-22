@@ -13,6 +13,7 @@ const {
 
 const { authenticateSession, authenticateRole } = require('../middleware/auth.middleware');
 const { checkUserStatus } = require('../middleware/userStatus.middleware');
+const { checkTalentRadarAlertLimit } = require('../middleware/usageLimit.middleware');
 
 // Create a new talent alert
 talentRadarRouter.post(
@@ -20,6 +21,7 @@ talentRadarRouter.post(
   authenticateSession,
   checkUserStatus,
   authenticateRole('Recruiter'),
+  checkTalentRadarAlertLimit,
   createAlert
 );
 

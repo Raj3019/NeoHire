@@ -33,6 +33,10 @@ const jobSchema = new mongoose.Schema({
     type: String,
     required: [true, "Company Name is required"]
   },
+  companyWebisteURL:{
+    type: String,
+    required: [true, "Company Website is required"]
+  },
   department:{
     type: String
   },

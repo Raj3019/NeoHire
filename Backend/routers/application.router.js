@@ -9,6 +9,7 @@ const checkEmployeeProfileComplete = require("../middleware/employee.middleware"
 const multer = require("multer");
 const { applicationLimiter } = require("../middleware/rateLimit.middleware");
 const { checkUserStatus } = require("../middleware/userStatus.middleware");
+const { checkApplicationLimit } = require("../middleware/usageLimit.middleware");
 // const upload = require("../middleware/multer.middleware");
 const upload = multer({ dest: 'resume/' , limits: { fileSize: 5 * 1024 * 1024 }})
 
@@ -18,6 +19,7 @@ applicationRouter.post(
   checkUserStatus,
   authenticateRole("Employee"),
   applicationLimiter,
+  checkApplicationLimit,
   upload.single("resume"),
   checkEmployeeProfileComplete,
   applyJob,

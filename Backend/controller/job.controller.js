@@ -13,7 +13,7 @@ const createJob = async (req, res) => {
       return res.status(404).json({ message: "Recruiter not found" });
     }
 
-    const { title, description, jobRequirements, location, companyName, jobType, department, applicationDeadline, openings, status, industry, benefits, educationRequired, workType, skillsRequired, experienceLevel, salary, postedBy } = req.body
+    const { title, description, jobRequirements, location, companyName, companyWebisteURL, jobType, department, applicationDeadline, openings, status, industry, benefits, educationRequired, workType, skillsRequired, experienceLevel, salary, postedBy } = req.body
 
     const job = new Job(
       {
@@ -22,6 +22,7 @@ const createJob = async (req, res) => {
         jobRequirements,
         location,
         companyName,
+        companyWebisteURL,
         department,
         jobType,
         workType,

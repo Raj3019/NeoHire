@@ -1,5 +1,10 @@
 const rateLimit = require("express-rate-limit")
 
+const maxResumeRoastsPerUser = parseInt(process.env.MAX_RESUME_ROASTS_PER_USER, 10);
+if (isNaN(maxResumeRoastsPerUser)) {
+  throw new Error('MAX_RESUME_ROASTS_PER_USER environment variable is not set or is invalid.');
+}
+
 const generalLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 min
   max: 100,
@@ -43,9 +48,11 @@ const jobPostLimiter = rateLimit({
 // Resume roast limiter (AI-intensive)
 const roastLimiter = rateLimit({
   windowMs: 24 * 60 * 60 * 1000,  // 24 hour
-  max: 2,                     // 2 roasts per hour
+  max: maxResumeRoastsPerUser,
+  keyGenerator: (req) => req.user?.id || req.ip,
   message: {
-    success: false
+    success: false,
+    message: `You've reached your daily limit of ${maxResumeRoastsPerUser} resume roasts.`
   }
 });
 

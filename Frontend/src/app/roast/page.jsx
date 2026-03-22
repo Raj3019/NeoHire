@@ -1,10 +1,12 @@
 'use client';
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { NeoButton, NeoCard, NeoBadge } from '@/components/ui/neo';
 import { tryAPI } from '@/lib/api';
 import { Upload, Flame, AlertCircle, FileText, CheckCircle2, Download, RefreshCw, Sparkles, Ghost, Zap } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import UsageLimitBanner from '@/components/shared/UsageLimitBanner';
+import { useUsageLimits } from '@/lib/usageLimitsStore';
 
 export default function RoastPage() {
     const [file, setFile] = useState(null);
@@ -12,6 +14,16 @@ export default function RoastPage() {
     const [roastData, setRoastData] = useState(null);
     const [error, setError] = useState(null);
     const fileInputRef = useRef(null);
+    const { limits, fetchLimits, refreshLimits } = useUsageLimits();
+    const isRoastLimitReached = Boolean(
+        limits?.resumeRoast &&
+        limits.resumeRoast.limit !== 'Unlimited' &&
+        limits.resumeRoast.remaining === 0
+    );
+
+    useEffect(() => {
+        fetchLimits();
+    }, []);
 
     const handleFileChange = (e) => {
         const selectedFile = e.target.files[0];
@@ -38,6 +50,11 @@ export default function RoastPage() {
     const [progress, setProgress] = useState(0);
 
     const handleRoast = async () => {
+        if (isRoastLimitReached) {
+            setError('Monthly roast limit reached. Come back next month.');
+            return;
+        }
+
         if (!file) {
             setError('Select a resume first, champ.');
             return;
@@ -75,6 +92,7 @@ export default function RoastPage() {
                 clearInterval(stageInterval);
                 setProgress(100);
                 setRoastData(result.data);
+                refreshLimits();
                 setTimeout(() => {
                     document.getElementById('roast-result')?.scrollIntoView({ behavior: 'smooth' });
                 }, 100);
@@ -82,8 +100,13 @@ export default function RoastPage() {
                 setError(result.message || 'The AI is too stunned by your resume to roast it. Try again.');
             }
         } catch (err) {
-            if (!err.isHandled) {
-                console.error('Roast failed:', err);
+            const status = err.response?.status;
+            const limitType = err.response?.data?.limitType;
+
+            if (status === 429 || status === 403 || limitType === 'RESUME_ROAST') {
+                await refreshLimits();
+                setError(err.response?.data?.message || 'Monthly roast limit reached. Come back next month, legend.');
+            } else if (!err.isHandled) {
                 setError(err.response?.data?.message || 'Server had a breakdown reading your resume. Try again?');
             }
         } finally {
@@ -103,6 +126,13 @@ export default function RoastPage() {
     return (
         <div className="min-h-screen bg-neo-bg py-12 px-4 selection:bg-neo-yellow selection:text-neo-black">
             <div className="max-w-4xl mx-auto">
+                {/* Usage Limit Banner */}
+                {limits?.resumeRoast && (
+                    <div className="mb-6">
+                        <UsageLimitBanner usage={limits.resumeRoast} label="Resume Roasts (Monthly)" />
+                    </div>
+                )}
+
                 {/* Header */}
                 <div className="text-center mb-10">
                     <div className="inline-block mb-3 transform -rotate-1">
@@ -133,9 +163,16 @@ export default function RoastPage() {
                         {!loading ? (
                             <div className="flex flex-col items-center justify-center text-center space-y-6">
                                 <div
-                                    onClick={() => fileInputRef.current?.click()}
+                                    onClick={() => {
+                                        if (!isRoastLimitReached) fileInputRef.current?.click();
+                                    }}
                                     className={`w-full max-w-md p-5 md:p-6 border-2 border-dashed cursor-pointer transition-all flex flex-col items-center group
-                                        ${file ? 'border-neo-green bg-neo-green/5' : 'border-neo-black dark:border-white hover:bg-gray-50 dark:hover:bg-zinc-800'}`}
+                                        ${isRoastLimitReached
+                                            ? 'border-red-500 bg-red-50 dark:bg-red-950/30 cursor-not-allowed opacity-70'
+                                            : file
+                                                ? 'border-neo-green bg-neo-green/5'
+                                                : 'border-neo-black dark:border-white hover:bg-gray-50 dark:hover:bg-zinc-800'}
+                                    `}
                                 >
                                     <input
                                         type="file"
@@ -174,7 +211,8 @@ export default function RoastPage() {
                                     variant="danger"
                                     className="text-lg md:text-xl py-3 md:py-4 px-8 w-full max-w-md border-2 md:border-3 shadow-neo-sm dark:shadow-[4px_4px_0px_0px_#ffffff]"
                                     onClick={handleRoast}
-                                    disabled={!file}
+                                    disabled={!file || isRoastLimitReached}
+                                    title={isRoastLimitReached ? 'Monthly roast limit reached' : ''}
                                 >
                                     ROAST MY RESUME
                                 </NeoButton>

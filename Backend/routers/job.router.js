@@ -4,11 +4,12 @@ const { createJob, listJobs, editJob, getJobById } = require("../controller/job.
 const checkRercuiterProfileComplete = require("../middleware/recruiter.middleware")
 const { jobPostLimiter } = require("../middleware/rateLimit.middleware")
 const { checkUserStatus } = require("../middleware/userStatus.middleware")
+const { checkJobCreationLimit } = require("../middleware/usageLimit.middleware")
 const jobRouter = express.Router()
 
 //create Job
 
-jobRouter.post('/create', authenticateSession, checkUserStatus, authenticateRole("Recruiter"), checkRercuiterProfileComplete, jobPostLimiter, createJob)
+jobRouter.post('/create', authenticateSession, checkUserStatus, authenticateRole("Recruiter"), checkRercuiterProfileComplete, jobPostLimiter, checkJobCreationLimit, createJob)
 
 //edit job
 
