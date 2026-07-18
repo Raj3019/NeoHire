@@ -6,7 +6,9 @@
 
 Find better-fit jobs, rank applicants intelligently, automate applications, and discover hidden talent from one platform.
 
-[Live Product](https://neohire.site) · [Candidate Demo](https://neohire.site/login?mode=candidate) · [Recruiter Demo](https://neohire.site/login?mode=recruiter)
+[Live Product](https://www.neohire.site) · [Candidate Demo](https://www.neohire.site/login?mode=candidate) · [Recruiter Demo](https://www.neohire.site/login?mode=recruiter)
+
+[GitHub source - v2 branch](https://github.com/Raj3019/NeoHire/tree/v2)
 
 </div>
 
@@ -267,4 +269,3 @@ Contributions are welcome. Create a focused branch, keep frontend and backend ch
 ## License
 
 This project is currently distributed under the ISC license declared by the backend package.
-

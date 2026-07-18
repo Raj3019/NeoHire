@@ -6,8 +6,10 @@
   "type": "commonjs",
   "scripts": {
     "dev": "nodemon app.js",
+    "start": "node app.js",
     "seed:demo": "node scripts/seed.js",
-    "seed:demo:validate": "node scripts/seed.js --validate-only"
+    "seed:demo:validate": "node scripts/seed.js --validate-only",
+    "reset:demo-admin-password": "node scripts/reset-demo-admin-password.js"
   },
   "author": "",
   "license": "ISC",

@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect, Suspense, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { NeoButton } from '@/components/ui/neo';
 import { useAuthStore } from '@/lib/store';
@@ -8,6 +9,29 @@ import { useAuthStore } from '@/lib/store';
 import { cookieStorage, hasValidAuth } from '@/lib/utils';
 import NotificationBell from './NotificationBell';
 import { useNotificationSocket } from '@/lib/notificationStore';
+import { Github, Star } from 'lucide-react';
+
+const GITHUB_REPOSITORY_URL = 'https://github.com/Raj3019/NeoHire/tree/v2';
+const GITHUB_REPOSITORY_API_URL = 'https://api.github.com/repos/Raj3019/NeoHire';
+
+const GitHubLink = ({ stars, compact = false, className = '' }) => (
+  <a
+    href={GITHUB_REPOSITORY_URL}
+    target="_blank"
+    rel="noopener noreferrer"
+    aria-label="View NeoHire source code on GitHub"
+    className={`inline-flex h-9 items-center overflow-hidden border-2 border-neo-black bg-white font-mono text-neo-black shadow-[3px_3px_0px_0px_#111] transition-[background-color,box-shadow] hover:bg-gray-50 hover:shadow-[4px_4px_0px_0px_#111] active:shadow-none dark:border-white dark:bg-zinc-900 dark:text-white dark:shadow-[3px_3px_0px_0px_#ffffff] dark:hover:bg-zinc-800 dark:hover:shadow-[4px_4px_0px_0px_#ffffff] ${className}`}
+  >
+    <span className="inline-flex h-full items-center gap-1.5 px-2.5 text-[10px] font-black tracking-wider">
+      <Github className="h-4 w-4" aria-hidden="true" />
+      <span className={compact ? 'sr-only' : 'hidden lg:inline'}>GITHUB</span>
+    </span>
+    <span className="inline-flex h-full items-center gap-1 border-l-2 border-neo-black bg-neo-yellow px-2 text-[10px] font-black tabular-nums text-neo-black dark:border-white">
+      <Star className="h-3.5 w-3.5 fill-current" aria-hidden="true" />
+      {stars ?? '—'}
+    </span>
+  </a>
+);
 
 const NavbarContent = () => {
   const pathname = usePathname();
@@ -23,7 +47,33 @@ const NavbarContent = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [githubStars, setGithubStars] = useState(null);
   const profileMenuRef = useRef(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    fetch(GITHUB_REPOSITORY_API_URL, {
+      headers: { Accept: 'application/vnd.github+json' },
+      signal: controller.signal,
+    })
+      .then((response) => {
+        if (!response.ok) throw new Error('Unable to load GitHub stars');
+        return response.json();
+      })
+      .then((repository) => {
+        if (Number.isInteger(repository.stargazers_count)) {
+          setGithubStars(repository.stargazers_count);
+        }
+      })
+      .catch((error) => {
+        if (error.name !== 'AbortError') {
+          console.warn('GitHub star count unavailable');
+        }
+      });
+
+    return () => controller.abort();
+  }, []);
 
   // Close profile menu on click outside
   useEffect(() => {
@@ -178,12 +228,19 @@ const NavbarContent = () => {
   };
 
   return (
-    <nav className="border-b-4 border-neo-black dark:border-white bg-white dark:bg-[#1E1E1E] sticky top-0 z-40 transition-colors">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <nav className="relative border-b-4 border-neo-black dark:border-white bg-white dark:bg-[#1E1E1E] sticky top-0 z-40 transition-colors">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:pr-32">
         <div className="flex justify-between h-20 items-center">
-          <Link href={user ? ((user.role === 'Recruiter' || user.role?.toLowerCase() === 'recruiter') ? '/recruiter/dashboard' : '/candidate/dashboard') : (isRecruiterMode ? '/?mode=recruiter' : '/')} className="flex items-center cursor-pointer">
-            <div className={`w-8 h-8 ${isRecruiterMode ? 'bg-neo-orange' : 'bg-neo-yellow'} border-2 border-neo-black dark:border-white mr-2 shadow-neo-sm dark:shadow-[2px_2px_0px_0px_#ffffff]`}></div>
-            <span className="font-black text-2xl tracking-tighter uppercase text-neo-black dark:text-white">
+          <Link href={user ? ((user.role === 'Recruiter' || user.role?.toLowerCase() === 'recruiter') ? '/recruiter/dashboard' : '/candidate/dashboard') : (isRecruiterMode ? '/?mode=recruiter' : '/')} className="group flex items-center cursor-pointer" aria-label="NeoHire home">
+            <Image
+              src="/neohire_logo.png"
+              alt=""
+              width={38}
+              height={48}
+              priority
+              className="mr-2 h-11 w-auto transition-transform duration-200 group-hover:rotate-6 group-hover:scale-105"
+            />
+            <span className="font-black text-2xl tracking-[-0.08em] uppercase text-neo-black dark:text-white">
               Neo<span className={isRecruiterMode ? 'text-neo-orange' : 'text-neo-blue'}>Hire</span>
             </span>
           </Link>
@@ -261,6 +318,10 @@ const NavbarContent = () => {
                 {darkMode ? '☀️' : '🌙'}
               </button>
             )}
+            <GitHubLink
+              stars={githubStars}
+              className="ml-6 xl:absolute xl:right-6 xl:top-1/2 xl:ml-0 xl:-translate-y-1/2"
+            />
           </div>
 
           {/* Mobile Menu Button */}
@@ -273,6 +334,7 @@ const NavbarContent = () => {
             <button onClick={toggleDarkMode} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-xl">
               {darkMode ? '☀️' : '🌙'}
             </button>
+            <GitHubLink stars={githubStars} compact />
             <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 border-2 border-neo-black dark:border-white shadow-neo-sm dark:shadow-[2px_2px_0px_0px_#ffffff] active:translate-y-1 active:shadow-none transition-all dark:text-white">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 {isMobileMenuOpen ? (
