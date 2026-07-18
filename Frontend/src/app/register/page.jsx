@@ -324,7 +324,7 @@ function RegisterForm() {
             </div>
 
             {/* Google Sign-In Button */}
-            <button
+            {/* <button
               type="button"
               onClick={() => {
                 setGoogleLoading(true);
@@ -353,7 +353,7 @@ function RegisterForm() {
                 </svg>
               )}
               {googleLoading ? 'Redirecting...' : 'Continue with Google'}
-            </button>
+            </button> */}
 
             <div className="mt-6 text-center text-sm font-mono dark:text-gray-300">
               Already have an account? <Link href={`/login?mode=${isRecruiter ? 'recruiter' : 'candidate'}`} className="font-bold underline decoration-2 hover:text-neo-blue">Login</Link>

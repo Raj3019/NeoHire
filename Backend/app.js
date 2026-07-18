@@ -1,3 +1,7 @@
+require('dotenv').config()
+const { configureDnsServers } = require('./utils/dns.utils')
+configureDnsServers()
+
 const express = require('express')
 const app = express()
 const http = require('http')
@@ -5,7 +9,6 @@ const socketIO = require('socket.io')
 const cors = require('cors')
 const cookieParser = require('cookie-parser')
 const connectToDB = require('./database/config.database')
-require('dotenv').config()
 const PORT = process.env.PORT || 3000
 const employeeRouter = require("./routers/employee.router")
 const recruiterRoute = require('./routers/recruiter.router')

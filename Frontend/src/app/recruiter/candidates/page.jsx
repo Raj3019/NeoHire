@@ -7,6 +7,30 @@ import Image from 'next/image';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import ProfileCompletionBanner from '@/components/shared/ProfileCompletionBanner';
 
+const normalizeCandidates = (items) => {
+  const candidatesByIdentity = new Map();
+
+  items.forEach((candidate) => {
+    const identity = candidate.email?.trim().toLowerCase() || candidate.applicationId;
+    if (!identity) return;
+
+    const matchScore = Number(candidate.aiMatchScore ?? candidate.score ?? 0);
+    const normalizedCandidate = {
+      ...candidate,
+      aiMatchScore: Number.isFinite(matchScore) ? matchScore : 0,
+    };
+    const existingCandidate = candidatesByIdentity.get(identity);
+
+    // A candidate may have applied to multiple jobs. Show them once using their
+    // strongest application match so the Talent directory stays meaningful.
+    if (!existingCandidate || normalizedCandidate.aiMatchScore > existingCandidate.aiMatchScore) {
+      candidatesByIdentity.set(identity, normalizedCandidate);
+    }
+  });
+
+  return Array.from(candidatesByIdentity.values());
+};
+
 export default function CandidatesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [candidates, setCandidates] = useState([]);
@@ -33,7 +57,7 @@ export default function CandidatesPage() {
           allCandidates = response.data.applicants;
         }
 
-        setCandidates(allCandidates);
+        setCandidates(normalizeCandidates(allCandidates));
       } catch (error) {
         console.error("Error fetching candidates:", error);
       } finally {
@@ -94,8 +118,8 @@ export default function CandidatesPage() {
           ) : (
             /* Candidates Grid */
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-              {paginatedCandidates.map((c, idx) => (
-                <NeoCard key={idx} className="p-6 relative group flex flex-col justify-between h-full border-4 hover:shadow-neo transition-all">
+              {paginatedCandidates.map((c) => (
+                <NeoCard key={c.email || c.applicationId} className="p-6 relative group flex flex-col justify-between h-full border-4 hover:shadow-neo transition-all">
 
                   {/* Header Row */}
                   <div className="flex justify-between items-start mb-4">
@@ -120,9 +144,8 @@ export default function CandidatesPage() {
                         <p className="font-mono text-xs text-gray-500 dark:text-gray-400">{c.currentJobTitle || 'Professional'}</p>
                       </div>
                     </div>
-                    {/* Score is not in the provided API response, but let's keep a placeholder or hide if not exists */}
                     <div className="bg-neo-black dark:bg-white text-white dark:text-black text-[10px] font-black uppercase px-2 py-1 border border-neo-black dark:border-white">
-                      {c.score || 0}% Match
+                      {c.aiMatchScore}% Match
                     </div>
                   </div>
 

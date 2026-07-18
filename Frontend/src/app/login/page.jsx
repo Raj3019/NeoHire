@@ -21,6 +21,16 @@ function LoginForm() {
   const { login, isAuthenticated, user, fetchProfile } = useAuthStore();
   // Role defaults to URL param or candidate, but we won't toggle it here anymore to match reference
   const role = isRecruiter ? 'Recruiter' : 'Employee';
+  const demoEmailDomain = process.env.NEXT_PUBLIC_DEMO_EMAIL_DOMAIN || 'demo.neohire.site';
+  const demoCredentials = isRecruiter
+    ? {
+      email: `recruiter@${demoEmailDomain}`,
+      password: process.env.NEXT_PUBLIC_DEMO_RECRUITER_PASSWORD || 'NeoHireDemo@2026',
+    }
+    : {
+      email: `candidate@${demoEmailDomain}`,
+      password: process.env.NEXT_PUBLIC_DEMO_CANDIDATE_PASSWORD || 'NeoHireDemo@2026',
+    };
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -30,10 +40,11 @@ function LoginForm() {
 
   // Wait for client-side hydration
   useEffect(() => {
-    setMounted(true);
+    const frame = window.requestAnimationFrame(() => setMounted(true));
     // Reset the account restricted flag so suspended/banned users
     // can see proper error messages when trying to login again
     resetAccountRestrictedFlag();
+    return () => window.cancelAnimationFrame(frame);
   }, []);
 
   // Redirect authenticated users away from login page
@@ -171,6 +182,32 @@ function LoginForm() {
           </div>
         )}
 
+        <div className={`mb-5 border-2 border-neo-black dark:border-white p-4 ${isRecruiter ? 'bg-pink-50 dark:bg-pink-950/30' : 'bg-yellow-50 dark:bg-yellow-950/30'}`}>
+          <div className="flex items-center justify-between gap-3 mb-3">
+            <div>
+              <p className="font-black uppercase tracking-wider text-sm dark:text-white">Demo account</p>
+              <p className="text-xs font-mono text-gray-600 dark:text-gray-300">Public access for testing</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setFormData(demoCredentials);
+                setError('');
+              }}
+              disabled={isLoading}
+              className={`px-3 py-2 border-2 border-neo-black dark:border-white text-xs font-black uppercase shadow-[2px_2px_0px_0px_#000] dark:shadow-[2px_2px_0px_0px_#fff] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none disabled:opacity-50 ${isRecruiter ? 'bg-neo-pink text-white' : 'bg-neo-yellow text-neo-black'}`}
+            >
+              Use demo
+            </button>
+          </div>
+          <dl className="grid grid-cols-[72px_1fr] gap-x-2 gap-y-1 text-xs font-mono">
+            <dt className="font-bold dark:text-gray-300">Email</dt>
+            <dd className="break-all select-all dark:text-white">{demoCredentials.email}</dd>
+            <dt className="font-bold dark:text-gray-300">Password</dt>
+            <dd className="break-all select-all dark:text-white">{demoCredentials.password}</dd>
+          </dl>
+        </div>
+
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="space-y-1">
             <label className="block font-bold text-sm dark:text-white">Email</label>
@@ -228,7 +265,7 @@ function LoginForm() {
         </div>
 
         {/* Google Sign-In Button */}
-        <button
+        {/* <button
           type="button"
           onClick={() => {
             setGoogleLoading(true);
@@ -257,10 +294,10 @@ function LoginForm() {
             </svg>
           )}
           {googleLoading ? 'Redirecting...' : 'Continue with Google'}
-        </button>
+        </button> */}
 
         <div className="mt-6 text-center text-sm font-mono dark:text-gray-300">
-          Don't have an account? <Link href={`/register?mode=${isRecruiter ? 'recruiter' : 'candidate'}`} className="font-bold underline decoration-2 hover:text-neo-blue">Sign Up</Link>
+          Don&apos;t have an account? <Link href={`/register?mode=${isRecruiter ? 'recruiter' : 'candidate'}`} className="font-bold underline decoration-2 hover:text-neo-blue">Sign Up</Link>
         </div>
       </NeoCard>
     </div>

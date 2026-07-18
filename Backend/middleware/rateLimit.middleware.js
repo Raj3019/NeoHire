@@ -1,4 +1,4 @@
-const rateLimit = require("express-rate-limit")
+const { rateLimit, ipKeyGenerator } = require("express-rate-limit")
 
 const maxResumeRoastsPerUser = parseInt(process.env.MAX_RESUME_ROASTS_PER_USER, 10);
 if (isNaN(maxResumeRoastsPerUser)) {
@@ -49,7 +49,9 @@ const jobPostLimiter = rateLimit({
 const roastLimiter = rateLimit({
   windowMs: 24 * 60 * 60 * 1000,  // 24 hour
   max: maxResumeRoastsPerUser,
-  keyGenerator: (req) => req.user?.id || req.ip,
+  keyGenerator: (req) => req.user?.id
+    ? `user:${req.user.id}`
+    : ipKeyGenerator(req.ip || req.socket?.remoteAddress || 'unknown'),
   message: {
     success: false,
     message: `You've reached your daily limit of ${maxResumeRoastsPerUser} resume roasts.`
