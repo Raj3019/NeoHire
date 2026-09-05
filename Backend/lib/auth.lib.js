@@ -4,6 +4,7 @@ const { MongoClient } = require("mongodb")
 const { Resend } = require("resend")
 const Employee = require("../model/employee.model")
 const Recruiter = require("../model/recruiter.model")
+const { allowedOrigins } = require("./allowedOrigins.lib")
 
 const client = new MongoClient(process.env.MONGODB_URL)
 const resend = new Resend(process.env.RESEND_API_KEY)
@@ -110,9 +111,7 @@ const auth = betterAuth({
     }
   },
 
-  trustedOrigins: [
-    process.env.FRONTEND_URL || "http://localhost:3001",
-  ],
+  trustedOrigins: allowedOrigins,
 
   databaseHooks: {
     user: {

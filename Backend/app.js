@@ -33,19 +33,11 @@ const activityLogRouter = require('./routers/activityLog.router')
 const { logActivity } = require('./utils/activityLog.utils')
 const { getUserUsageLimits } = require('./middleware/usageLimit.middleware')
 
-const frontendURL = process.env.FRONTEND_URL
 
 const server = http.createServer(app)
 
 // Allow both public frontend URL and localhost for development
-const allowedOrigins = [
-  frontendURL,
-  'https://www.neohire.site',
-  'https://neohire.site',
-  'http://localhost:3000',
-  'http://localhost:3001',
-  'http://localhost:8080'
-].filter(Boolean);
+const { allowedOrigins } = require('./lib/allowedOrigins.lib')
 
 
 const io = socketIO(server, {
